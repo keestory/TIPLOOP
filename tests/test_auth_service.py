@@ -1,54 +1,100 @@
-"""인증 서비스 단위 테스트."""
+"""인증 서비스 단위 테스트 — Supabase 소셜 로그인 흐름."""
+
+import base64
+import hashlib
+import hmac
+import json
+import time
 
 import pytest
 
 from app.service import auth_service
 from app.service.auth_service import AuthError
 
+SECRET = "test-jwt-secret"  # conftest가 SUPABASE_JWT_SECRET로 설정
 
-def _register():
-    return auth_service.register(
-        "kim@school.kr", "password123", "김선생", "중학교", "서울", "과학"
+
+def _b64(data: dict) -> str:
+    return base64.urlsafe_b64encode(json.dumps(data).encode()).rstrip(b"=").decode()
+
+
+def make_token(secret=SECRET, exp_delta=3600, **claims) -> str:
+    header = {"alg": "HS256", "typ": "JWT"}
+    payload = {"sub": "auth-abc", "exp": int(time.time()) + exp_delta, **claims}
+    signing = f"{_b64(header)}.{_b64(payload)}"
+    sig = base64.urlsafe_b64encode(
+        hmac.new(secret.encode(), signing.encode(), hashlib.sha256).digest()
+    ).rstrip(b"=").decode()
+    return f"{signing}.{sig}"
+
+
+def _google_token(**over):
+    claims = {
+        "sub": "google-user-1",
+        "email": "kim@gmail.com",
+        "app_metadata": {"provider": "google"},
+        "user_metadata": {"full_name": "김서연", "avatar_url": "http://x/a.png"},
+    }
+    claims.update(over)
+    return make_token(**claims)
+
+
+def test_google_login_creates_unonboarded_teacher():
+    teacher, cookie = auth_service.establish_session(_google_token())
+    assert teacher.name == "김서연"
+    assert teacher.email == "kim@gmail.com"
+    assert teacher.provider == "google"
+    assert teacher.is_onboarded is False      # 학교급/지역 아직 없음
+    assert teacher.needs_phone is True         # 구글은 번호 안 줌
+    assert auth_service.current_user(cookie).id == teacher.id
+
+
+def test_login_is_idempotent_by_auth_id():
+    t1, _ = auth_service.establish_session(_google_token())
+    t2, _ = auth_service.establish_session(_google_token(user_metadata={"full_name": "김서연B"}))
+    assert t1.id == t2.id            # 같은 sub → 같은 교사
+    assert t2.name == "김서연B"      # 이름은 최신화
+
+
+def test_kakao_login_captures_verified_phone():
+    token = make_token(
+        sub="kakao-1", app_metadata={"provider": "kakao"},
+        user_metadata={"name": "박지우", "phone_number": "+8210...", "avatar_url": None},
     )
+    teacher, _ = auth_service.establish_session(token)
+    assert teacher.provider == "kakao"
+    assert teacher.phone == "+8210..."
+    assert teacher.phone_verified is True
+    assert teacher.needs_phone is False        # 카카오가 번호 줌 → 안 물어봄
 
 
-def test_register_then_current_user():
-    user, token = _register()
-    assert user.email == "kim@school.kr"
-    assert user.school_level == "중학교"
-    assert auth_service.current_user(token).id == user.id
-
-
-def test_register_rejects_short_password():
+def test_invalid_signature_rejected():
+    bad = make_token(secret="wrong-secret")
     with pytest.raises(AuthError):
-        auth_service.register("a@b.kr", "short", "이름", "초등학교", "부산", "")
+        auth_service.establish_session(bad)
 
 
-def test_register_rejects_bad_school_level():
+def test_expired_token_rejected():
     with pytest.raises(AuthError):
-        auth_service.register("a@b.kr", "password123", "이름", "대학교", "부산", "")
+        auth_service.establish_session(_google_token(exp_delta=-10))
 
 
-def test_register_rejects_duplicate_email():
-    _register()
-    with pytest.raises(AuthError):
-        _register()
-
-
-def test_login_success_and_failure():
-    _register()
-    user, token = auth_service.login("kim@school.kr", "password123")
-    assert auth_service.current_user(token).id == user.id
-    with pytest.raises(AuthError):
-        auth_service.login("kim@school.kr", "wrong-password")
-
-
-def test_logout_invalidates_session():
-    _, token = _register()
-    auth_service.logout(token)
-    assert auth_service.current_user(token) is None
-
-
-def test_current_user_none_for_missing_token():
+def test_current_user_none_for_bad_cookie():
     assert auth_service.current_user(None) is None
-    assert auth_service.current_user("nope") is None
+    assert auth_service.current_user("garbage.cookie.value") is None
+
+
+def test_onboarding_completes_profile():
+    teacher, _ = auth_service.establish_session(_google_token())
+    done = auth_service.complete_onboarding(teacher.id, "중학교", "서울", "과학", "010-1234-5678")
+    assert done.is_onboarded is True
+    assert done.school_level == "중학교" and done.region == "서울"
+    assert done.phone == "010-1234-5678"
+
+
+def test_onboarding_rejects_bad_values():
+    teacher, _ = auth_service.establish_session(_google_token())
+    with pytest.raises(AuthError):
+        auth_service.complete_onboarding(teacher.id, "대학교", "서울", "", "")
+    with pytest.raises(AuthError):
+        auth_service.complete_onboarding(teacher.id, "중학교", "화성", "", "")

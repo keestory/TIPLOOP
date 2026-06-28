@@ -16,7 +16,10 @@
     </a>
     <nav class="site-nav">
       {% if current_user %}
-        <a href="/users/{{ current_user.id }}" class="nav-link">{{ current_user.name }} 선생님</a>
+        <a href="/users/{{ current_user.id }}" class="nav-link nav-me">
+          {% if current_user.avatar_url %}<img class="nav-avatar" src="{{ current_user.avatar_url }}" alt="">{% endif %}
+          {{ current_user.name }} 선생님
+        </a>
         <form action="/logout" method="post" class="inline-form">
           <button type="submit" class="nav-link as-button">로그아웃</button>
         </form>

@@ -9,7 +9,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.config.settings import CATEGORIES, REGIONS, SCHOOL_LEVELS, category_label
+from app.config.settings import (
+    CATEGORIES,
+    REGIONS,
+    SCHOOL_LEVELS,
+    SUPABASE_ANON_KEY,
+    SUPABASE_URL,
+    category_label,
+)
 from app.repo.database import init_db
 from app.ui import routes_auth, routes_community
 
@@ -17,7 +24,10 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 
 def create_app() -> FastAPI:
-    init_db()
+    from app.config.settings import DATABASE_URL
+
+    if DATABASE_URL:
+        init_db()  # 스키마 보장. DB가 없으면 부팅은 하되 첫 쿼리에서 명확히 실패.
 
     app = FastAPI(title="이음 — 선생님 커뮤니티")
 
@@ -29,6 +39,8 @@ def create_app() -> FastAPI:
         school_levels=SCHOOL_LEVELS,
         regions=REGIONS,
         brand="이음",
+        supabase_url=SUPABASE_URL,
+        supabase_anon_key=SUPABASE_ANON_KEY,
     )
     app.state.templates = templates
 

@@ -11,15 +11,31 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class User:
-    """가입한 교사."""
+    """가입한 교사. 인증은 Supabase(구글/카카오), 프로필은 우리가 보관."""
 
     id: int
-    email: str
+    auth_id: str  # Supabase auth 사용자 id
     name: str
-    school_level: str  # 유치원 | 초등학교 | 중학교 | 고등학교
-    region: str
-    subject: str  # 담당 과목/학년 (자유 입력)
     created_at: str
+    email: str | None = None
+    avatar_url: str | None = None
+    provider: str | None = None  # google | kakao
+    phone: str | None = None
+    phone_verified: bool = False
+    # 온보딩에서 채우는 값 (소셜이 주지 않음) — 완료 전엔 None
+    school_level: str | None = None
+    region: str | None = None
+    subject: str = ""
+
+    @property
+    def is_onboarded(self) -> bool:
+        """학교급·지역을 채웠으면 온보딩 완료."""
+        return bool(self.school_level and self.region)
+
+    @property
+    def needs_phone(self) -> bool:
+        """전화번호가 아직 없으면 입력받아야 한다(구글 가입자 등)."""
+        return not self.phone
 
 
 @dataclass(frozen=True)

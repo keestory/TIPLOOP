@@ -1,17 +1,38 @@
 {% extends "base.html" %}
-{% block title %}로그인{% endblock %}
+{% block title %}시작하기{% endblock %}
+{% block fab %}{% endblock %}
 {% block content %}
 
-<h1 class="page-title">로그인</h1>
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<div class="auth">
+  <h1 class="page-title">이음 시작하기</h1>
+  <p class="auth-sub">유치원·초·중·고 선생님들의 열린 커뮤니티.<br>구글이나 카카오로 3초 만에 시작하세요.</p>
 
-<form class="form form-narrow" method="post" action="/login">
-  <label for="email">이메일</label>
-  <input id="email" name="email" type="email" required value="{{ form.email if form else '' }}">
-  <label for="password">비밀번호</label>
-  <input id="password" name="password" type="password" required>
-  <button type="submit" class="btn">로그인</button>
-</form>
+  {% if not supabase_url %}
+    <p class="error">로그인이 아직 설정되지 않았습니다. (관리자: Supabase 키를 넣어주세요)</p>
+  {% endif %}
 
-<p class="alt">아직 회원이 아니신가요? <a href="/register">가입하기</a></p>
+  <div class="auth-buttons">
+    <button id="google" class="social social-google" type="button">
+      <span class="social-logo">G</span> 구글로 시작하기
+    </button>
+    <button id="kakao" class="social social-kakao" type="button">
+      <span class="social-logo">K</span> 카카오로 시작하기
+    </button>
+  </div>
+
+  <p class="auth-fine">계속하면 이음의 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.</p>
+</div>
+
+{% if supabase_url %}
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const sb = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}")
+  const redirectTo = location.origin + '/auth/callback'
+  document.getElementById('google').addEventListener('click', () =>
+    sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } }))
+  document.getElementById('kakao').addEventListener('click', () =>
+    sb.auth.signInWithOAuth({ provider: 'kakao',
+      options: { redirectTo, scopes: 'account_email phone_number' } }))
+</script>
+{% endif %}
 {% endblock %}

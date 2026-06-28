@@ -30,6 +30,15 @@ def _back(request: Request, fallback: str) -> RedirectResponse:
     return RedirectResponse(target, status_code=303)
 
 
+def _gate(user: Optional[User]) -> Optional[RedirectResponse]:
+    """쓰기 액션 가드 — 비로그인은 로그인, 온보딩 미완료는 온보딩으로."""
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    if not user.is_onboarded:
+        return RedirectResponse("/onboarding", status_code=303)
+    return None
+
+
 @router.get("/")
 def feed(
     request: Request,
@@ -53,8 +62,8 @@ def feed(
 def new_post_form(
     request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
 ):
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
+    if gate := _gate(user):
+        return gate
     return _render(request, "post_new.html", user, prefill_category=category)
 
 
@@ -69,8 +78,8 @@ def create_post(
     online_url: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
+    if gate := _gate(user):
+        return gate
     try:
         post_id = community_service.create_post(
             user.id, category, title, body, event_at, location, online_url
@@ -107,8 +116,8 @@ def add_comment(
     parent_id: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
+    if gate := _gate(user):
+        return gate
     parent = int(parent_id) if parent_id.isdigit() else None
     try:
         community_service.add_comment(post_id, user.id, body, parent)
@@ -119,16 +128,16 @@ def add_comment(
 
 @router.post("/posts/{post_id}/react")
 def react_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
+    if gate := _gate(user):
+        return gate
     reaction_service.toggle_post(post_id, user.id)
     return _back(request, f"/posts/{post_id}")
 
 
 @router.post("/comments/{comment_id}/react")
 def react_comment(request: Request, comment_id: int, user: Optional[User] = Depends(get_current_user)):
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
+    if gate := _gate(user):
+        return gate
     post_id = reaction_service.toggle_comment(comment_id, user.id)
     return _back(request, f"/posts/{post_id}" if post_id else "/")
 

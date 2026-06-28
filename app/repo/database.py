@@ -1,90 +1,74 @@
-"""SQLite 커넥션과 스키마 초기화.
+"""Supabase Postgres 커넥션과 스키마 초기화.
 
-Types, Config, Providers만 import 가능.
+Types, Config, Providers만 import 가능. 연결은 DATABASE_URL(환경 변수)로.
 """
 
 from __future__ import annotations
 
+import psycopg
+from psycopg.rows import dict_row
 
-import sqlite3
-
-from app.config.settings import DB_PATH
+from app.config.settings import DATABASE_URL
 
 _SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    email         TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name          TEXT NOT NULL,
-    school_level  TEXT NOT NULL,
-    region        TEXT NOT NULL,
-    subject       TEXT NOT NULL DEFAULT '',
-    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS sessions (
-    token      TEXT PRIMARY KEY,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+CREATE TABLE IF NOT EXISTS teachers (
+    id             BIGSERIAL PRIMARY KEY,
+    auth_id        TEXT UNIQUE NOT NULL,          -- Supabase auth 사용자 id(uuid)
+    email          TEXT,
+    name           TEXT NOT NULL,
+    avatar_url     TEXT,
+    provider       TEXT,                          -- google | kakao
+    phone          TEXT,
+    phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    school_level   TEXT,                          -- 온보딩 전엔 NULL
+    region         TEXT,
+    subject        TEXT NOT NULL DEFAULT '',
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS posts (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    author_id  INTEGER NOT NULL REFERENCES users(id),
+    id         BIGSERIAL PRIMARY KEY,
+    author_id  BIGINT NOT NULL REFERENCES teachers(id),
     category   TEXT NOT NULL,
     title      TEXT NOT NULL,
     body       TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     event_at   TEXT,
     location   TEXT,
     online_url TEXT
 );
 
 CREATE TABLE IF NOT EXISTS comments (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    post_id    INTEGER NOT NULL REFERENCES posts(id),
-    author_id  INTEGER NOT NULL REFERENCES users(id),
+    id         BIGSERIAL PRIMARY KEY,
+    post_id    BIGINT NOT NULL REFERENCES posts(id),
+    author_id  BIGINT NOT NULL REFERENCES teachers(id),
     body       TEXT NOT NULL,
-    parent_id  INTEGER REFERENCES comments(id),
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    parent_id  BIGINT REFERENCES comments(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 공감(단일 반응). (대상, 사용자) 1회로 제한해 중복 방지.
 CREATE TABLE IF NOT EXISTS post_reactions (
-    post_id INTEGER NOT NULL REFERENCES posts(id),
-    user_id INTEGER NOT NULL REFERENCES users(id),
+    post_id BIGINT NOT NULL REFERENCES posts(id),
+    user_id BIGINT NOT NULL REFERENCES teachers(id),
     PRIMARY KEY (post_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS comment_reactions (
-    comment_id INTEGER NOT NULL REFERENCES comments(id),
-    user_id    INTEGER NOT NULL REFERENCES users(id),
+    comment_id BIGINT NOT NULL REFERENCES comments(id),
+    user_id    BIGINT NOT NULL REFERENCES teachers(id),
     PRIMARY KEY (comment_id, user_id)
 );
 """
 
 
-def get_connection() -> sqlite3.Connection:
-    """요청마다 새 커넥션을 연다. row_factory로 dict-유사 접근."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+def get_connection() -> psycopg.Connection:
+    """요청마다 새 커넥션. dict_row로 컬럼명 접근."""
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL이 설정되지 않았습니다. Supabase Postgres 연결 문자열을 넣어주세요.")
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row, autocommit=True)
 
 
 def init_db() -> None:
-    """스키마를 생성하고 가벼운 마이그레이션을 적용한다."""
-    conn = get_connection()
-    try:
-        conn.executescript(_SCHEMA)
-        _migrate(conn)
-        conn.commit()
-    finally:
-        conn.close()
-
-
-def _migrate(conn) -> None:
-    """기존 DB에 없는 컬럼을 더한다(이미 있으면 무시)."""
-    cols = {row["name"] for row in conn.execute("PRAGMA table_info(comments)")}
-    if "parent_id" not in cols:
-        conn.execute("ALTER TABLE comments ADD COLUMN parent_id INTEGER REFERENCES comments(id)")
+    """스키마를 생성한다(이미 있으면 건너뜀)."""
+    with get_connection() as conn:
+        conn.execute(_SCHEMA)

@@ -5,50 +5,49 @@
 
 - 제품 사양: [`docs/product-specs/ieum-community.md`](../docs/product-specs/ieum-community.md)
 - 설계·디자인 시스템: [`docs/design-docs/ieum-design.md`](../docs/design-docs/ieum-design.md)
-- 실행 계획: [`docs/exec-plans/active/ieum-mvp.md`](../docs/exec-plans/active/ieum-mvp.md)
+- **Supabase 셋업: [`docs/SUPABASE_SETUP.md`](../docs/SUPABASE_SETUP.md)**
 
-## 기능 (MVP)
+## 기능
 
-- 교사 가입/로그인 (이메일·학교급·지역·담당)
-- 글쓰기 — `정보공유` · `세미나` · `고민나눔` 세 카테고리 통합
-- 세미나 글: 일시·장소·온라인 링크
-- 피드 필터: 카테고리 · 학교급 · 지역
-- 누구나 읽기 가능(오픈 원칙), 로그인 시 댓글 작성
-- 교사 프로필 + 작성 글 모아보기
+- **구글·카카오 소셜 로그인** (Supabase Auth) — 이메일/비밀번호 없음
+- 온보딩 — 소셜이 주지 않는 **학교급·지역·담당**만 추가로 받음(전화번호는 카카오가 주면 자동, 구글이면 입력)
+- 글쓰기 — `정보공유` · `세미나` · `고민나눔` 세 카테고리 통합 (세미나는 일시·장소·링크)
+- 피드 정렬(최신·공감·화제) + 필터(카테고리·학교급·지역)
+- 공감(♥)·댓글·답글 스레드, 누구나 읽기 가능(오픈 원칙)
+- 교사 프로필 + 받은 공감(카르마)
 
 ## 실행 (로컬)
 
-Python 3.9+ (macOS 시스템 파이썬 3.9 포함). 저장소 루트(`FT/`)에서:
+데이터·인증 모두 **Supabase**를 씁니다. 먼저 [`docs/SUPABASE_SETUP.md`](../docs/SUPABASE_SETUP.md)대로
+프로젝트를 만들고 키를 받으세요. Python 3.9+.
 
 ```bash
-# 1) 브랜치 받기
-git clone https://github.com/keestory/ft.git FT
-cd FT
+git clone https://github.com/keestory/ft.git FT && cd FT
 git checkout claude/harness-engineering-agent-acwvo2
-
-# 2) (권장) 가상환경
-python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-
-# 3) 의존성
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r app/requirements.txt
 
-# 4) (선택) 데모 데이터 — 빈 화면 대신 예시 글/세미나/댓글/공감
+# 환경 변수 (.env.example 참고)
+export DATABASE_URL="postgresql://postgres:[PW]@db.<ref>.supabase.co:5432/postgres"
+export SUPABASE_URL="https://<ref>.supabase.co"
+export SUPABASE_ANON_KEY="..."
+export SUPABASE_JWT_SECRET="..."
+export IEUM_SECRET="$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')"
+
+# (선택) 데모 글/세미나/댓글/공감 채우기
 python3 scripts/seed_demo.py
 
-# 5) 서버
-uvicorn app.main:app --reload
-# 브라우저: http://127.0.0.1:8000
+uvicorn app.main:app --reload   # http://127.0.0.1:8000
 ```
 
-데모 로그인: `kim@s.kr` / `password123` (그 외 `lee@s.kr`, `park@s.kr` 등도 동일 비밀번호).
-
-DB는 SQLite(`ieum.db`), 첫 기동 시 자동 생성됩니다. 위치는 `IEUM_DB_PATH`,
-세션 시크릿은 `IEUM_SECRET` 환경 변수로 바꿀 수 있습니다.
+> Supabase의 Redirect URLs에 `http://127.0.0.1:8000/auth/callback`을 꼭 추가하세요.
 
 ## 테스트 / 린트
 
+테스트는 Postgres가 필요합니다(로컬 PG 또는 Supabase). `DATABASE_URL`을 주고 실행:
+
 ```bash
-python3 -m pytest tests/
+DATABASE_URL=postgresql://... python3 -m pytest tests/
 python3 linters/architecture_linter.py .   # 레이어 의존성
 ```
 
@@ -58,13 +57,13 @@ python3 linters/architecture_linter.py .   # 레이어 의존성
 
 ```
 app/
-  types/      User · Post · Comment (순수 데이터)
-  config/     설정 + 학교급/지역/카테고리 상수
-  providers/  비밀번호 해시 · 세션 토큰 (stdlib만)
-  repo/       SQLite 데이터 접근
-  service/    auth · community 비즈니스 로직
-  ui/         FastAPI 라우트 + 의존성
+  types/      User(=교사) · Post · Comment (순수 데이터)
+  config/     설정(Supabase/DB 키) + 학교급/지역/카테고리 상수
+  providers/  Supabase JWT 검증 · 세션 쿠키 서명 (stdlib만)
+  repo/       Supabase Postgres 데이터 접근 (psycopg)
+  service/    auth(소셜 로그인·온보딩) · community · reaction
+  ui/         FastAPI 라우트 + 의존성 (소셜 로그인/콜백/온보딩 포함)
   main.py     엔트리포인트 (create_app)
-templates/    Jinja2 (종이·먹·황토 디자인 시스템)
+templates/    Jinja2 (모노 + 형광 디자인 시스템, supabase-js로 OAuth)
 static/       styles.css
 ```

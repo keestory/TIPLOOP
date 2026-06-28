@@ -6,7 +6,7 @@
   <span class="profile-avatar">{{ teacher.name[0] }}</span>
   <div>
     <h1 class="page-title">{{ teacher.name }} 선생님</h1>
-    <p class="profile-meta">{{ teacher.school_level }} · {{ teacher.region }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
+    <p class="profile-meta">{{ teacher.school_level or '' }} · {{ teacher.region or '' }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
   </div>
 </section>
 

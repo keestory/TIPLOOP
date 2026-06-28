@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}프로필 완성{% endblock %}
+{% block fab %}{% endblock %}
+{% block content %}
+
+<h1 class="page-title">{{ current_user.name }} 선생님, 거의 다 됐어요</h1>
+<p class="auth-sub">소셜로 받은 정보는 채워뒀어요. 학교급·지역만 알려주시면 시작합니다.</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<div class="identity">
+  {% if current_user.avatar_url %}<img class="identity-avatar" src="{{ current_user.avatar_url }}" alt="">{% endif %}
+  <div>
+    <strong>{{ current_user.name }}</strong>
+    <span class="identity-meta">{% if current_user.email %}{{ current_user.email }} · {% endif %}{{ current_user.provider }} 계정</span>
+  </div>
+</div>
+
+<form class="form form-narrow" method="post" action="/onboarding">
+  <label for="school_level">학교급</label>
+  <select id="school_level" name="school_level" required>
+    <option value="">선택</option>
+    {% for lvl in school_levels %}
+      <option value="{{ lvl }}" {% if current_user.school_level == lvl %}selected{% endif %}>{{ lvl }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="region">지역</label>
+  <select id="region" name="region" required>
+    <option value="">선택</option>
+    {% for r in regions %}
+      <option value="{{ r }}" {% if current_user.region == r %}selected{% endif %}>{{ r }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="subject">담당 <span class="hint">(과목·학년, 선택)</span></label>
+  <input id="subject" name="subject" type="text" placeholder="예: 3학년 담임 / 과학"
+         value="{{ current_user.subject or '' }}">
+
+  {% if current_user.needs_phone %}
+  <label for="phone">전화번호 <span class="hint">(연락·인증용)</span></label>
+  <input id="phone" name="phone" type="tel" placeholder="010-0000-0000">
+  {% endif %}
+
+  <button type="submit" class="btn">시작하기</button>
+</form>
+{% endblock %}

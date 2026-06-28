@@ -7,7 +7,7 @@ from __future__ import annotations
 
 
 from app.config.settings import CATEGORIES
-from app.repo import comments, posts, reactions, users
+from app.repo import comments, posts, reactions, teachers
 from app.types.models import Post, Thread, User
 
 
@@ -105,7 +105,7 @@ def add_comment(post_id: int, author_id: int, body: str, parent_id: int | None =
 
 def get_profile(user_id: int) -> tuple[User, list[Post], int]:
     """교사 프로필, 쓴 글, 받은 공감 합계. 없으면 CommunityError."""
-    user = users.get_user(user_id)
+    user = teachers.get(user_id)
     if user is None:
         raise CommunityError("사용자를 찾을 수 없습니다.")
     return user, posts.list_posts(author_id=user_id), reactions.received_reaction_count(user_id)

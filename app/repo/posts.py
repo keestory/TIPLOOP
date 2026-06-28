@@ -1,21 +1,21 @@
-"""글 저장소 — 작성과 필터 조회."""
+"""글 저장소 — 작성과 필터 조회 (Supabase Postgres)."""
 
 from __future__ import annotations
-
-
-import sqlite3
 
 from app.repo.database import get_connection
 from app.types.models import Post
 
 # 작성자 표시 정보 + 인게이지먼트 집계를 함께 가져오는 공통 SELECT
 _SELECT = """
-SELECT p.*, u.name AS author_name, u.school_level AS author_school_level,
+SELECT p.id, p.author_id, p.category, p.title, p.body,
+       to_char(p.created_at, 'YYYY-MM-DD HH24:MI') AS created_at,
+       p.event_at, p.location, p.online_url,
+       u.name AS author_name, u.school_level AS author_school_level,
        u.region AS author_region,
        (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS reaction_count,
        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
 FROM posts p
-JOIN users u ON u.id = p.author_id
+JOIN teachers u ON u.id = p.author_id
 """
 
 # 정렬: 최신 / 공감 / 화제(댓글 많은)
@@ -26,7 +26,7 @@ _ORDER = {
 }
 
 
-def _to_post(row: sqlite3.Row) -> Post:
+def _to_post(row: dict) -> Post:
     return Post(
         id=row["id"],
         author_id=row["author_id"],
@@ -55,26 +55,21 @@ def create_post(
     online_url: str | None = None,
 ) -> int:
     """글을 만들고 id를 돌려준다."""
-    conn = get_connection()
-    try:
-        cur = conn.execute(
-            "INSERT INTO posts (author_id, category, title, body, event_at, location, online_url) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (author_id, category, title, body, event_at, location, online_url),
-        )
-        conn.commit()
-        return cur.lastrowid
-    finally:
-        conn.close()
+    sql = (
+        "INSERT INTO posts (author_id, category, title, body, event_at, location, online_url) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id"
+    )
+    with get_connection() as conn:
+        row = conn.execute(
+            sql, (author_id, category, title, body, event_at, location, online_url)
+        ).fetchone()
+        return row["id"]
 
 
 def get_post(post_id: int) -> Post | None:
-    conn = get_connection()
-    try:
-        row = conn.execute(_SELECT + " WHERE p.id = ?", (post_id,)).fetchone()
+    with get_connection() as conn:
+        row = conn.execute(_SELECT + " WHERE p.id = %s", (post_id,)).fetchone()
         return _to_post(row) if row else None
-    finally:
-        conn.close()
 
 
 def list_posts(
@@ -88,23 +83,20 @@ def list_posts(
     clauses: list[str] = []
     params: list[object] = []
     if category:
-        clauses.append("p.category = ?")
+        clauses.append("p.category = %s")
         params.append(category)
     if school_level:
-        clauses.append("u.school_level = ?")
+        clauses.append("u.school_level = %s")
         params.append(school_level)
     if region:
-        clauses.append("u.region = ?")
+        clauses.append("u.region = %s")
         params.append(region)
     if author_id is not None:
-        clauses.append("p.author_id = ?")
+        clauses.append("p.author_id = %s")
         params.append(author_id)
 
     where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
     order = _ORDER.get(sort, _ORDER["new"])
-    conn = get_connection()
-    try:
-        rows = conn.execute(_SELECT + where + " " + order, params)
-        return [_to_post(r) for r in rows.fetchall()]
-    finally:
-        conn.close()
+    with get_connection() as conn:
+        rows = conn.execute(_SELECT + where + " " + order, params).fetchall()
+        return [_to_post(r) for r in rows]

@@ -247,6 +247,40 @@ select:focus, input:focus, textarea:focus {
 .empty { padding: calc(var(--unit) * 4) 0; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
+/* ── 인증 / 소셜 로그인 ── */
+.auth { max-width: 420px; margin: calc(var(--unit) * 5) auto; text-align: center; }
+.auth-sub { color: var(--muted); margin: var(--unit) 0 calc(var(--unit) * 4); line-height: 1.6; }
+.auth-buttons { display: flex; flex-direction: column; gap: calc(var(--unit) * 1.5); }
+.social {
+  display: flex; align-items: center; justify-content: center; gap: calc(var(--unit) * 1.25);
+  width: 100%; padding: calc(var(--unit) * 1.75); border-radius: var(--radius);
+  font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  transition: border-color .12s ease, background .12s ease;
+}
+.social:hover { border-color: var(--ink); }
+.social-logo {
+  display: inline-flex; width: 22px; height: 22px; border-radius: 50%;
+  align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
+}
+.social-google .social-logo { border: 1px solid var(--line); }
+.social-kakao { background: #fee500; border-color: #fee500; color: #191600; }
+.social-kakao:hover { background: #f5dd00; border-color: #f5dd00; }
+.social-kakao .social-logo { background: #191600; color: #fee500; }
+.auth-fine { color: var(--muted); font-size: 12px; margin-top: calc(var(--unit) * 3); }
+
+/* 헤더 아바타 + 온보딩 정체성 박스 */
+.nav-me { display: inline-flex; align-items: center; gap: var(--unit); }
+.nav-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.identity {
+  display: flex; align-items: center; gap: calc(var(--unit) * 1.5);
+  padding: calc(var(--unit) * 2); border: 1px solid var(--line); border-radius: var(--radius);
+  margin: calc(var(--unit) * 2) 0 calc(var(--unit) * 3);
+}
+.identity-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.identity strong { display: block; }
+.identity-meta { color: var(--muted); font-size: 13px; }
+
 @media (max-width: 600px) {
   .brand-tag { display: none; }
   .post-title { font-size: 25px; }
