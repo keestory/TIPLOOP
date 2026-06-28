@@ -3,6 +3,9 @@
 세 기능(정보공유/세미나/고민나눔)을 글 카테고리로 통합한다.
 """
 
+from __future__ import annotations
+
+
 from app.config.settings import CATEGORIES
 from app.repo import comments, posts, reactions, users
 from app.types.models import Post, Thread, User

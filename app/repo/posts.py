@@ -1,5 +1,8 @@
 """글 저장소 — 작성과 필터 조회."""
 
+from __future__ import annotations
+
+
 import sqlite3
 
 from app.repo.database import get_connection

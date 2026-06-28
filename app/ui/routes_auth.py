@@ -1,5 +1,8 @@
 """인증 라우트 — 가입·로그인·로그아웃."""
 
+from __future__ import annotations
+
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 

@@ -1,1 +1,4 @@
 """Types 레이어 — 순수 데이터 구조."""
+
+from __future__ import annotations
+

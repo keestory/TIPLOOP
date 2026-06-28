@@ -5,6 +5,9 @@
 기존 데이터가 있으면 건드리지 않고 추가만 한다(이메일 중복은 건너뜀).
 """
 
+from __future__ import annotations
+
+
 import sqlite3
 import sys
 from pathlib import Path

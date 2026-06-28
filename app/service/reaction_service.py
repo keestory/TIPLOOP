@@ -1,5 +1,8 @@
 """공감 도메인 로직 — 글/댓글 반응 토글과 조회."""
 
+from __future__ import annotations
+
+
 from app.repo import comments, posts, reactions
 
 

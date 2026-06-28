@@ -3,6 +3,9 @@
 표준 라이브러리만 사용한다(추가 의존성 0). Types, Config만 import 가능.
 """
 
+from __future__ import annotations
+
+
 import hashlib
 import hmac
 import secrets

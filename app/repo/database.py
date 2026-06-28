@@ -3,6 +3,9 @@
 Types, Config, Providers만 import 가능.
 """
 
+from __future__ import annotations
+
+
 import sqlite3
 
 from app.config.settings import DB_PATH

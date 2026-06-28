@@ -5,6 +5,9 @@
     uvicorn app.main:app --reload
 """
 
+from __future__ import annotations
+
+
 from app.ui.app_factory import create_app
 
 app = create_app()

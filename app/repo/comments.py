@@ -1,5 +1,8 @@
 """댓글 저장소 — 답글(parent_id)과 공감 집계 포함."""
 
+from __future__ import annotations
+
+
 import sqlite3
 
 from app.repo.database import get_connection

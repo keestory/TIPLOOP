@@ -3,6 +3,9 @@
 순수 데이터만 담는다. 다른 레이어를 import하지 않는다.
 """
 
+from __future__ import annotations
+
+
 from dataclasses import dataclass
 
 

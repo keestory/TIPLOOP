@@ -3,6 +3,9 @@
 Types만 import 가능. 시크릿은 환경 변수에서만 읽는다.
 """
 
+from __future__ import annotations
+
+
 import os
 from pathlib import Path
 

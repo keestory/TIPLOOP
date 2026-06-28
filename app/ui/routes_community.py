@@ -1,5 +1,9 @@
 """커뮤니티 라우트 — 피드·글쓰기·상세·댓글·공감·프로필."""
 
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -13,7 +17,7 @@ router = APIRouter()
 FEED_SORTS = {"new": "최신", "top": "공감", "buzz": "화제"}
 
 
-def _render(request: Request, name: str, current_user: User | None, **ctx):
+def _render(request: Request, name: str, current_user: Optional[User], **ctx):
     return request.app.state.templates.TemplateResponse(
         request, name, {"current_user": current_user, **ctx}
     )
@@ -33,7 +37,7 @@ def feed(
     category: str = "",
     school_level: str = "",
     region: str = "",
-    user: User | None = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user),
 ):
     sort = sort if sort in FEED_SORTS else "new"
     posts = community_service.list_feed(category, school_level, region, sort)
@@ -46,7 +50,7 @@ def feed(
 
 
 @router.get("/posts/new")
-def new_post_form(request: Request, user: User | None = Depends(get_current_user)):
+def new_post_form(request: Request, user: Optional[User] = Depends(get_current_user)):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     return _render(request, "post_new.html", user)
@@ -61,7 +65,7 @@ def create_post(
     event_at: str = Form(""),
     location: str = Form(""),
     online_url: str = Form(""),
-    user: User | None = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user),
 ):
     if user is None:
         return RedirectResponse("/login", status_code=303)
@@ -78,7 +82,7 @@ def create_post(
 
 
 @router.get("/posts/{post_id}")
-def post_detail(request: Request, post_id: int, user: User | None = Depends(get_current_user)):
+def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
     try:
         post, threads = community_service.get_post_with_threads(post_id)
     except CommunityError as exc:
@@ -99,7 +103,7 @@ def add_comment(
     post_id: int,
     body: str = Form(...),
     parent_id: str = Form(""),
-    user: User | None = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user),
 ):
     if user is None:
         return RedirectResponse("/login", status_code=303)
@@ -112,7 +116,7 @@ def add_comment(
 
 
 @router.post("/posts/{post_id}/react")
-def react_post(request: Request, post_id: int, user: User | None = Depends(get_current_user)):
+def react_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     reaction_service.toggle_post(post_id, user.id)
@@ -120,7 +124,7 @@ def react_post(request: Request, post_id: int, user: User | None = Depends(get_c
 
 
 @router.post("/comments/{comment_id}/react")
-def react_comment(request: Request, comment_id: int, user: User | None = Depends(get_current_user)):
+def react_comment(request: Request, comment_id: int, user: Optional[User] = Depends(get_current_user)):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     post_id = reaction_service.toggle_comment(comment_id, user.id)
@@ -128,7 +132,7 @@ def react_comment(request: Request, comment_id: int, user: User | None = Depends
 
 
 @router.get("/users/{user_id}")
-def profile(request: Request, user_id: int, user: User | None = Depends(get_current_user)):
+def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
     try:
         teacher, posts, received = community_service.get_profile(user_id)
     except CommunityError as exc:

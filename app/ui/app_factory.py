@@ -1,5 +1,8 @@
 """FastAPI 앱 조립 — 템플릿/정적 파일 마운트, 라우터 등록, DB 초기화."""
 
+from __future__ import annotations
+
+
 from pathlib import Path
 
 from fastapi import FastAPI

@@ -1,5 +1,8 @@
 """공감(반응) 저장소 — 글/댓글에 대한 단일 반응 토글."""
 
+from __future__ import annotations
+
+
 from app.repo.database import get_connection
 
 

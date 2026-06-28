@@ -1,5 +1,8 @@
 """세션 저장소 — 토큰 ↔ 사용자."""
 
+from __future__ import annotations
+
+
 from app.repo.database import get_connection
 
 

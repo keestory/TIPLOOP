@@ -3,6 +3,9 @@
 경계에서 입력을 검증한다. 실패는 ValueError로 알린다.
 """
 
+from __future__ import annotations
+
+
 import sqlite3
 
 from app.config.settings import REGIONS, SCHOOL_LEVELS

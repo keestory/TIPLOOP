@@ -1,5 +1,8 @@
 """사용자 저장소."""
 
+from __future__ import annotations
+
+
 import sqlite3
 
 from app.repo.database import get_connection
