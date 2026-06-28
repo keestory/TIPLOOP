@@ -1,0 +1,24 @@
+# Harness Engineering - 오케스트레이터 및 에이전트 시스템
+# Python 3.11+
+
+# Core
+anthropic>=0.42.0         # Claude API 클라이언트
+pydantic>=2.0             # 데이터 검증 및 경계 파싱
+
+# Async
+asyncio-pool>=0.6.0       # 비동기 에이전트 풀
+
+# CLI
+click>=8.0                # CLI 인터페이스
+rich>=13.0                # 터미널 출력 포매팅
+
+# Testing
+pytest>=8.0               # 테스트 프레임워크
+pytest-asyncio>=0.23      # 비동기 테스트 지원
+pytest-cov>=5.0           # 커버리지 측정
+
+# Linting
+ruff>=0.5.0               # 코드 린터 (보조)
+
+# Observability
+structlog>=24.0           # 구조화된 로깅
