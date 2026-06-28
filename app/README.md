@@ -16,13 +16,31 @@
 - 누구나 읽기 가능(오픈 원칙), 로그인 시 댓글 작성
 - 교사 프로필 + 작성 글 모아보기
 
-## 실행
+## 실행 (로컬)
+
+Python 3.11+ 필요. 저장소 루트(`FT/`)에서:
 
 ```bash
+# 1) 브랜치 받기
+git clone https://github.com/keestory/ft.git FT
+cd FT
+git checkout claude/harness-engineering-agent-acwvo2
+
+# 2) (권장) 가상환경
+python3 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+# 3) 의존성
 pip install -r app/requirements.txt
+
+# 4) (선택) 데모 데이터 — 빈 화면 대신 예시 글/세미나/댓글/공감
+python3 scripts/seed_demo.py
+
+# 5) 서버
 uvicorn app.main:app --reload
-# http://127.0.0.1:8000
+# 브라우저: http://127.0.0.1:8000
 ```
+
+데모 로그인: `kim@s.kr` / `password123` (그 외 `lee@s.kr`, `park@s.kr` 등도 동일 비밀번호).
 
 DB는 SQLite(`ieum.db`), 첫 기동 시 자동 생성됩니다. 위치는 `IEUM_DB_PATH`,
 세션 시크릿은 `IEUM_SECRET` 환경 변수로 바꿀 수 있습니다.
