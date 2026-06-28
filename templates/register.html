@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}가입{% endblock %}
+{% block content %}
+
+<h1 class="page-title">선생님으로 가입하기</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<form class="form form-narrow" method="post" action="/register">
+  <label for="email">이메일</label>
+  <input id="email" name="email" type="email" required value="{{ form.email if form else '' }}">
+
+  <label for="password">비밀번호 <span class="hint">(8자 이상)</span></label>
+  <input id="password" name="password" type="password" required minlength="8">
+
+  <label for="name">이름</label>
+  <input id="name" name="name" type="text" required value="{{ form.name if form else '' }}">
+
+  <label for="school_level">학교급</label>
+  <select id="school_level" name="school_level" required>
+    <option value="">선택</option>
+    {% for lvl in school_levels %}
+      <option value="{{ lvl }}" {% if form and form.school_level == lvl %}selected{% endif %}>{{ lvl }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="region">지역</label>
+  <select id="region" name="region" required>
+    <option value="">선택</option>
+    {% for r in regions %}
+      <option value="{{ r }}" {% if form and form.region == r %}selected{% endif %}>{{ r }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="subject">담당 <span class="hint">(과목·학년, 선택)</span></label>
+  <input id="subject" name="subject" type="text" placeholder="예: 3학년 담임 / 과학"
+         value="{{ form.subject if form else '' }}">
+
+  <button type="submit" class="btn">가입하기</button>
+</form>
+
+<p class="alt">이미 회원이신가요? <a href="/login">로그인</a></p>
+{% endblock %}

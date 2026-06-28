@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ teacher.name }} 선생님{% endblock %}
+{% block content %}
+
+<section class="profile-head">
+  <h1 class="page-title">{{ teacher.name }} 선생님</h1>
+  <p class="profile-meta">{{ teacher.school_level }} · {{ teacher.region }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
+</section>
+
+<h2 class="section-title">남긴 글 {{ posts|length }}</h2>
+{% if posts %}
+<ul class="feed">
+  {% for post in posts %}
+  <li class="feed-item">
+    <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
+    <a class="feed-title" href="/posts/{{ post.id }}">{{ post.title }}</a>
+    <span class="feed-meta">{{ post.created_at }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">아직 남긴 글이 없습니다.</p>
+{% endif %}
+
+<p class="back"><a href="/">← 피드로</a></p>
+{% endblock %}

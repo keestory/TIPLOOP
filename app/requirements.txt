@@ -1,0 +1,7 @@
+# 이음(Ieum) 웹앱 런타임 의존성
+# (오케스트레이터/하네스의 requirements.txt와 별개)
+
+fastapi>=0.110
+uvicorn>=0.29
+jinja2>=3.1
+python-multipart>=0.0.9   # HTML 폼(Form) 파싱

@@ -1,0 +1,145 @@
+/* 이음(Ieum) 디자인 시스템 — 종이·먹·황토. 그림자 없음, 헤어라인으로 위계. */
+
+:root {
+  --ink: #20211c;
+  --paper: #faf8f3;
+  --brand: #a8432a;
+  --brand-ink: #8a371f;
+  --muted: #6b6a63;
+  --line: #e4ddcf;
+  --warn: #9a6b16;
+  --unit: 8px;
+  --read: 720px;
+  --serif: "Noto Serif KR", Georgia, serif;
+  --sans: "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+a { color: var(--brand); text-decoration: none; }
+a:hover { color: var(--brand-ink); text-decoration: underline; }
+
+/* ── 헤더 ── */
+.site-header {
+  max-width: var(--read);
+  margin: 0 auto;
+  padding: calc(var(--unit) * 3) calc(var(--unit) * 2) calc(var(--unit) * 2);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--unit);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: var(--unit); color: var(--ink); }
+.brand:hover { text-decoration: none; }
+.brand-name { font-family: var(--serif); font-weight: 700; font-size: 28px; color: var(--brand); }
+.brand-tag { color: var(--muted); font-size: 14px; }
+.site-nav { display: flex; align-items: center; gap: calc(var(--unit) * 2); }
+.nav-link { color: var(--muted); font-size: 15px; }
+.as-button { background: none; border: 0; cursor: pointer; font: inherit; padding: 0; }
+.inline-form { display: inline; margin: 0; }
+
+/* ── 레이아웃 ── */
+.container { max-width: var(--read); margin: 0 auto; padding: calc(var(--unit) * 3) calc(var(--unit) * 2) calc(var(--unit) * 6); }
+.site-footer { max-width: var(--read); margin: 0 auto; padding: calc(var(--unit) * 3) calc(var(--unit) * 2); border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+
+/* ── 버튼 (1종) ── */
+.btn {
+  display: inline-block;
+  background: var(--brand);
+  color: var(--paper);
+  border: 0;
+  padding: calc(var(--unit) * 1.25) calc(var(--unit) * 2.5);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.btn:hover { background: var(--brand-ink); color: var(--paper); text-decoration: none; }
+
+/* ── 필터 ── */
+.filters { margin-bottom: calc(var(--unit) * 3); }
+.filter-cats { display: flex; gap: var(--unit); flex-wrap: wrap; margin-bottom: calc(var(--unit) * 2); overflow-x: auto; }
+.chip {
+  border: 1px solid var(--line);
+  padding: calc(var(--unit) * 0.5) calc(var(--unit) * 1.5);
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
+.chip.is-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.filter-selects { display: flex; gap: var(--unit); }
+
+select, input, textarea {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: calc(var(--unit) * 1) calc(var(--unit) * 1.25);
+}
+select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+
+/* ── 피드 ── */
+.feed { list-style: none; margin: 0; padding: 0; }
+.feed-item { padding: calc(var(--unit) * 2) 0; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--unit); }
+.feed-title { font-family: var(--serif); font-size: 21px; color: var(--ink); font-weight: 600; flex: 1 1 100%; }
+.feed-title:hover { color: var(--brand-ink); }
+.feed-event { color: var(--warn); font-size: 14px; }
+.feed-meta { color: var(--muted); font-size: 14px; }
+.feed-meta a { color: var(--muted); }
+
+/* ── 카테고리 태그 (색 점 대신 텍스트) ── */
+.tag { font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); color: var(--muted); }
+.tag-seminar { color: var(--warn); border-color: var(--warn); }
+.tag-support { color: var(--brand); border-color: var(--brand); }
+
+/* ── 글 본문 ── */
+.post-title { font-family: var(--serif); font-size: 28px; margin: var(--unit) 0; line-height: 1.4; }
+.post-meta { color: var(--muted); font-size: 14px; margin-top: 0; }
+.post-body { margin-top: calc(var(--unit) * 3); white-space: pre-wrap; }
+.seminar-box { border: 1px solid var(--line); padding: calc(var(--unit) * 2); margin: calc(var(--unit) * 3) 0; display: grid; grid-template-columns: auto 1fr; gap: var(--unit) calc(var(--unit) * 2); }
+.seminar-box dt { color: var(--muted); font-size: 14px; }
+.seminar-box dd { margin: 0; }
+
+/* ── 댓글 ── */
+.comments { margin-top: calc(var(--unit) * 6); border-top: 1px solid var(--line); padding-top: calc(var(--unit) * 3); }
+.comments h2 { font-family: var(--serif); font-size: 21px; }
+.comment { padding: calc(var(--unit) * 1.5) 0; border-bottom: 1px solid var(--line); }
+.comment-meta { color: var(--muted); font-size: 13px; margin: 0; }
+.comment-body { margin: calc(var(--unit) * 0.5) 0 0; white-space: pre-wrap; }
+.comment-form { margin-top: calc(var(--unit) * 2); display: flex; flex-direction: column; gap: var(--unit); align-items: flex-start; }
+.comment-form textarea { width: 100%; }
+
+/* ── 폼 ── */
+.form { display: flex; flex-direction: column; gap: var(--unit); max-width: var(--read); }
+.form-narrow { max-width: 420px; }
+.form label { font-size: 14px; color: var(--muted); margin-top: var(--unit); }
+.form .hint { color: var(--muted); font-weight: normal; }
+.form .btn { margin-top: calc(var(--unit) * 2); align-self: flex-start; }
+.seminar-fields { border: 1px solid var(--line); padding: calc(var(--unit) * 2); margin-top: var(--unit); }
+.seminar-fields legend { color: var(--muted); font-size: 14px; padding: 0 var(--unit); }
+
+/* ── 기타 ── */
+.page-title, .section-title { font-family: var(--serif); }
+.page-title { font-size: 28px; }
+.section-title { font-size: 21px; margin-top: calc(var(--unit) * 4); }
+.profile-meta { color: var(--muted); }
+.error { color: var(--brand-ink); border-left: 3px solid var(--brand); padding-left: var(--unit); }
+.empty, .login-hint, .alt, .back, .hint { color: var(--muted); }
+.back { margin-top: calc(var(--unit) * 4); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+@media (max-width: 600px) {
+  .brand-tag { display: none; }
+  .site-header { padding-top: calc(var(--unit) * 2); }
+}

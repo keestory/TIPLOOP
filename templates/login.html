@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}로그인{% endblock %}
+{% block content %}
+
+<h1 class="page-title">로그인</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+<form class="form form-narrow" method="post" action="/login">
+  <label for="email">이메일</label>
+  <input id="email" name="email" type="email" required value="{{ form.email if form else '' }}">
+  <label for="password">비밀번호</label>
+  <input id="password" name="password" type="password" required>
+  <button type="submit" class="btn">로그인</button>
+</form>
+
+<p class="alt">아직 회원이 아니신가요? <a href="/register">가입하기</a></p>
+{% endblock %}
