@@ -9,7 +9,7 @@
   <label for="category">카테고리</label>
   <select id="category" name="category" required onchange="toggleSeminar(this.value)">
     {% for code, label in categories.items() %}
-      <option value="{{ code }}" {% if form and form.category == code %}selected{% endif %}>{{ label }}</option>
+      <option value="{{ code }}" {% if (form and form.category == code) or (not form and prefill_category == code) %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
 

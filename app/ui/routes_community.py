@@ -50,10 +50,12 @@ def feed(
 
 
 @router.get("/posts/new")
-def new_post_form(request: Request, user: Optional[User] = Depends(get_current_user)):
+def new_post_form(
+    request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
+):
     if user is None:
         return RedirectResponse("/login", status_code=303)
-    return _render(request, "post_new.html", user)
+    return _render(request, "post_new.html", user, prefill_category=category)
 
 
 @router.post("/posts")

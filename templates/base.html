@@ -15,7 +15,6 @@
       <span class="brand-tag">교실을 넘어, 선생님을 잇다</span>
     </a>
     <nav class="site-nav">
-      <a href="/posts/new" class="btn">글쓰기</a>
       {% if current_user %}
         <a href="/users/{{ current_user.id }}" class="nav-link">{{ current_user.name }} 선생님</a>
         <form action="/logout" method="post" class="inline-form">
@@ -34,5 +33,11 @@
   <footer class="site-footer">
     <p>{{ brand }} — 유치원·초·중·고 선생님들의 열린 커뮤니티</p>
   </footer>
+
+  {% block fab %}
+  <a class="fab" href="/posts/new">
+    <span class="fab-icon">✏️</span><span class="fab-label">글쓰기</span>
+  </a>
+  {% endblock %}
 </body>
 </html>

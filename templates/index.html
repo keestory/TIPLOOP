@@ -3,13 +3,6 @@
 {% block title %}피드{% endblock %}
 {% block content %}
 
-{# 작성 유도 — 쓰고 싶게 #}
-<a class="compose" href="/posts/new">
-  <span class="compose-avatar">{{ (current_user.name[0] if current_user else '쌤') }}</span>
-  <span class="compose-prompt">무엇을 나누고 싶으세요? 정보·세미나·고민 모두 환영해요</span>
-  <span class="compose-cta">글쓰기</span>
-</a>
-
 {# 정렬 탭 — 다시 올 이유 #}
 <div class="sorttabs">
   {% for code, label in sorts.items() %}
@@ -70,4 +63,12 @@
 <p class="empty">아직 글이 없습니다. <a href="/posts/new">첫 글을 남겨보세요.</a></p>
 {% endif %}
 
+{% endblock %}
+
+{# 카테고리 탭마다 다른 CTA — 누르면 그 카테고리가 선택된 글쓰기로 #}
+{% block fab %}
+{% set cta = {"": "글쓰기", "info": "정보 나누기", "seminar": "세미나 열기", "support": "고민 나누기"} %}
+<a class="fab fab-{{ active.category or 'all' }}" href="/posts/new?category={{ active.category }}">
+  <span class="fab-icon">✏️</span><span class="fab-label">{{ cta.get(active.category, "글쓰기") }}</span>
+</a>
 {% endblock %}

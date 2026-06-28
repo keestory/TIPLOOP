@@ -67,7 +67,7 @@ a:hover { text-decoration: underline; }
 .inline-form { display: inline; margin: 0; }
 
 /* ── 레이아웃 ── */
-.container { max-width: var(--read); margin: 0 auto; padding: calc(var(--unit) * 4) calc(var(--unit) * 2) calc(var(--unit) * 8); }
+.container { max-width: var(--read); margin: 0 auto; padding: calc(var(--unit) * 4) calc(var(--unit) * 2) calc(var(--unit) * 13); }
 .site-footer { max-width: var(--read); margin: 0 auto; padding: calc(var(--unit) * 4) calc(var(--unit) * 2); border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 
 /* ── 버튼 (블랙 액션) ── */
@@ -83,26 +83,28 @@ a:hover { text-decoration: underline; }
 .btn:active { transform: translateY(1px); }
 .btn-small { font-size: 13px; padding: calc(var(--unit) * 0.85) calc(var(--unit) * 1.75); }
 
-/* ── 작성 유도 박스 ── */
-.compose {
-  display: flex; align-items: center; gap: calc(var(--unit) * 1.5);
-  border: 1px solid var(--line); border-radius: var(--radius);
-  background: var(--bg);
-  padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
-  margin-bottom: calc(var(--unit) * 3); color: var(--ink);
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-.compose:hover { text-decoration: none; border-color: var(--ink); }
-.compose-avatar {
-  flex: none; width: 38px; height: 38px; border-radius: 50%;
+/* ── 플로팅 작성 버튼(FAB) — 하단 중앙, 탭마다 라벨이 바뀜 ── */
+.fab {
+  position: fixed; left: 50%; bottom: calc(var(--unit) * 3); z-index: 30;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: calc(var(--unit) * 1);
   background: var(--ink); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 15px;
+  padding: calc(var(--unit) * 1.75) calc(var(--unit) * 3);
+  border-radius: var(--pill); font-size: 15px; font-weight: 800;
+  letter-spacing: -0.01em;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  transition: transform .1s ease, box-shadow .15s ease;
 }
-.compose-prompt { flex: 1; color: var(--muted); font-size: 15px; }
-.compose-cta {
-  flex: none; background: var(--neon); color: var(--ink);
-  font-size: 13px; font-weight: 800; padding: 7px 14px; border-radius: var(--pill);
+.fab:hover {
+  color: #fff; text-decoration: none;
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.26);
+}
+.fab:active { transform: translateX(-50%) translateY(0); }
+.fab-icon {
+  display: inline-flex; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--neon); color: var(--ink);
+  align-items: center; justify-content: center; font-size: 12px;
 }
 
 /* ── 정렬 탭 ── */
