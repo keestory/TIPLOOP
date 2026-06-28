@@ -1,0 +1,19 @@
+{# 공감 버튼 — 로그인 상태면 토글 폼, 아니면 로그인 링크 #}
+{% macro react_button(kind, target_id, count, is_on, current_user) %}
+  {% if current_user %}
+  <form class="react inline-form" method="post" action="/{{ kind }}/{{ target_id }}/react">
+    <button type="submit" class="react-btn {% if is_on %}is-on{% endif %}"
+            aria-pressed="{{ 'true' if is_on else 'false' }}">
+      <span class="react-heart">♥</span>
+      <span class="react-label">공감</span>
+      <span class="react-count">{{ count }}</span>
+    </button>
+  </form>
+  {% else %}
+  <a class="react-btn" href="/login" title="로그인하면 공감할 수 있어요">
+    <span class="react-heart">♡</span>
+    <span class="react-label">공감</span>
+    <span class="react-count">{{ count }}</span>
+  </a>
+  {% endif %}
+{% endmacro %}

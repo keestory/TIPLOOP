@@ -89,14 +89,56 @@ select, input, textarea {
 }
 select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
 
+/* ── 작성 유도 박스 ── */
+.compose {
+  display: flex; align-items: center; gap: calc(var(--unit) * 1.5);
+  border: 1px solid var(--line); padding: calc(var(--unit) * 1.5) calc(var(--unit) * 2);
+  margin-bottom: calc(var(--unit) * 3); color: var(--ink);
+}
+.compose:hover { border-color: var(--brand); text-decoration: none; }
+.compose-avatar {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--brand); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 16px;
+}
+.compose-prompt { flex: 1; color: var(--muted); }
+.compose-cta { color: var(--brand); font-size: 15px; }
+
+/* ── 정렬 탭 ── */
+.sorttabs { display: flex; gap: calc(var(--unit) * 3); border-bottom: 1px solid var(--line); margin-bottom: calc(var(--unit) * 2); }
+.sorttab { color: var(--muted); font-size: 15px; padding-bottom: var(--unit); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.sorttab:hover { color: var(--brand); text-decoration: none; }
+.sorttab.is-active { color: var(--ink); border-bottom-color: var(--brand); }
+
 /* ── 피드 ── */
 .feed { list-style: none; margin: 0; padding: 0; }
-.feed-item { padding: calc(var(--unit) * 2) 0; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--unit); }
-.feed-title { font-family: var(--serif); font-size: 21px; color: var(--ink); font-weight: 600; flex: 1 1 100%; }
+.feed-item { padding: calc(var(--unit) * 2.5) 0; border-bottom: 1px solid var(--line); }
+.feed-head { display: flex; align-items: baseline; gap: var(--unit); margin-bottom: calc(var(--unit) * 0.5); }
+.feed-title { display: block; font-family: var(--serif); font-size: 21px; color: var(--ink); font-weight: 600; line-height: 1.4; }
 .feed-title:hover { color: var(--brand-ink); }
-.feed-event { color: var(--warn); font-size: 14px; }
+.feed-event { color: var(--warn); font-size: 14px; margin: calc(var(--unit) * 0.5) 0 0; }
 .feed-meta { color: var(--muted); font-size: 14px; }
 .feed-meta a { color: var(--muted); }
+.feed-actions, .post-actions, .comment-actions {
+  display: flex; align-items: center; gap: calc(var(--unit) * 2);
+  margin-top: calc(var(--unit) * 1.5);
+}
+
+/* ── 공감 버튼 + 액션 ── */
+.react-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted);
+  padding: calc(var(--unit) * 0.5) calc(var(--unit) * 1.25);
+  font: inherit; font-size: 14px; cursor: pointer; line-height: 1;
+}
+.react-btn:hover { border-color: var(--brand); color: var(--brand); text-decoration: none; }
+.react-btn .react-heart { font-size: 15px; }
+.react-btn.is-on { border-color: var(--brand); color: var(--brand); background: #f3e6df; }
+.react-btn.is-on .react-heart { color: var(--brand); }
+.react-count { font-variant-numeric: tabular-nums; }
+.action-link { color: var(--muted); font-size: 14px; background: none; border: 0; cursor: pointer; padding: 0; font-family: inherit; }
+.action-link:hover { color: var(--brand); }
 
 /* ── 카테고리 태그 (색 점 대신 텍스트) ── */
 .tag { font-size: 12px; padding: 2px 8px; border: 1px solid var(--line); color: var(--muted); }
@@ -117,8 +159,11 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand); out
 .comment { padding: calc(var(--unit) * 1.5) 0; border-bottom: 1px solid var(--line); }
 .comment-meta { color: var(--muted); font-size: 13px; margin: 0; }
 .comment-body { margin: calc(var(--unit) * 0.5) 0 0; white-space: pre-wrap; }
-.comment-form { margin-top: calc(var(--unit) * 2); display: flex; flex-direction: column; gap: var(--unit); align-items: flex-start; }
-.comment-form textarea { width: 100%; }
+.comment-form { margin: calc(var(--unit) * 2) 0 calc(var(--unit) * 3); display: flex; flex-direction: column; gap: var(--unit); align-items: flex-start; }
+.comment-form textarea, .reply-form textarea { width: 100%; }
+.comment-reply { margin-left: calc(var(--unit) * 3); padding-left: calc(var(--unit) * 2); border-left: 2px solid var(--line); border-bottom: 0; }
+.reply-form { margin-top: var(--unit); display: flex; flex-direction: column; gap: var(--unit); align-items: flex-start; }
+.btn-small { font-size: 13px; padding: calc(var(--unit) * 0.75) calc(var(--unit) * 1.5); }
 
 /* ── 폼 ── */
 .form { display: flex; flex-direction: column; gap: var(--unit); max-width: var(--read); }
@@ -133,7 +178,17 @@ select:focus, input:focus, textarea:focus { outline: 2px solid var(--brand); out
 .page-title, .section-title { font-family: var(--serif); }
 .page-title { font-size: 28px; }
 .section-title { font-size: 21px; margin-top: calc(var(--unit) * 4); }
-.profile-meta { color: var(--muted); }
+.profile-head { display: flex; align-items: center; gap: calc(var(--unit) * 2); }
+.profile-avatar {
+  flex: none; width: 56px; height: 56px; border-radius: 50%;
+  background: var(--brand); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 26px;
+}
+.profile-meta { color: var(--muted); margin: 0; }
+.profile-stats { display: flex; gap: calc(var(--unit) * 4); margin-top: calc(var(--unit) * 2); padding: calc(var(--unit) * 2) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stat { color: var(--muted); font-size: 14px; }
+.stat strong { color: var(--ink); font-size: 21px; font-family: var(--serif); margin-right: 4px; }
 .error { color: var(--brand-ink); border-left: 3px solid var(--brand); padding-left: var(--unit); }
 .empty, .login-hint, .alt, .back, .hint { color: var(--muted); }
 .back { margin-top: calc(var(--unit) * 4); }

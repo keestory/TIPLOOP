@@ -37,16 +37,29 @@ class Post:
     author_name: str | None = None
     author_school_level: str | None = None
     author_region: str | None = None
+    # 인게이지먼트 지표 (집계 결과)
+    reaction_count: int = 0
+    comment_count: int = 0
 
 
 @dataclass(frozen=True)
 class Comment:
-    """글에 달린 댓글."""
+    """글에 달린 댓글. parent_id가 있으면 답글이다."""
 
     id: int
     post_id: int
     author_id: int
     body: str
     created_at: str
+    parent_id: int | None = None
     author_name: str | None = None
     author_school_level: str | None = None
+    reaction_count: int = 0
+
+
+@dataclass(frozen=True)
+class Thread:
+    """최상위 댓글 + 그 답글들. 화면 렌더링용 묶음."""
+
+    comment: Comment
+    replies: tuple[Comment, ...] = ()

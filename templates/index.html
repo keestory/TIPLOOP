@@ -1,12 +1,29 @@
 {% extends "base.html" %}
+{% import "macros.html" as ui %}
 {% block title %}피드{% endblock %}
 {% block content %}
 
+{# 작성 유도 — 쓰고 싶게 #}
+<a class="compose" href="/posts/new">
+  <span class="compose-avatar">{{ (current_user.name[0] if current_user else '쌤') }}</span>
+  <span class="compose-prompt">무엇을 나누고 싶으세요? 정보·세미나·고민 모두 환영해요</span>
+  <span class="compose-cta">글쓰기</span>
+</a>
+
+{# 정렬 탭 — 다시 올 이유 #}
+<div class="sorttabs">
+  {% for code, label in sorts.items() %}
+    <a class="sorttab {% if sort == code %}is-active{% endif %}"
+       href="/?sort={{ code }}&category={{ active.category }}&school_level={{ active.school_level }}&region={{ active.region }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
 <form class="filters" method="get" action="/">
+  <input type="hidden" name="sort" value="{{ sort }}">
   <div class="filter-cats">
-    <a href="/" class="chip {% if not active.category %}is-active{% endif %}">전체</a>
+    <a href="/?sort={{ sort }}" class="chip {% if not active.category %}is-active{% endif %}">전체</a>
     {% for code, label in categories.items() %}
-      <a href="/?category={{ code }}"
+      <a href="/?sort={{ sort }}&category={{ code }}"
          class="chip {% if active.category == code %}is-active{% endif %}">{{ label }}</a>
     {% endfor %}
   </div>
@@ -31,15 +48,21 @@
 <ul class="feed">
   {% for post in posts %}
   <li class="feed-item">
-    <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
+    <div class="feed-head">
+      <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
+      <span class="feed-meta">
+        <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a>
+        · {{ post.author_school_level }} · {{ post.author_region }}
+      </span>
+    </div>
     <a class="feed-title" href="/posts/{{ post.id }}">{{ post.title }}</a>
     {% if post.category == "seminar" and (post.event_at or post.location) %}
-      <span class="feed-event">{% if post.event_at %}{{ post.event_at }}{% endif %}{% if post.location %} · {{ post.location }}{% endif %}</span>
+      <p class="feed-event">📍 {% if post.event_at %}{{ post.event_at }}{% endif %}{% if post.location %} · {{ post.location }}{% endif %}{% if post.online_url %} · 온라인{% endif %}</p>
     {% endif %}
-    <span class="feed-meta">
-      <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a>
-      · {{ post.author_school_level }} · {{ post.author_region }}
-    </span>
+    <div class="feed-actions">
+      {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
+      <a class="action-link" href="/posts/{{ post.id }}">💬 댓글 {{ post.comment_count }}</a>
+    </div>
   </li>
   {% endfor %}
 </ul>

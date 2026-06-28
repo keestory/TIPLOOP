@@ -5,13 +5,22 @@ import sqlite3
 from app.repo.database import get_connection
 from app.types.models import Post
 
-# 작성자 표시 정보를 함께 가져오는 공통 SELECT
+# 작성자 표시 정보 + 인게이지먼트 집계를 함께 가져오는 공통 SELECT
 _SELECT = """
 SELECT p.*, u.name AS author_name, u.school_level AS author_school_level,
-       u.region AS author_region
+       u.region AS author_region,
+       (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS reaction_count,
+       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
 FROM posts p
 JOIN users u ON u.id = p.author_id
 """
+
+# 정렬: 최신 / 공감 / 화제(댓글 많은)
+_ORDER = {
+    "new": "ORDER BY p.created_at DESC, p.id DESC",
+    "top": "ORDER BY reaction_count DESC, p.created_at DESC, p.id DESC",
+    "buzz": "ORDER BY comment_count DESC, p.created_at DESC, p.id DESC",
+}
 
 
 def _to_post(row: sqlite3.Row) -> Post:
@@ -28,6 +37,8 @@ def _to_post(row: sqlite3.Row) -> Post:
         author_name=row["author_name"],
         author_school_level=row["author_school_level"],
         author_region=row["author_region"],
+        reaction_count=row["reaction_count"],
+        comment_count=row["comment_count"],
     )
 
 
@@ -68,8 +79,9 @@ def list_posts(
     school_level: str | None = None,
     region: str | None = None,
     author_id: int | None = None,
+    sort: str = "new",
 ) -> list[Post]:
-    """필터를 AND로 적용해 최신순으로 글을 돌려준다."""
+    """필터를 AND로 적용하고 sort(new|top|buzz)로 정렬해 돌려준다."""
     clauses: list[str] = []
     params: list[object] = []
     if category:
@@ -86,9 +98,10 @@ def list_posts(
         params.append(author_id)
 
     where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    order = _ORDER.get(sort, _ORDER["new"])
     conn = get_connection()
     try:
-        rows = conn.execute(_SELECT + where + " ORDER BY p.created_at DESC, p.id DESC", params)
+        rows = conn.execute(_SELECT + where + " " + order, params)
         return [_to_post(r) for r in rows.fetchall()]
     finally:
         conn.close()

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as ui %}
 {% block title %}{{ post.title }}{% endblock %}
 {% block content %}
 
@@ -20,18 +21,15 @@
   {% endif %}
 
   <div class="post-body">{{ post.body }}</div>
+
+  <div class="post-actions">
+    {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
+    <span class="action-link">💬 댓글 {{ post.comment_count }}</span>
+  </div>
 </article>
 
-<section class="comments">
-  <h2>댓글 {{ comments|length }}</h2>
-  {% for c in comments %}
-  <div class="comment">
-    <p class="comment-meta"><a href="/users/{{ c.author_id }}">{{ c.author_name }}</a> · {{ c.author_school_level }} · {{ c.created_at }}</p>
-    <p class="comment-body">{{ c.body }}</p>
-  </div>
-  {% else %}
-  <p class="empty">첫 댓글을 남겨보세요.</p>
-  {% endfor %}
+<section class="comments" id="comments">
+  <h2>댓글 {{ post.comment_count }}</h2>
 
   {% if current_user %}
   <form class="comment-form" method="post" action="/posts/{{ post.id }}/comments">
@@ -40,9 +38,50 @@
     <button type="submit" class="btn">댓글 남기기</button>
   </form>
   {% else %}
-  <p class="login-hint"><a href="/login">로그인</a>하면 댓글을 남길 수 있어요.</p>
+  <p class="login-hint"><a href="/login">로그인</a>하면 공감하고 댓글을 남길 수 있어요.</p>
   {% endif %}
+
+  {% for t in threads %}
+  <div class="comment" id="c{{ t.comment.id }}">
+    <p class="comment-meta"><a href="/users/{{ t.comment.author_id }}">{{ t.comment.author_name }}</a> · {{ t.comment.author_school_level }} · {{ t.comment.created_at }}</p>
+    <p class="comment-body">{{ t.comment.body }}</p>
+    <div class="comment-actions">
+      {{ ui.react_button("comments", t.comment.id, t.comment.reaction_count, t.comment.id in reacted_comments, current_user) }}
+      {% if current_user %}
+      <button type="button" class="action-link as-button" onclick="toggleReply({{ t.comment.id }})">답글</button>
+      {% endif %}
+    </div>
+
+    {% if current_user %}
+    <form class="reply-form" id="reply{{ t.comment.id }}" method="post" action="/posts/{{ post.id }}/comments" style="display:none">
+      <input type="hidden" name="parent_id" value="{{ t.comment.id }}">
+      <textarea name="body" rows="2" placeholder="{{ t.comment.author_name }} 선생님에게 답글" required></textarea>
+      <button type="submit" class="btn btn-small">답글 남기기</button>
+    </form>
+    {% endif %}
+
+    {% for r in t.replies %}
+    <div class="comment comment-reply" id="c{{ r.id }}">
+      <p class="comment-meta"><a href="/users/{{ r.author_id }}">{{ r.author_name }}</a> · {{ r.author_school_level }} · {{ r.created_at }}</p>
+      <p class="comment-body">{{ r.body }}</p>
+      <div class="comment-actions">
+        {{ ui.react_button("comments", r.id, r.reaction_count, r.id in reacted_comments, current_user) }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">첫 댓글을 남겨보세요.</p>
+  {% endfor %}
 </section>
 
 <p class="back"><a href="/">← 피드로</a></p>
+
+<script>
+  function toggleReply(id) {
+    var f = document.getElementById('reply' + id);
+    f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+    if (f.style.display === 'flex') f.querySelector('textarea').focus();
+  }
+</script>
 {% endblock %}

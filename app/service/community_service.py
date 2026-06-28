@@ -4,8 +4,8 @@
 """
 
 from app.config.settings import CATEGORIES
-from app.repo import comments, posts, users
-from app.types.models import Comment, Post, User
+from app.repo import comments, posts, reactions, users
+from app.types.models import Post, Thread, User
 
 
 class CommunityError(ValueError):
@@ -55,37 +55,54 @@ def create_post(
 
 
 def list_feed(
-    category: str = "", school_level: str = "", region: str = ""
+    category: str = "", school_level: str = "", region: str = "", sort: str = "new"
 ) -> list[Post]:
-    """피드. 빈 문자열 필터는 무시한다."""
+    """피드. 빈 문자열 필터는 무시한다. sort: new|top|buzz."""
     return posts.list_posts(
         category=category or None,
         school_level=school_level or None,
         region=region or None,
+        sort=sort,
     )
 
 
-def get_post_with_comments(post_id: int) -> tuple[Post, list[Comment]]:
-    """글과 댓글을 함께 가져온다. 없으면 CommunityError."""
+def get_post_with_threads(post_id: int) -> tuple[Post, list[Thread]]:
+    """글과, 답글까지 묶은 댓글 스레드를 가져온다. 없으면 CommunityError."""
     post = posts.get_post(post_id)
     if post is None:
         raise CommunityError("글을 찾을 수 없습니다.")
-    return post, comments.list_comments(post_id)
+    flat = comments.list_comments(post_id)
+    replies_by_parent: dict[int, list] = {}
+    for c in flat:
+        if c.parent_id is not None:
+            replies_by_parent.setdefault(c.parent_id, []).append(c)
+    threads = [
+        Thread(comment=c, replies=tuple(replies_by_parent.get(c.id, ())))
+        for c in flat
+        if c.parent_id is None
+    ]
+    return post, threads
 
 
-def add_comment(post_id: int, author_id: int, body: str) -> int:
-    """댓글을 단다. 대상 글이 있어야 한다."""
+def add_comment(post_id: int, author_id: int, body: str, parent_id: int | None = None) -> int:
+    """댓글/답글을 단다. 답글은 항상 최상위 댓글에 붙인다(1단계 스레드)."""
     body = (body or "").strip()
     if not body:
         raise CommunityError("댓글 내용을 입력해 주세요.")
     if posts.get_post(post_id) is None:
         raise CommunityError("글을 찾을 수 없습니다.")
-    return comments.create_comment(post_id, author_id, body)
+    if parent_id is not None:
+        parent = comments.get_comment(parent_id)
+        if parent is None or parent.post_id != post_id:
+            parent_id = None
+        elif parent.parent_id is not None:
+            parent_id = parent.parent_id  # 답글의 답글은 최상위로 평탄화
+    return comments.create_comment(post_id, author_id, body, parent_id)
 
 
-def get_profile(user_id: int) -> tuple[User, list[Post]]:
-    """교사 프로필과 그가 쓴 글. 없으면 CommunityError."""
+def get_profile(user_id: int) -> tuple[User, list[Post], int]:
+    """교사 프로필, 쓴 글, 받은 공감 합계. 없으면 CommunityError."""
     user = users.get_user(user_id)
     if user is None:
         raise CommunityError("사용자를 찾을 수 없습니다.")
-    return user, posts.list_posts(author_id=user_id)
+    return user, posts.list_posts(author_id=user_id), reactions.received_reaction_count(user_id)

@@ -3,18 +3,32 @@
 {% block content %}
 
 <section class="profile-head">
-  <h1 class="page-title">{{ teacher.name }} 선생님</h1>
-  <p class="profile-meta">{{ teacher.school_level }} · {{ teacher.region }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
+  <span class="profile-avatar">{{ teacher.name[0] }}</span>
+  <div>
+    <h1 class="page-title">{{ teacher.name }} 선생님</h1>
+    <p class="profile-meta">{{ teacher.school_level }} · {{ teacher.region }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
+  </div>
 </section>
 
-<h2 class="section-title">남긴 글 {{ posts|length }}</h2>
+<div class="profile-stats">
+  <span class="stat"><strong>{{ posts|length }}</strong> 글</span>
+  <span class="stat"><strong>{{ received }}</strong> 받은 공감</span>
+</div>
+
+<h2 class="section-title">남긴 글</h2>
 {% if posts %}
 <ul class="feed">
   {% for post in posts %}
   <li class="feed-item">
-    <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
+    <div class="feed-head">
+      <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
+      <span class="feed-meta">{{ post.created_at }}</span>
+    </div>
     <a class="feed-title" href="/posts/{{ post.id }}">{{ post.title }}</a>
-    <span class="feed-meta">{{ post.created_at }}</span>
+    <div class="feed-actions">
+      <span class="action-link">♥ 공감 {{ post.reaction_count }}</span>
+      <a class="action-link" href="/posts/{{ post.id }}">💬 댓글 {{ post.comment_count }}</a>
+    </div>
   </li>
   {% endfor %}
 </ul>
