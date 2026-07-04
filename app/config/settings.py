@@ -6,6 +6,17 @@ Types만 import 가능. 시크릿·연결정보는 환경 변수에서만 읽는
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
+# .env 자동 로딩 (있으면) — 매번 export 하지 않아도 되도록
+try:
+    from dotenv import load_dotenv
+
+    _env_file = Path(__file__).resolve().parents[2] / ".env"
+    if _env_file.exists():
+        load_dotenv(_env_file)
+except ImportError:
+    pass
 
 # ── Supabase / Postgres ──────────────────────────────────────────────
 # 전부 Supabase로 이전: 데이터는 Supabase Postgres, 인증은 Supabase Auth.
