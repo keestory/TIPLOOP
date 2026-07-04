@@ -82,16 +82,18 @@ def test_current_user_none_for_bad_cookie():
 
 
 def test_onboarding_completes_profile():
-    teacher, _ = auth_service.establish_session(_google_token())
-    done = auth_service.complete_onboarding(teacher.id, "중학교", "서울", "과학")
+    member, _ = auth_service.establish_session(_google_token())
+    done = auth_service.complete_onboarding(member.id, "PM", "3~5년", "커머스")
     assert done.is_onboarded is True
-    assert done.school_level == "중학교" and done.region == "서울"
-    assert done.subject == "과학"
+    assert done.job_role == "PM" and done.years == "3~5년"
+    assert done.industry == "커머스"
 
 
 def test_onboarding_rejects_bad_values():
-    teacher, _ = auth_service.establish_session(_google_token())
+    member, _ = auth_service.establish_session(_google_token())
     with pytest.raises(AuthError):
-        auth_service.complete_onboarding(teacher.id, "대학교", "서울", "")
+        auth_service.complete_onboarding(member.id, "사장", "3~5년", "커머스")
     with pytest.raises(AuthError):
-        auth_service.complete_onboarding(teacher.id, "중학교", "화성", "")
+        auth_service.complete_onboarding(member.id, "PM", "20년", "커머스")
+    with pytest.raises(AuthError):
+        auth_service.complete_onboarding(member.id, "PM", "3~5년", "우주")

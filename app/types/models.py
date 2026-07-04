@@ -5,13 +5,12 @@
 
 from __future__ import annotations
 
-
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class User:
-    """가입한 교사. 인증은 Supabase(구글/카카오), 프로필은 우리가 보관."""
+    """가입한 실무자 회원. 인증은 Supabase(구글/카카오), 프로필은 우리가 보관."""
 
     id: int
     auth_id: str  # Supabase auth 사용자 id
@@ -20,37 +19,32 @@ class User:
     email: str | None = None
     avatar_url: str | None = None
     provider: str | None = None  # google | kakao
-    phone: str | None = None
-    phone_verified: bool = False
     # 온보딩에서 채우는 값 (소셜이 주지 않음) — 완료 전엔 None
-    school_level: str | None = None
-    region: str | None = None
-    subject: str = ""
+    job_role: str | None = None   # 직군
+    years: str | None = None      # 연차
+    industry: str | None = None   # 업종
 
     @property
     def is_onboarded(self) -> bool:
-        """학교급·지역을 채웠으면 온보딩 완료."""
-        return bool(self.school_level and self.region)
+        """직군·연차를 채웠으면 온보딩 완료."""
+        return bool(self.job_role and self.years)
 
 
 @dataclass(frozen=True)
 class Post:
-    """글. 카테고리(정보공유/세미나/고민나눔)로 세 기능을 통합한다."""
+    """글. 카테고리(팁/레퍼런스/질문/회고)로 종류를 나눈다."""
 
     id: int
     author_id: int
-    category: str  # info | seminar | support
+    category: str  # tip | reference | question | retro
     title: str
     body: str
     created_at: str
-    # 세미나 전용 (nullable)
-    event_at: str | None = None
-    location: str | None = None
-    online_url: str | None = None
+    link_url: str | None = None  # 레퍼런스 참고 링크 (선택)
     # 조회 시 채워지는 작성자 표시 정보 (join 결과)
     author_name: str | None = None
-    author_school_level: str | None = None
-    author_region: str | None = None
+    author_job_role: str | None = None
+    author_years: str | None = None
     # 인게이지먼트 지표 (집계 결과)
     reaction_count: int = 0
     comment_count: int = 0
@@ -67,7 +61,7 @@ class Comment:
     created_at: str
     parent_id: int | None = None
     author_name: str | None = None
-    author_school_level: str | None = None
+    author_job_role: str | None = None
     reaction_count: int = 0
 
 

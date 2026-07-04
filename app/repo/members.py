@@ -1,7 +1,7 @@
-"""교사 프로필 저장소 (Supabase Postgres).
+"""회원 프로필 저장소 (Supabase Postgres).
 
 인증 자체는 Supabase Auth가 맡고, 여기엔 프로필만 보관한다.
-auth_id(Supabase 사용자 id)로 우리 교사 레코드와 1:1 매핑.
+auth_id(Supabase 사용자 id)로 우리 회원 레코드와 1:1 매핑.
 """
 
 from __future__ import annotations
@@ -19,11 +19,9 @@ def _to_user(row: dict) -> User:
         email=row["email"],
         avatar_url=row["avatar_url"],
         provider=row["provider"],
-        phone=row["phone"],
-        phone_verified=row["phone_verified"],
-        school_level=row["school_level"],
-        region=row["region"],
-        subject=row["subject"],
+        job_role=row["job_role"],
+        years=row["years"],
+        industry=row["industry"],
     )
 
 
@@ -34,9 +32,9 @@ def upsert_by_auth(
     avatar_url: str | None,
     provider: str | None,
 ) -> User:
-    """소셜 로그인 결과로 교사를 만들거나 갱신한다(이름·이메일·아바타·제공자 최신화)."""
+    """소셜 로그인 결과로 회원을 만들거나 갱신한다(이름·이메일·아바타·제공자 최신화)."""
     sql = """
-    INSERT INTO teachers (auth_id, name, email, avatar_url, provider)
+    INSERT INTO members (auth_id, name, email, avatar_url, provider)
     VALUES (%s, %s, %s, %s, %s)
     ON CONFLICT (auth_id) DO UPDATE SET
         name = EXCLUDED.name,
@@ -50,26 +48,26 @@ def upsert_by_auth(
         return _to_user(row)
 
 
-def get(teacher_id: int) -> User | None:
+def get(member_id: int) -> User | None:
     with get_connection() as conn:
-        row = conn.execute("SELECT * FROM teachers WHERE id = %s", (teacher_id,)).fetchone()
+        row = conn.execute("SELECT * FROM members WHERE id = %s", (member_id,)).fetchone()
         return _to_user(row) if row else None
 
 
 def get_by_auth(auth_id: str) -> User | None:
     with get_connection() as conn:
-        row = conn.execute("SELECT * FROM teachers WHERE auth_id = %s", (auth_id,)).fetchone()
+        row = conn.execute("SELECT * FROM members WHERE auth_id = %s", (auth_id,)).fetchone()
         return _to_user(row) if row else None
 
 
-def complete_profile(teacher_id: int, school_level: str, region: str, subject: str) -> User:
-    """온보딩 — 학교급·지역·담당을 채운다."""
+def complete_profile(member_id: int, job_role: str, years: str, industry: str) -> User:
+    """온보딩 — 직군·연차·업종을 채운다."""
     sql = """
-    UPDATE teachers
-    SET school_level = %s, region = %s, subject = %s
+    UPDATE members
+    SET job_role = %s, years = %s, industry = %s
     WHERE id = %s
     RETURNING *;
     """
     with get_connection() as conn:
-        row = conn.execute(sql, (school_level, region, subject, teacher_id)).fetchone()
+        row = conn.execute(sql, (job_role, years, industry, member_id)).fetchone()
         return _to_user(row)

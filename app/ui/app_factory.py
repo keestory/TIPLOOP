@@ -10,11 +10,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.config.settings import (
+    BRAND,
     CATEGORIES,
-    REGIONS,
-    SCHOOL_LEVELS,
+    INDUSTRIES,
+    JOB_ROLES,
     SUPABASE_ANON_KEY,
     SUPABASE_URL,
+    TAGLINE,
+    YEARS,
     category_label,
 )
 from app.repo.database import init_db
@@ -29,16 +32,18 @@ def create_app() -> FastAPI:
     if DATABASE_URL:
         init_db()  # 스키마 보장. DB가 없으면 부팅은 하되 첫 쿼리에서 명확히 실패.
 
-    app = FastAPI(title="이음 — 선생님 커뮤니티")
+    app = FastAPI(title=f"{BRAND} — 실무자 커뮤니티")
 
     templates = Jinja2Templates(directory=str(_ROOT / "templates"))
     # 템플릿 전역: 화면 어디서나 라벨/목록을 쓸 수 있게
     templates.env.globals.update(
         categories=CATEGORIES,
         category_label=category_label,
-        school_levels=SCHOOL_LEVELS,
-        regions=REGIONS,
-        brand="이음",
+        job_roles=JOB_ROLES,
+        years_list=YEARS,
+        industries=INDUSTRIES,
+        brand=BRAND,
+        tagline=TAGLINE,
         supabase_url=SUPABASE_URL,
         supabase_anon_key=SUPABASE_ANON_KEY,
     )

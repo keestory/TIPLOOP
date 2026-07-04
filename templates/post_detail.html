@@ -7,16 +7,15 @@
   <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
   <h1 class="post-title">{{ post.title }}</h1>
   <p class="post-meta">
-    <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a> 선생님
-    · {{ post.author_school_level }} · {{ post.author_region }}
+    <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a>
+    · {{ post.author_job_role }}{% if post.author_years %} · {{ post.author_years }}{% endif %}
     · {{ post.created_at }}
   </p>
 
-  {% if post.category == "seminar" %}
-  <dl class="seminar-box">
-    {% if post.event_at %}<dt>일시</dt><dd>{{ post.event_at }}</dd>{% endif %}
-    {% if post.location %}<dt>장소</dt><dd>{{ post.location }}</dd>{% endif %}
-    {% if post.online_url %}<dt>온라인</dt><dd><a href="{{ post.online_url }}" rel="noopener" target="_blank">{{ post.online_url }}</a></dd>{% endif %}
+  {% if post.category == "reference" and post.link_url %}
+  <dl class="link-box">
+    <dt>참고 링크</dt>
+    <dd><a href="{{ post.link_url }}" rel="noopener" target="_blank">{{ post.link_url }}</a></dd>
   </dl>
   {% endif %}
 
@@ -43,7 +42,7 @@
 
   {% for t in threads %}
   <div class="comment" id="c{{ t.comment.id }}">
-    <p class="comment-meta"><a href="/users/{{ t.comment.author_id }}">{{ t.comment.author_name }}</a> · {{ t.comment.author_school_level }} · {{ t.comment.created_at }}</p>
+    <p class="comment-meta"><a href="/users/{{ t.comment.author_id }}">{{ t.comment.author_name }}</a> · {{ t.comment.author_job_role }} · {{ t.comment.created_at }}</p>
     <p class="comment-body">{{ t.comment.body }}</p>
     <div class="comment-actions">
       {{ ui.react_button("comments", t.comment.id, t.comment.reaction_count, t.comment.id in reacted_comments, current_user) }}
@@ -55,14 +54,14 @@
     {% if current_user %}
     <form class="reply-form" id="reply{{ t.comment.id }}" method="post" action="/posts/{{ post.id }}/comments" style="display:none">
       <input type="hidden" name="parent_id" value="{{ t.comment.id }}">
-      <textarea name="body" rows="2" placeholder="{{ t.comment.author_name }} 선생님에게 답글" required></textarea>
+      <textarea name="body" rows="2" placeholder="{{ t.comment.author_name }}님에게 답글" required></textarea>
       <button type="submit" class="btn btn-small">답글 남기기</button>
     </form>
     {% endif %}
 
     {% for r in t.replies %}
     <div class="comment comment-reply" id="c{{ r.id }}">
-      <p class="comment-meta"><a href="/users/{{ r.author_id }}">{{ r.author_name }}</a> · {{ r.author_school_level }} · {{ r.created_at }}</p>
+      <p class="comment-meta"><a href="/users/{{ r.author_id }}">{{ r.author_name }}</a> · {{ r.author_job_role }} · {{ r.created_at }}</p>
       <p class="comment-body">{{ r.body }}</p>
       <div class="comment-actions">
         {{ ui.react_button("comments", r.id, r.reaction_count, r.id in reacted_comments, current_user) }}

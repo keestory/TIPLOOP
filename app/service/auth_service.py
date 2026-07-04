@@ -6,14 +6,15 @@
 from __future__ import annotations
 
 from app.config.settings import (
-    REGIONS,
-    SCHOOL_LEVELS,
+    INDUSTRIES,
+    JOB_ROLES,
     SESSION_SECRET,
     SESSION_TTL_DAYS,
     SUPABASE_JWT_SECRET,
+    YEARS,
 )
 from app.providers.security import read_session, sign_session, verify_supabase_jwt
-from app.repo import teachers
+from app.repo import members
 from app.types.models import User
 
 _TTL = SESSION_TTL_DAYS * 24 * 60 * 60
@@ -28,7 +29,7 @@ def _claim_name(claims: dict, meta: dict) -> str:
         if meta.get(key):
             return str(meta[key])
     email = claims.get("email") or meta.get("email") or ""
-    return email.split("@")[0] if email else "선생님"
+    return email.split("@")[0] if email else "회원"
 
 
 def establish_session(access_token: str) -> tuple[User, str]:
@@ -40,28 +41,30 @@ def establish_session(access_token: str) -> tuple[User, str]:
     meta = claims.get("user_metadata") or {}
     app_meta = claims.get("app_metadata") or {}
 
-    teacher = teachers.upsert_by_auth(
+    member = members.upsert_by_auth(
         auth_id=str(claims["sub"]),
         name=_claim_name(claims, meta),
         email=claims.get("email") or meta.get("email"),
         avatar_url=meta.get("avatar_url") or meta.get("picture"),
         provider=app_meta.get("provider"),
     )
-    return teacher, sign_session(teacher.id, SESSION_SECRET, _TTL)
+    return member, sign_session(member.id, SESSION_SECRET, _TTL)
 
 
 def current_user(cookie: str | None) -> User | None:
-    """세션 쿠키로 현재 교사를 찾는다. 없으면 None."""
-    teacher_id = read_session(cookie, SESSION_SECRET)
-    if teacher_id is None:
+    """세션 쿠키로 현재 회원을 찾는다. 없으면 None."""
+    member_id = read_session(cookie, SESSION_SECRET)
+    if member_id is None:
         return None
-    return teachers.get(teacher_id)
+    return members.get(member_id)
 
 
-def complete_onboarding(teacher_id: int, school_level: str, region: str, subject: str) -> User:
-    """온보딩 — 소셜이 주지 않는 학교급·지역·담당을 채운다."""
-    if school_level not in SCHOOL_LEVELS:
-        raise AuthError("학교급을 선택해 주세요.")
-    if region not in REGIONS:
-        raise AuthError("지역을 선택해 주세요.")
-    return teachers.complete_profile(teacher_id, school_level, region, (subject or "").strip())
+def complete_onboarding(member_id: int, job_role: str, years: str, industry: str) -> User:
+    """온보딩 — 소셜이 주지 않는 직군·연차·업종을 채운다."""
+    if job_role not in JOB_ROLES:
+        raise AuthError("직군을 선택해 주세요.")
+    if years not in YEARS:
+        raise AuthError("연차를 선택해 주세요.")
+    if industry not in INDUSTRIES:
+        raise AuthError("업종을 선택해 주세요.")
+    return members.complete_profile(member_id, job_role, years, industry)

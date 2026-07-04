@@ -76,15 +76,15 @@ def onboarding_form(request: Request, user: Optional[User] = Depends(get_current
 @router.post("/onboarding")
 def onboarding_submit(
     request: Request,
-    school_level: str = Form(...),
-    region: str = Form(...),
-    subject: str = Form(""),
+    job_role: str = Form(...),
+    years: str = Form(...),
+    industry: str = Form(...),
     user: Optional[User] = Depends(get_current_user),
 ):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     try:
-        auth_service.complete_onboarding(user.id, school_level, region, subject)
+        auth_service.complete_onboarding(user.id, job_role, years, industry)
     except AuthError as exc:
         return _render(request, "onboarding.html", user, error=str(exc))
     return RedirectResponse("/", status_code=303)

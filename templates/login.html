@@ -4,8 +4,8 @@
 {% block content %}
 
 <div class="auth">
-  <h1 class="page-title">이음 시작하기</h1>
-  <p class="auth-sub">유치원·초·중·고 선생님들의 열린 커뮤니티.<br>구글이나 카카오로 3초 만에 시작하세요.</p>
+  <h1 class="page-title">{{ brand }} 시작하기</h1>
+  <p class="auth-sub">커머스·IT 실무자들의 팁·레퍼런스 커뮤니티.<br>구글이나 카카오로 3초 만에 시작하세요.</p>
 
   {% if not supabase_url %}
     <p class="error">로그인이 아직 설정되지 않았습니다. (관리자: Supabase 키를 넣어주세요)</p>
@@ -20,7 +20,7 @@
     </button>
   </div>
 
-  <p class="auth-fine">계속하면 이음의 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.</p>
+  <p class="auth-fine">계속하면 {{ brand }}의 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.</p>
 </div>
 
 {% if supabase_url %}

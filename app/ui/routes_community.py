@@ -44,17 +44,17 @@ def feed(
     request: Request,
     sort: str = "new",
     category: str = "",
-    school_level: str = "",
-    region: str = "",
+    job_role: str = "",
+    industry: str = "",
     user: Optional[User] = Depends(get_current_user),
 ):
     sort = sort if sort in FEED_SORTS else "new"
-    posts = community_service.list_feed(category, school_level, region, sort)
+    posts = community_service.list_feed(category, job_role, industry, sort)
     reacted = reaction_service.viewer_post_reactions(user.id if user else None)
     return _render(
         request, "index.html", user, posts=posts, reacted=reacted,
         sorts=FEED_SORTS, sort=sort,
-        active={"category": category, "school_level": school_level, "region": region},
+        active={"category": category, "job_role": job_role, "industry": industry},
     )
 
 
@@ -73,21 +73,16 @@ def create_post(
     category: str = Form(...),
     title: str = Form(...),
     body: str = Form(...),
-    event_at: str = Form(""),
-    location: str = Form(""),
-    online_url: str = Form(""),
+    link_url: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if gate := _gate(user):
         return gate
     try:
-        post_id = community_service.create_post(
-            user.id, category, title, body, event_at, location, online_url
-        )
+        post_id = community_service.create_post(user.id, category, title, body, link_url)
     except CommunityError as exc:
         return _render(request, "post_new.html", user, error=str(exc), form={
-            "category": category, "title": title, "body": body,
-            "event_at": event_at, "location": location, "online_url": online_url,
+            "category": category, "title": title, "body": body, "link_url": link_url,
         })
     return RedirectResponse(f"/posts/{post_id}", status_code=303)
 

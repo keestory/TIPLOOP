@@ -1,6 +1,6 @@
-# Supabase 셋업 가이드 (이음)
+# Supabase 셋업 가이드 (티핑)
 
-이음은 **인증=Supabase Auth(구글·카카오), 데이터=Supabase Postgres**로 동작합니다.
+티핑은 **인증=Supabase Auth(구글·카카오), 데이터=Supabase Postgres**로 동작합니다.
 아래 값들을 환경 변수로 넣으면 됩니다. (`.env.example` 참고)
 
 | 환경 변수 | 어디서 | 용도 |
@@ -43,6 +43,6 @@ https://<배포도메인>/auth/callback        (배포)
    → supabase-js signInWithOAuth → 제공자 동의 → Supabase
    → /auth/callback (supabase-js가 세션 파싱)
    → POST /auth/session  (백엔드가 JWT 검증 → 교사 upsert → 세션 쿠키)
-   → 신규/미완료면 /onboarding (학교급·지역·담당)
+   → 신규/미완료면 /onboarding (직군·연차·업종)
    → 완료면 /
 ```

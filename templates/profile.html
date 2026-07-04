@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{{ teacher.name }} 선생님{% endblock %}
+{% block title %}{{ teacher.name }}{% endblock %}
 {% block content %}
 
 <section class="profile-head">
   <span class="profile-avatar">{{ teacher.name[0] }}</span>
   <div>
-    <h1 class="page-title">{{ teacher.name }} 선생님</h1>
-    <p class="profile-meta">{{ teacher.school_level or '' }} · {{ teacher.region or '' }}{% if teacher.subject %} · {{ teacher.subject }}{% endif %}</p>
+    <h1 class="page-title">{{ teacher.name }}</h1>
+    <p class="profile-meta">{{ teacher.job_role or '' }}{% if teacher.years %} · {{ teacher.years }}{% endif %}{% if teacher.industry %} · {{ teacher.industry }}{% endif %}</p>
   </div>
 </section>
 

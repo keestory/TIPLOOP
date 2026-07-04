@@ -1,13 +1,12 @@
-"""커뮤니티 도메인 로직 — 글·세미나·댓글·프로필.
+"""커뮤니티 도메인 로직 — 글·레퍼런스·댓글·프로필.
 
-세 기능(정보공유/세미나/고민나눔)을 글 카테고리로 통합한다.
+카테고리(팁/레퍼런스/질문/회고)로 종류를 나눈다. 레퍼런스는 참고 링크를 붙일 수 있다.
 """
 
 from __future__ import annotations
 
-
 from app.config.settings import CATEGORIES
-from app.repo import comments, posts, reactions, teachers
+from app.repo import comments, members, posts, reactions
 from app.types.models import Post, Thread, User
 
 
@@ -16,17 +15,12 @@ class CommunityError(ValueError):
 
 
 def create_post(
-    author_id: int,
-    category: str,
-    title: str,
-    body: str,
-    event_at: str = "",
-    location: str = "",
-    online_url: str = "",
+    author_id: int, category: str, title: str, body: str, link_url: str = ""
 ) -> int:
-    """글을 작성한다. 세미나면 일시/장소/링크 중 하나는 있어야 한다."""
+    """글을 작성한다. 레퍼런스면 참고 링크를 함께 저장할 수 있다."""
     title = (title or "").strip()
     body = (body or "").strip()
+    link_url = (link_url or "").strip()
 
     if category not in CATEGORIES:
         raise CommunityError("카테고리를 선택해 주세요.")
@@ -35,36 +29,24 @@ def create_post(
     if not body:
         raise CommunityError("내용을 입력해 주세요.")
 
-    event_at = (event_at or "").strip()
-    location = (location or "").strip()
-    online_url = (online_url or "").strip()
-
-    if category == "seminar" and not (event_at or location or online_url):
-        raise CommunityError("세미나는 일시·장소·온라인 링크 중 하나 이상을 입력해 주세요.")
-
-    # 세미나가 아니면 세미나 전용 필드는 비운다
-    if category != "seminar":
-        event_at = location = online_url = ""
+    # 링크는 레퍼런스에서만 유지
+    if category != "reference":
+        link_url = ""
 
     return posts.create_post(
-        author_id=author_id,
-        category=category,
-        title=title,
-        body=body,
-        event_at=event_at or None,
-        location=location or None,
-        online_url=online_url or None,
+        author_id=author_id, category=category, title=title, body=body,
+        link_url=link_url or None,
     )
 
 
 def list_feed(
-    category: str = "", school_level: str = "", region: str = "", sort: str = "new"
+    category: str = "", job_role: str = "", industry: str = "", sort: str = "new"
 ) -> list[Post]:
     """피드. 빈 문자열 필터는 무시한다. sort: new|top|buzz."""
     return posts.list_posts(
         category=category or None,
-        school_level=school_level or None,
-        region=region or None,
+        job_role=job_role or None,
+        industry=industry or None,
         sort=sort,
     )
 
@@ -104,8 +86,8 @@ def add_comment(post_id: int, author_id: int, body: str, parent_id: int | None =
 
 
 def get_profile(user_id: int) -> tuple[User, list[Post], int]:
-    """교사 프로필, 쓴 글, 받은 공감 합계. 없으면 CommunityError."""
-    user = teachers.get(user_id)
+    """회원 프로필, 쓴 글, 받은 공감 합계. 없으면 CommunityError."""
+    user = members.get(user_id)
     if user is None:
         raise CommunityError("사용자를 찾을 수 없습니다.")
     return user, posts.list_posts(author_id=user_id), reactions.received_reaction_count(user_id)

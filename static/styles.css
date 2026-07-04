@@ -184,8 +184,10 @@ select:focus, input:focus, textarea:focus {
   padding: 3px 9px; border-radius: var(--pill);
   border: 1px solid var(--line); color: var(--ink-soft); background: var(--bg);
 }
-.tag-seminar { color: var(--ink); border-color: var(--neon); background: var(--neon); }
-.tag-support { color: var(--ink); border-color: var(--ink); }
+.tag-reference { color: var(--ink); border-color: var(--neon); background: var(--neon); }
+.tag-tip { color: var(--ink); border-color: var(--ink); }
+.tag-question { color: var(--ink-soft); }
+.tag-retro { color: var(--ink-soft); }
 
 /* ── 글 본문 ── */
 .post { padding-top: var(--unit); }
@@ -193,14 +195,14 @@ select:focus, input:focus, textarea:focus {
 .post-meta { color: var(--muted); font-size: 13px; margin-top: 0; }
 .post-meta a { color: var(--ink-soft); font-weight: 600; }
 .post-body { margin-top: calc(var(--unit) * 3); white-space: pre-wrap; font-size: 17px; line-height: 1.75; color: var(--ink-soft); }
-.seminar-box {
+.link-box {
   border: 1px solid var(--line); border-radius: var(--radius);
   padding: calc(var(--unit) * 2.5); margin: calc(var(--unit) * 3) 0;
   display: grid; grid-template-columns: auto 1fr; gap: calc(var(--unit) * 1.25) calc(var(--unit) * 2.5);
   background: var(--surface);
 }
-.seminar-box dt { color: var(--muted); font-size: 13px; font-weight: 700; }
-.seminar-box dd { margin: 0; font-weight: 600; }
+.link-box dt { color: var(--muted); font-size: 13px; font-weight: 700; }
+.link-box dd { margin: 0; font-weight: 600; word-break: break-all; }
 .post-actions { margin-top: calc(var(--unit) * 3); }
 
 /* ── 댓글 ── */
@@ -221,8 +223,8 @@ select:focus, input:focus, textarea:focus {
 .form label { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin-top: var(--unit); }
 .form .hint { color: var(--muted); font-weight: 500; }
 .form .btn { margin-top: calc(var(--unit) * 2); align-self: flex-start; }
-.seminar-fields { border: 1px solid var(--line); border-radius: var(--radius); padding: calc(var(--unit) * 2); margin-top: var(--unit); }
-.seminar-fields legend { color: var(--muted); font-size: 13px; font-weight: 700; padding: 0 var(--unit); }
+.link-field { display: flex; flex-direction: column; gap: var(--unit); }
+.link-field input { width: 100%; }
 
 /* ── 프로필 ── */
 .profile-head { display: flex; align-items: center; gap: calc(var(--unit) * 2); }

@@ -12,7 +12,7 @@ os.environ.setdefault("IEUM_SECRET", "test-session-secret")
 import pytest
 
 _DB = os.environ.get("DATABASE_URL")
-_TABLES = "comment_reactions, post_reactions, comments, posts, teachers"
+_TABLES = "comment_reactions, post_reactions, comments, posts, members"
 
 
 def _reset_schema():
@@ -33,22 +33,22 @@ def fresh_db():
 
 
 @pytest.fixture
-def make_teacher():
-    """테스트용 교사 생성기. onboard=False면 학교급/지역 비운 상태."""
-    from app.repo import teachers
+def make_member():
+    """테스트용 회원 생성기. onboard=False면 직군/연차 비운 상태."""
+    from app.repo import members
 
     counter = {"n": 0}
 
-    def _make(name="쌤", level="중학교", region="서울", subject="",
+    def _make(name="쌤", job_role="PM", years="1~3년", industry="커머스",
               provider="google", onboard=True):
         counter["n"] += 1
         n = counter["n"]
-        teacher = teachers.upsert_by_auth(
-            auth_id=f"auth-{n}", name=name, email=f"t{n}@s.kr",
+        member = members.upsert_by_auth(
+            auth_id=f"auth-{n}", name=name, email=f"t{n}@ex.com",
             avatar_url=None, provider=provider,
         )
         if onboard:
-            teacher = teachers.complete_profile(teacher.id, level, region, subject)
-        return teacher
+            member = members.complete_profile(member.id, job_role, years, industry)
+        return member
 
     return _make

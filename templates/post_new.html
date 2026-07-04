@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}글쓰기{% endblock %}
+{% block fab %}{% endblock %}
 {% block content %}
 
 <h1 class="page-title">글쓰기</h1>
@@ -7,9 +8,10 @@
 
 <form class="form" method="post" action="/posts">
   <label for="category">카테고리</label>
-  <select id="category" name="category" required onchange="toggleSeminar(this.value)">
+  <select id="category" name="category" required onchange="toggleLink(this.value)">
     {% for code, label in categories.items() %}
-      <option value="{{ code }}" {% if (form and form.category == code) or (not form and prefill_category == code) %}selected{% endif %}>{{ label }}</option>
+      <option value="{{ code }}"
+        {% if (form and form.category == code) or (not form and prefill_category == code) %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
 
@@ -19,26 +21,19 @@
   <label for="body">내용</label>
   <textarea id="body" name="body" rows="10" required>{{ form.body if form else '' }}</textarea>
 
-  <fieldset id="seminar-fields" class="seminar-fields">
-    <legend>세미나 정보 (세미나일 때만)</legend>
-    <label for="event_at">일시</label>
-    <input id="event_at" name="event_at" type="text" placeholder="예: 7/12 (토) 14:00"
-           value="{{ form.event_at if form else '' }}">
-    <label for="location">장소</label>
-    <input id="location" name="location" type="text" placeholder="예: 서울교육연수원 / 또는 비워두기"
-           value="{{ form.location if form else '' }}">
-    <label for="online_url">온라인 링크</label>
-    <input id="online_url" name="online_url" type="url" placeholder="https://..."
-           value="{{ form.online_url if form else '' }}">
-  </fieldset>
+  <div id="link-field" class="link-field">
+    <label for="link_url">참고 링크 <span class="hint">(레퍼런스일 때, 선택)</span></label>
+    <input id="link_url" name="link_url" type="url" placeholder="https://..."
+           value="{{ form.link_url if form else '' }}">
+  </div>
 
   <button type="submit" class="btn">올리기</button>
 </form>
 
 <script>
-  function toggleSeminar(value) {
-    document.getElementById('seminar-fields').style.display = value === 'seminar' ? 'block' : 'none';
+  function toggleLink(value) {
+    document.getElementById('link-field').style.display = value === 'reference' ? 'block' : 'none';
   }
-  toggleSeminar(document.getElementById('category').value);
+  toggleLink(document.getElementById('category').value);
 </script>
 {% endblock %}

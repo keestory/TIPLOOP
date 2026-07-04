@@ -18,34 +18,34 @@ try:
 except ImportError:
     pass
 
-# ── Supabase / Postgres ──────────────────────────────────────────────
-# 전부 Supabase로 이전: 데이터는 Supabase Postgres, 인증은 Supabase Auth.
-DATABASE_URL = os.environ.get("DATABASE_URL", "")  # Supabase Postgres 연결 문자열
+# ── 브랜드 ────────────────────────────────────────────────────────────
+BRAND = "티핑"
+TAGLINE = "실무 팁과 레퍼런스를 쌓고 나누는 곳"
 
-# 프론트(supabase-js)에서 OAuth를 시작할 때 필요 — 공개 값
+# ── Supabase / Postgres ──────────────────────────────────────────────
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
-# 백엔드에서 액세스 토큰(JWT, HS256)을 검증할 때 쓰는 프로젝트 시크릿
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 
-# ── 세션 (우리 자체 서명 쿠키) ──────────────────────────────────────
-SESSION_COOKIE = "ieum_session"
+# ── 세션 (자체 서명 쿠키) ────────────────────────────────────────────
+SESSION_COOKIE = "tipping_session"
 SESSION_SECRET = os.environ.get("IEUM_SECRET", "dev-only-change-me")
 SESSION_TTL_DAYS = 14
 
 # ── 도메인 상수 — 화면과 검증에서 공유 ──────────────────────────────
-SCHOOL_LEVELS = ["유치원", "초등학교", "중학교", "고등학교"]
+# 온보딩에서 받는 프로필 (소셜이 주지 않는 값)
+JOB_ROLES = ["PM", "개발", "디자인", "마케팅", "데이터", "기획", "MD", "운영", "기타"]
+YEARS = ["1년 미만", "1~3년", "3~5년", "5~10년", "10년+"]
+INDUSTRIES = ["커머스", "핀테크", "SaaS", "콘텐츠·미디어", "광고·마케팅", "교육", "게임", "기타"]
 
-REGIONS = [
-    "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
-    "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
-]
-
-# 카테고리: 코드값 → 한글 라벨 (글이 세 기능을 통합)
+# 글 카테고리: 코드값 → 한글 라벨
 CATEGORIES = {
-    "info": "정보공유",
-    "seminar": "세미나",
-    "support": "고민나눔",
+    "tip": "팁",
+    "reference": "레퍼런스",
+    "question": "질문",
+    "retro": "회고",
 }
 
 # 소셜 로그인 제공자

@@ -7,7 +7,7 @@
 <div class="sorttabs">
   {% for code, label in sorts.items() %}
     <a class="sorttab {% if sort == code %}is-active{% endif %}"
-       href="/?sort={{ code }}&category={{ active.category }}&school_level={{ active.school_level }}&region={{ active.region }}">{{ label }}</a>
+       href="/?sort={{ code }}&category={{ active.category }}&job_role={{ active.job_role }}&industry={{ active.industry }}">{{ label }}</a>
   {% endfor %}
 </div>
 
@@ -22,16 +22,16 @@
   </div>
   <div class="filter-selects">
     <input type="hidden" name="category" value="{{ active.category }}">
-    <select name="school_level" onchange="this.form.submit()">
-      <option value="">학교급 전체</option>
-      {% for lvl in school_levels %}
-        <option value="{{ lvl }}" {% if active.school_level == lvl %}selected{% endif %}>{{ lvl }}</option>
+    <select name="job_role" onchange="this.form.submit()">
+      <option value="">직군 전체</option>
+      {% for r in job_roles %}
+        <option value="{{ r }}" {% if active.job_role == r %}selected{% endif %}>{{ r }}</option>
       {% endfor %}
     </select>
-    <select name="region" onchange="this.form.submit()">
-      <option value="">지역 전체</option>
-      {% for r in regions %}
-        <option value="{{ r }}" {% if active.region == r %}selected{% endif %}>{{ r }}</option>
+    <select name="industry" onchange="this.form.submit()">
+      <option value="">업종 전체</option>
+      {% for i in industries %}
+        <option value="{{ i }}" {% if active.industry == i %}selected{% endif %}>{{ i }}</option>
       {% endfor %}
     </select>
   </div>
@@ -45,12 +45,12 @@
       <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
       <span class="feed-meta">
         <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a>
-        · {{ post.author_school_level }} · {{ post.author_region }}
+        · {{ post.author_job_role }}{% if post.author_years %} · {{ post.author_years }}{% endif %}
       </span>
     </div>
     <a class="feed-title" href="/posts/{{ post.id }}">{{ post.title }}</a>
-    {% if post.category == "seminar" and (post.event_at or post.location) %}
-      <p class="feed-event">📍 {% if post.event_at %}{{ post.event_at }}{% endif %}{% if post.location %} · {{ post.location }}{% endif %}{% if post.online_url %} · 온라인{% endif %}</p>
+    {% if post.category == "reference" and post.link_url %}
+      <p class="feed-event">🔗 {{ post.link_url }}</p>
     {% endif %}
     <div class="feed-actions">
       {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
@@ -67,8 +67,8 @@
 
 {# 카테고리 탭마다 다른 CTA — 누르면 그 카테고리가 선택된 글쓰기로 #}
 {% block fab %}
-{% set cta = {"": "글쓰기", "info": "정보 나누기", "seminar": "세미나 열기", "support": "고민 나누기"} %}
-<a class="fab fab-{{ active.category or 'all' }}" href="/posts/new?category={{ active.category }}">
+{% set cta = {"": "글쓰기", "tip": "팁 공유", "reference": "레퍼런스 남기기", "question": "질문하기", "retro": "회고 쓰기"} %}
+<a class="fab" href="/posts/new?category={{ active.category }}">
   <span class="fab-icon">✏️</span><span class="fab-label">{{ cta.get(active.category, "글쓰기") }}</span>
 </a>
 {% endblock %}

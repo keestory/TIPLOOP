@@ -8,10 +8,10 @@ from app.types.models import Comment
 _SELECT = """
 SELECT c.id, c.post_id, c.author_id, c.body, c.parent_id,
        to_char(c.created_at, 'YYYY-MM-DD HH24:MI') AS created_at,
-       u.name AS author_name, u.school_level AS author_school_level,
+       u.name AS author_name, u.job_role AS author_job_role,
        (SELECT COUNT(*) FROM comment_reactions r WHERE r.comment_id = c.id) AS reaction_count
 FROM comments c
-JOIN teachers u ON u.id = c.author_id
+JOIN members u ON u.id = c.author_id
 """
 
 
@@ -24,7 +24,7 @@ def _to_comment(row: dict) -> Comment:
         created_at=row["created_at"],
         parent_id=row["parent_id"],
         author_name=row["author_name"],
-        author_school_level=row["author_school_level"],
+        author_job_role=row["author_job_role"],
         reaction_count=row["reaction_count"],
     )
 

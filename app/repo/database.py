@@ -11,37 +11,33 @@ from psycopg.rows import dict_row
 from app.config.settings import DATABASE_URL
 
 _SCHEMA = """
-CREATE TABLE IF NOT EXISTS teachers (
-    id             BIGSERIAL PRIMARY KEY,
-    auth_id        TEXT UNIQUE NOT NULL,          -- Supabase auth 사용자 id(uuid)
-    email          TEXT,
-    name           TEXT NOT NULL,
-    avatar_url     TEXT,
-    provider       TEXT,                          -- google | kakao
-    phone          TEXT,
-    phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    school_level   TEXT,                          -- 온보딩 전엔 NULL
-    region         TEXT,
-    subject        TEXT NOT NULL DEFAULT '',
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+CREATE TABLE IF NOT EXISTS members (
+    id         BIGSERIAL PRIMARY KEY,
+    auth_id    TEXT UNIQUE NOT NULL,          -- Supabase auth 사용자 id(uuid)
+    email      TEXT,
+    name       TEXT NOT NULL,
+    avatar_url TEXT,
+    provider   TEXT,                          -- google | kakao
+    job_role   TEXT,                          -- 직군 (온보딩 전엔 NULL)
+    years      TEXT,                          -- 연차
+    industry   TEXT,                          -- 업종
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS posts (
     id         BIGSERIAL PRIMARY KEY,
-    author_id  BIGINT NOT NULL REFERENCES teachers(id),
+    author_id  BIGINT NOT NULL REFERENCES members(id),
     category   TEXT NOT NULL,
     title      TEXT NOT NULL,
     body       TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    event_at   TEXT,
-    location   TEXT,
-    online_url TEXT
+    link_url   TEXT                           -- 레퍼런스 참고 링크 (선택)
 );
 
 CREATE TABLE IF NOT EXISTS comments (
     id         BIGSERIAL PRIMARY KEY,
     post_id    BIGINT NOT NULL REFERENCES posts(id),
-    author_id  BIGINT NOT NULL REFERENCES teachers(id),
+    author_id  BIGINT NOT NULL REFERENCES members(id),
     body       TEXT NOT NULL,
     parent_id  BIGINT REFERENCES comments(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -49,13 +45,13 @@ CREATE TABLE IF NOT EXISTS comments (
 
 CREATE TABLE IF NOT EXISTS post_reactions (
     post_id BIGINT NOT NULL REFERENCES posts(id),
-    user_id BIGINT NOT NULL REFERENCES teachers(id),
+    user_id BIGINT NOT NULL REFERENCES members(id),
     PRIMARY KEY (post_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS comment_reactions (
     comment_id BIGINT NOT NULL REFERENCES comments(id),
-    user_id    BIGINT NOT NULL REFERENCES teachers(id),
+    user_id    BIGINT NOT NULL REFERENCES members(id),
     PRIMARY KEY (comment_id, user_id)
 );
 """
