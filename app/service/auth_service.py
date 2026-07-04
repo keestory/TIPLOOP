@@ -10,10 +10,12 @@ from app.config.settings import (
     JOB_ROLES,
     SESSION_SECRET,
     SESSION_TTL_DAYS,
-    SUPABASE_JWT_SECRET,
+    SUPABASE_ANON_KEY,
+    SUPABASE_URL,
     YEARS,
 )
-from app.providers.security import read_session, sign_session, verify_supabase_jwt
+from app.providers import security
+from app.providers.security import read_session, sign_session
 from app.repo import members
 from app.types.models import User
 
@@ -33,18 +35,18 @@ def _claim_name(claims: dict, meta: dict) -> str:
 
 
 def establish_session(access_token: str) -> tuple[User, str]:
-    """Supabase 액세스 토큰을 검증하고 (교사, 세션 쿠키값)을 돌려준다."""
-    claims = verify_supabase_jwt(access_token, SUPABASE_JWT_SECRET)
-    if not claims or not claims.get("sub"):
+    """Supabase 액세스 토큰을 검증(=사용자 조회)하고 (회원, 세션 쿠키값)을 돌려준다."""
+    info = security.fetch_supabase_user(access_token, SUPABASE_URL, SUPABASE_ANON_KEY)
+    if not info or not info.get("id"):
         raise AuthError("로그인 정보를 확인하지 못했습니다. 다시 시도해 주세요.")
 
-    meta = claims.get("user_metadata") or {}
-    app_meta = claims.get("app_metadata") or {}
+    meta = info.get("user_metadata") or {}
+    app_meta = info.get("app_metadata") or {}
 
     member = members.upsert_by_auth(
-        auth_id=str(claims["sub"]),
-        name=_claim_name(claims, meta),
-        email=claims.get("email") or meta.get("email"),
+        auth_id=str(info["id"]),
+        name=_claim_name(info, meta),
+        email=info.get("email") or meta.get("email"),
         avatar_url=meta.get("avatar_url") or meta.get("picture"),
         provider=app_meta.get("provider"),
     )

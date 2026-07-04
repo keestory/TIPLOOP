@@ -1,68 +1,64 @@
-"""인증 1차 처리 — Supabase JWT 검증과 자체 세션 쿠키 서명.
+"""인증 1차 처리 — Supabase 사용자 조회와 자체 세션 쿠키 서명.
 
-표준 라이브러리만 사용한다(추가 의존성 0). Types, Config만 import 가능.
-Supabase 액세스 토큰은 HS256(프로젝트 JWT 시크릿)으로 서명되므로 hmac로 검증한다.
+액세스 토큰 검증은 Supabase에 위임한다(/auth/v1/user). 서명 방식(HS256/ES256)에
+무관하게 동작하고, 반환된 사용자 정보를 그대로 쓴다. 세션은 자체 서명 쿠키로 유지.
+Types, Config만 import 가능.
 """
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import json
 import time
+import urllib.error
+import urllib.request
 
 
-def _b64url_decode(segment: str) -> bytes:
-    pad = "=" * (-len(segment) % 4)
-    return base64.urlsafe_b64decode(segment + pad)
+def fetch_supabase_user(access_token: str, supabase_url: str, anon_key: str) -> dict | None:
+    """액세스 토큰으로 Supabase에 사용자 정보를 조회한다. 무효면 None.
 
-
-def verify_supabase_jwt(token: str, secret: str) -> dict | None:
-    """HS256 서명·만료를 검증하고 claims(dict)를 돌려준다. 실패 시 None."""
-    if not token or not secret:
+    반환 예: {"id": "...uuid...", "email": "...", "user_metadata": {...}, "app_metadata": {...}}
+    """
+    if not access_token or not supabase_url or not anon_key:
         return None
+    url = supabase_url.rstrip("/") + "/auth/v1/user"
+    req = urllib.request.Request(
+        url, headers={"Authorization": "Bearer " + access_token, "apikey": anon_key}
+    )
     try:
-        header_b64, payload_b64, sig_b64 = token.split(".")
-    except ValueError:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status != 200:
+                return None
+            data = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, ValueError, TimeoutError, OSError):
         return None
-    signing_input = f"{header_b64}.{payload_b64}".encode()
-    expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
-    try:
-        if not hmac.compare_digest(expected, _b64url_decode(sig_b64)):
-            return None
-        claims = json.loads(_b64url_decode(payload_b64))
-    except (ValueError, json.JSONDecodeError):
-        return None
-    exp = claims.get("exp")
-    if isinstance(exp, (int, float)) and time.time() > exp:
-        return None
-    return claims
+    return data if isinstance(data, dict) and data.get("id") else None
 
 
-def sign_session(teacher_id: int, secret: str, ttl_seconds: int) -> str:
-    """teacher_id를 담은 서명 세션 토큰. 'id.exp.sig' 형식."""
+def sign_session(member_id: int, secret: str, ttl_seconds: int) -> str:
+    """member_id를 담은 서명 세션 토큰. 'id.exp.sig' 형식."""
     exp = int(time.time()) + ttl_seconds
-    msg = f"{teacher_id}.{exp}"
+    msg = f"{member_id}.{exp}"
     sig = hmac.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
     return f"{msg}.{sig}"
 
 
 def read_session(cookie: str | None, secret: str) -> int | None:
-    """세션 토큰을 검증하고 teacher_id를 돌려준다. 무효/만료면 None."""
+    """세션 토큰을 검증하고 member_id를 돌려준다. 무효/만료면 None."""
     if not cookie:
         return None
     try:
-        teacher_id, exp, sig = cookie.split(".")
+        member_id, exp, sig = cookie.split(".")
     except (ValueError, AttributeError):
         return None
-    msg = f"{teacher_id}.{exp}"
+    msg = f"{member_id}.{exp}"
     expected = hmac.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected, sig):
         return None
     try:
         if int(exp) < time.time():
             return None
-        return int(teacher_id)
+        return int(member_id)
     except ValueError:
         return None
