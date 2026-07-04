@@ -74,15 +74,19 @@ def create_post(
     title: str = Form(...),
     body: str = Form(...),
     link_url: str = Form(""),
+    image_url: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if gate := _gate(user):
         return gate
     try:
-        post_id = community_service.create_post(user.id, category, title, body, link_url)
+        post_id = community_service.create_post(
+            user.id, category, title, body, link_url, image_url
+        )
     except CommunityError as exc:
         return _render(request, "post_new.html", user, error=str(exc), form={
-            "category": category, "title": title, "body": body, "link_url": link_url,
+            "category": category, "title": title, "body": body,
+            "link_url": link_url, "image_url": image_url,
         })
     return RedirectResponse(f"/posts/{post_id}", status_code=303)
 

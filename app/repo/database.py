@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS posts (
     title      TEXT NOT NULL,
     body       TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    link_url   TEXT                           -- 레퍼런스 참고 링크 (선택)
+    link_url   TEXT,                          -- 레퍼런스 참고 링크 (선택)
+    image_url  TEXT                           -- 주석 이미지 (Supabase Storage URL, 선택)
 );
 
 CREATE TABLE IF NOT EXISTS comments (

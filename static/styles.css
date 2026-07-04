@@ -226,6 +226,27 @@ select:focus, input:focus, textarea:focus {
 .link-field { display: flex; flex-direction: column; gap: var(--unit); }
 .link-field input { width: 100%; }
 
+/* ── 이미지 주석 에디터 ── */
+.anno-pick { align-self: flex-start; cursor: pointer; }
+.anno-editor { margin-top: var(--unit); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--unit); }
+.anno-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--unit); margin-bottom: var(--unit); }
+.anno-tool, .anno-op {
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink-soft);
+  border-radius: var(--pill); padding: 6px 12px;
+}
+.anno-tool:hover, .anno-op:hover { border-color: var(--ink); color: var(--ink); }
+.anno-tool.is-active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.anno-op { color: var(--muted); }
+.anno-colors { display: inline-flex; gap: 6px; align-items: center; margin: 0 4px; }
+.anno-color { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.anno-color.is-active { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+.anno-canvas { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: crosshair; display: block; }
+
+/* 글에 붙은 이미지 */
+.post-image { max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius); margin-top: calc(var(--unit) * 3); display: block; }
+.feed-thumb { max-width: 100%; max-height: 320px; border: 1px solid var(--line); border-radius: 10px; margin-top: var(--unit); display: block; }
+
 /* ── 프로필 ── */
 .profile-head { display: flex; align-items: center; gap: calc(var(--unit) * 2); }
 .profile-avatar {

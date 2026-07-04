@@ -30,6 +30,21 @@
 
 > 전화번호는 현재 받지 않습니다(추후 필요 시 문자 인증 또는 카카오 동의항목으로 추가 가능).
 
+## 3-2. 이미지 첨부 — Storage 버킷
+글에 **주석 이미지**를 올리려면 스토리지 버킷이 하나 필요합니다.
+1. Supabase → **Storage → New bucket** → 이름 `attachments` → **Public bucket 체크** → 생성.
+   (공개 버킷이라 이미지 URL을 누구나 볼 수 있음 — 커뮤니티 특성상 OK)
+2. **업로드 권한**(로그인 사용자만 올리게) — SQL Editor에서 실행:
+   ```sql
+   create policy "authenticated upload"
+   on storage.objects for insert to authenticated
+   with check (bucket_id = 'attachments');
+   ```
+   (읽기는 Public 버킷이라 별도 정책 불필요)
+
+> 버킷 이름은 코드에서 `attachments` 로 고정돼 있습니다(templates/post_new.html).
+> 없으면 이미지 업로드 시 "attachments 버킷이 있는지 확인" 알림이 뜹니다.
+
 ## 4. 리디렉션 허용 URL
 Supabase → Authentication → URL Configuration → **Redirect URLs**에 앱 주소의 콜백을 추가:
 ```

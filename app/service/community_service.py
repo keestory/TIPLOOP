@@ -15,12 +15,14 @@ class CommunityError(ValueError):
 
 
 def create_post(
-    author_id: int, category: str, title: str, body: str, link_url: str = ""
+    author_id: int, category: str, title: str, body: str,
+    link_url: str = "", image_url: str = "",
 ) -> int:
-    """글을 작성한다. 레퍼런스면 참고 링크를 함께 저장할 수 있다."""
+    """글을 작성한다. 레퍼런스면 참고 링크를, 어느 글이든 주석 이미지를 붙일 수 있다."""
     title = (title or "").strip()
     body = (body or "").strip()
     link_url = (link_url or "").strip()
+    image_url = (image_url or "").strip()
 
     if category not in CATEGORIES:
         raise CommunityError("카테고리를 선택해 주세요.")
@@ -35,7 +37,7 @@ def create_post(
 
     return posts.create_post(
         author_id=author_id, category=category, title=title, body=body,
-        link_url=link_url or None,
+        link_url=link_url or None, image_url=image_url or None,
     )
 
 

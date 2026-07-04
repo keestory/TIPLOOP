@@ -24,6 +24,15 @@ def test_reference_keeps_link(make_member):
     assert post.link_url == "https://toss.im"
 
 
+def test_image_url_is_stored(make_member):
+    t = make_member()
+    pid = community_service.create_post(
+        t.id, "tip", "스크린샷 팁", "여기 보세요", image_url="https://cdn.example.com/a.png"
+    )
+    post, _ = community_service.get_post_with_threads(pid)
+    assert post.image_url == "https://cdn.example.com/a.png"
+
+
 def test_non_reference_drops_link(make_member):
     t = make_member()
     pid = community_service.create_post(

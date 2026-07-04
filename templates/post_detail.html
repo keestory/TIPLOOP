@@ -21,6 +21,10 @@
 
   <div class="post-body">{{ post.body }}</div>
 
+  {% if post.image_url %}
+  <img class="post-image" src="{{ post.image_url }}" alt="첨부 이미지" loading="lazy">
+  {% endif %}
+
   <div class="post-actions">
     {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
     <span class="action-link">💬 댓글 {{ post.comment_count }}</span>

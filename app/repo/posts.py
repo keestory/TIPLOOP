@@ -9,7 +9,7 @@ from app.types.models import Post
 _SELECT = """
 SELECT p.id, p.author_id, p.category, p.title, p.body,
        to_char(p.created_at, 'YYYY-MM-DD HH24:MI') AS created_at,
-       p.link_url,
+       p.link_url, p.image_url,
        u.name AS author_name, u.job_role AS author_job_role, u.years AS author_years,
        (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS reaction_count,
        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
@@ -34,6 +34,7 @@ def _to_post(row: dict) -> Post:
         body=row["body"],
         created_at=row["created_at"],
         link_url=row["link_url"],
+        image_url=row["image_url"],
         author_name=row["author_name"],
         author_job_role=row["author_job_role"],
         author_years=row["author_years"],
@@ -48,14 +49,17 @@ def create_post(
     title: str,
     body: str,
     link_url: str | None = None,
+    image_url: str | None = None,
 ) -> int:
     """글을 만들고 id를 돌려준다."""
     sql = (
-        "INSERT INTO posts (author_id, category, title, body, link_url) "
-        "VALUES (%s, %s, %s, %s, %s) RETURNING id"
+        "INSERT INTO posts (author_id, category, title, body, link_url, image_url) "
+        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"
     )
     with get_connection() as conn:
-        row = conn.execute(sql, (author_id, category, title, body, link_url)).fetchone()
+        row = conn.execute(
+            sql, (author_id, category, title, body, link_url, image_url)
+        ).fetchone()
         return row["id"]
 
 

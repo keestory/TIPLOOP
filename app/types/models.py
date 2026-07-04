@@ -40,7 +40,8 @@ class Post:
     title: str
     body: str
     created_at: str
-    link_url: str | None = None  # 레퍼런스 참고 링크 (선택)
+    link_url: str | None = None   # 레퍼런스 참고 링크 (선택)
+    image_url: str | None = None  # 주석 이미지 (선택)
     # 조회 시 채워지는 작성자 표시 정보 (join 결과)
     author_name: str | None = None
     author_job_role: str | None = None

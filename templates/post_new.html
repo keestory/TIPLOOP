@@ -6,7 +6,7 @@
 <h1 class="page-title">글쓰기</h1>
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
-<form class="form" method="post" action="/posts">
+<form class="form" method="post" action="/posts" id="post-form">
   <label for="category">카테고리</label>
   <select id="category" name="category" required onchange="toggleLink(this.value)">
     {% for code, label in categories.items() %}
@@ -27,7 +27,35 @@
            value="{{ form.link_url if form else '' }}">
   </div>
 
-  <button type="submit" class="btn">올리기</button>
+  {% if supabase_url %}
+  <label>이미지 <span class="hint">(사진에 표시하며 설명, 선택)</span></label>
+  <div class="anno">
+    <label class="btn btn-small anno-pick">
+      이미지 추가<input id="imgpick" type="file" accept="image/*" hidden>
+    </label>
+    <div id="anno-editor" class="anno-editor" hidden>
+      <div class="anno-tools">
+        <button type="button" class="anno-tool is-active" data-tool="pen">✏️ 펜</button>
+        <button type="button" class="anno-tool" data-tool="arrow">➘ 화살표</button>
+        <button type="button" class="anno-tool" data-tool="rect">▭ 사각형</button>
+        <button type="button" class="anno-tool" data-tool="highlighter">🖍 형광</button>
+        <span class="anno-colors">
+          <button type="button" class="anno-color is-active" data-color="#c8ff00" style="background:#c8ff00"></button>
+          <button type="button" class="anno-color" data-color="#e5484d" style="background:#e5484d"></button>
+          <button type="button" class="anno-color" data-color="#0b0b0c" style="background:#0b0b0c"></button>
+          <button type="button" class="anno-color" data-color="#ffffff" style="background:#fff;border:1px solid #ddd"></button>
+        </span>
+        <button type="button" class="anno-op" id="anno-undo">되돌리기</button>
+        <button type="button" class="anno-op" id="anno-clear">표시 지우기</button>
+        <button type="button" class="anno-op" id="anno-remove">이미지 제거</button>
+      </div>
+      <canvas id="anno-canvas" class="anno-canvas"></canvas>
+    </div>
+  </div>
+  <input type="hidden" id="image_url" name="image_url" value="{{ form.image_url if form else '' }}">
+  {% endif %}
+
+  <button type="submit" class="btn" id="submit-btn">올리기</button>
 </form>
 
 <script>
@@ -36,4 +64,68 @@
   }
   toggleLink(document.getElementById('category').value);
 </script>
+
+{% if supabase_url %}
+<script src="/static/annotate.js"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const supabase = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}")
+
+  const canvas = document.getElementById('anno-canvas')
+  const editor = document.getElementById('anno-editor')
+  const anno = new Annotator(canvas)
+  const imageUrlInput = document.getElementById('image_url')
+  const form = document.getElementById('post-form')
+  const submitBtn = document.getElementById('submit-btn')
+
+  document.getElementById('imgpick').addEventListener('change', (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const img = new Image()
+    img.onload = () => { anno.setImage(img); editor.hidden = false; imageUrlInput.value = '' }
+    img.src = URL.createObjectURL(file)
+  })
+
+  document.querySelectorAll('.anno-tool').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.anno-tool').forEach((x) => x.classList.remove('is-active'))
+      b.classList.add('is-active'); anno.setTool(b.dataset.tool)
+    }))
+  document.querySelectorAll('.anno-color').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.anno-color').forEach((x) => x.classList.remove('is-active'))
+      b.classList.add('is-active'); anno.setColor(b.dataset.color)
+    }))
+  document.getElementById('anno-undo').addEventListener('click', () => anno.undo())
+  document.getElementById('anno-clear').addEventListener('click', () => anno.clearMarks())
+  document.getElementById('anno-remove').addEventListener('click', () => {
+    anno.reset(); editor.hidden = true; imageUrlInput.value = ''; document.getElementById('imgpick').value = ''
+  })
+
+  async function uploadBlob(blob) {
+    const { data: u } = await supabase.auth.getUser()
+    const uid = u && u.user ? u.user.id : 'anon'
+    const path = `${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.png`
+    const { data, error } = await supabase.storage.from('attachments')
+      .upload(path, blob, { contentType: 'image/png', upsert: false })
+    if (error) throw error
+    return supabase.storage.from('attachments').getPublicUrl(data.path).data.publicUrl
+  }
+
+  form.addEventListener('submit', (e) => {
+    if (!anno.hasImage() || imageUrlInput.value) return   // 이미지 없음 or 이미 업로드됨
+    e.preventDefault()
+    submitBtn.disabled = true; submitBtn.textContent = '이미지 올리는 중…'
+    anno.toBlob(async (blob) => {
+      try {
+        imageUrlInput.value = await uploadBlob(blob)
+        form.submit()
+      } catch (err) {
+        alert('이미지 업로드 실패: ' + (err.message || err) + '\n(Supabase Storage에 attachments 버킷이 있는지 확인)')
+        submitBtn.disabled = false; submitBtn.textContent = '올리기'
+      }
+    })
+  })
+</script>
+{% endif %}
 {% endblock %}
