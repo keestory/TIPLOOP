@@ -33,30 +33,20 @@ def upsert_by_auth(
     email: str | None,
     avatar_url: str | None,
     provider: str | None,
-    phone: str | None,
-    phone_verified: bool,
 ) -> User:
-    """소셜 로그인 결과로 교사를 만들거나 갱신한다.
-
-    이름·이메일·아바타·제공자는 항상 최신화하고, 전화번호는 비어있을 때만 채운다
-    (온보딩에서 직접 넣은 값을 덮어쓰지 않도록).
-    """
+    """소셜 로그인 결과로 교사를 만들거나 갱신한다(이름·이메일·아바타·제공자 최신화)."""
     sql = """
-    INSERT INTO teachers (auth_id, name, email, avatar_url, provider, phone, phone_verified)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO teachers (auth_id, name, email, avatar_url, provider)
+    VALUES (%s, %s, %s, %s, %s)
     ON CONFLICT (auth_id) DO UPDATE SET
         name = EXCLUDED.name,
         email = EXCLUDED.email,
         avatar_url = EXCLUDED.avatar_url,
-        provider = EXCLUDED.provider,
-        phone = COALESCE(teachers.phone, EXCLUDED.phone),
-        phone_verified = teachers.phone_verified OR EXCLUDED.phone_verified
+        provider = EXCLUDED.provider
     RETURNING *;
     """
     with get_connection() as conn:
-        row = conn.execute(
-            sql, (auth_id, name, email, avatar_url, provider, phone, phone_verified)
-        ).fetchone()
+        row = conn.execute(sql, (auth_id, name, email, avatar_url, provider)).fetchone()
         return _to_user(row)
 
 
@@ -72,17 +62,14 @@ def get_by_auth(auth_id: str) -> User | None:
         return _to_user(row) if row else None
 
 
-def complete_profile(
-    teacher_id: int, school_level: str, region: str, subject: str, phone: str | None
-) -> User:
-    """온보딩 — 학교급·지역·담당(+없으면 전화번호)을 채운다."""
+def complete_profile(teacher_id: int, school_level: str, region: str, subject: str) -> User:
+    """온보딩 — 학교급·지역·담당을 채운다."""
     sql = """
     UPDATE teachers
-    SET school_level = %s, region = %s, subject = %s,
-        phone = COALESCE(phone, NULLIF(%s, ''))
+    SET school_level = %s, region = %s, subject = %s
     WHERE id = %s
     RETURNING *;
     """
     with get_connection() as conn:
-        row = conn.execute(sql, (school_level, region, subject, phone or "", teacher_id)).fetchone()
+        row = conn.execute(sql, (school_level, region, subject, teacher_id)).fetchone()
         return _to_user(row)

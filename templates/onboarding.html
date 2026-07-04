@@ -36,11 +36,6 @@
   <input id="subject" name="subject" type="text" placeholder="예: 3학년 담임 / 과학"
          value="{{ current_user.subject or '' }}">
 
-  {% if current_user.needs_phone %}
-  <label for="phone">전화번호 <span class="hint">(연락·인증용)</span></label>
-  <input id="phone" name="phone" type="tel" placeholder="010-0000-0000">
-  {% endif %}
-
   <button type="submit" class="btn">시작하기</button>
 </form>
 {% endblock %}

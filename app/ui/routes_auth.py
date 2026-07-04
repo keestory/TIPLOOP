@@ -79,13 +79,12 @@ def onboarding_submit(
     school_level: str = Form(...),
     region: str = Form(...),
     subject: str = Form(""),
-    phone: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     try:
-        auth_service.complete_onboarding(user.id, school_level, region, subject, phone)
+        auth_service.complete_onboarding(user.id, school_level, region, subject)
     except AuthError as exc:
         return _render(request, "onboarding.html", user, error=str(exc))
     return RedirectResponse("/", status_code=303)

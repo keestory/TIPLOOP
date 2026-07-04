@@ -31,8 +31,7 @@
   document.getElementById('google').addEventListener('click', () =>
     sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } }))
   document.getElementById('kakao').addEventListener('click', () =>
-    sb.auth.signInWithOAuth({ provider: 'kakao',
-      options: { redirectTo, scopes: 'account_email phone_number' } }))
+    sb.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo } }))
 </script>
 {% endif %}
 {% endblock %}

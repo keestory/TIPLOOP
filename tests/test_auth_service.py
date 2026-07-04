@@ -45,7 +45,6 @@ def test_google_login_creates_unonboarded_teacher():
     assert teacher.email == "kim@gmail.com"
     assert teacher.provider == "google"
     assert teacher.is_onboarded is False      # 학교급/지역 아직 없음
-    assert teacher.needs_phone is True         # 구글은 번호 안 줌
     assert auth_service.current_user(cookie).id == teacher.id
 
 
@@ -56,16 +55,14 @@ def test_login_is_idempotent_by_auth_id():
     assert t2.name == "김서연B"      # 이름은 최신화
 
 
-def test_kakao_login_captures_verified_phone():
+def test_kakao_login_sets_provider():
     token = make_token(
         sub="kakao-1", app_metadata={"provider": "kakao"},
-        user_metadata={"name": "박지우", "phone_number": "+8210...", "avatar_url": None},
+        user_metadata={"name": "박지우", "avatar_url": None},
     )
     teacher, _ = auth_service.establish_session(token)
     assert teacher.provider == "kakao"
-    assert teacher.phone == "+8210..."
-    assert teacher.phone_verified is True
-    assert teacher.needs_phone is False        # 카카오가 번호 줌 → 안 물어봄
+    assert teacher.name == "박지우"
 
 
 def test_invalid_signature_rejected():
@@ -86,15 +83,15 @@ def test_current_user_none_for_bad_cookie():
 
 def test_onboarding_completes_profile():
     teacher, _ = auth_service.establish_session(_google_token())
-    done = auth_service.complete_onboarding(teacher.id, "중학교", "서울", "과학", "010-1234-5678")
+    done = auth_service.complete_onboarding(teacher.id, "중학교", "서울", "과학")
     assert done.is_onboarded is True
     assert done.school_level == "중학교" and done.region == "서울"
-    assert done.phone == "010-1234-5678"
+    assert done.subject == "과학"
 
 
 def test_onboarding_rejects_bad_values():
     teacher, _ = auth_service.establish_session(_google_token())
     with pytest.raises(AuthError):
-        auth_service.complete_onboarding(teacher.id, "대학교", "서울", "", "")
+        auth_service.complete_onboarding(teacher.id, "대학교", "서울", "")
     with pytest.raises(AuthError):
-        auth_service.complete_onboarding(teacher.id, "중학교", "화성", "", "")
+        auth_service.complete_onboarding(teacher.id, "중학교", "화성", "")

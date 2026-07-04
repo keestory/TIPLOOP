@@ -39,19 +39,13 @@ def establish_session(access_token: str) -> tuple[User, str]:
 
     meta = claims.get("user_metadata") or {}
     app_meta = claims.get("app_metadata") or {}
-    phone = claims.get("phone") or meta.get("phone_number") or meta.get("phone") or None
-    provider = app_meta.get("provider")
-    # 카카오는 동의항목으로 검증된 번호를 준다 → verified 처리
-    phone_verified = bool(claims.get("phone_verified") or (provider == "kakao" and phone))
 
     teacher = teachers.upsert_by_auth(
         auth_id=str(claims["sub"]),
         name=_claim_name(claims, meta),
         email=claims.get("email") or meta.get("email"),
         avatar_url=meta.get("avatar_url") or meta.get("picture"),
-        provider=provider,
-        phone=phone,
-        phone_verified=phone_verified,
+        provider=app_meta.get("provider"),
     )
     return teacher, sign_session(teacher.id, SESSION_SECRET, _TTL)
 
@@ -64,14 +58,10 @@ def current_user(cookie: str | None) -> User | None:
     return teachers.get(teacher_id)
 
 
-def complete_onboarding(
-    teacher_id: int, school_level: str, region: str, subject: str, phone: str
-) -> User:
-    """온보딩 — 소셜이 주지 않는 학교급·지역·담당(+필요 시 전화번호)을 채운다."""
+def complete_onboarding(teacher_id: int, school_level: str, region: str, subject: str) -> User:
+    """온보딩 — 소셜이 주지 않는 학교급·지역·담당을 채운다."""
     if school_level not in SCHOOL_LEVELS:
         raise AuthError("학교급을 선택해 주세요.")
     if region not in REGIONS:
         raise AuthError("지역을 선택해 주세요.")
-    return teachers.complete_profile(
-        teacher_id, school_level, region, (subject or "").strip(), (phone or "").strip()
-    )
+    return teachers.complete_profile(teacher_id, school_level, region, (subject or "").strip())

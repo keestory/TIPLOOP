@@ -22,16 +22,13 @@
    `https://<ref>.supabase.co/auth/v1/callback`
 3. 발급된 Client ID/Secret을 Supabase → Authentication → Providers → **Google**에 입력, 활성화.
 
-## 3. 카카오 로그인 (+ 전화번호)
+## 3. 카카오 로그인
 1. https://developers.kakao.com 에서 애플리케이션 생성.
 2. 카카오 로그인 활성화 → Redirect URI에 `https://<ref>.supabase.co/auth/v1/callback` 추가.
-3. **동의항목**에서 다음을 사용 설정:
-   - 카카오계정(이메일) — 이름/이메일
-   - **전화번호** — ⚠️ 전화번호 제공은 **비즈니스 앱 전환 + 심사**가 필요합니다.
+3. **동의항목**에서 카카오계정(이메일) — 이름/이메일 을 사용 설정.
 4. REST API 키/Client Secret을 Supabase → Authentication → Providers → **Kakao**에 입력, 활성화.
 
-> 카카오가 검증된 번호를 주면 이음은 그 번호를 그대로 저장하고 `phone_verified`로 처리합니다.
-> 구글 가입자는 번호를 주지 않으므로 온보딩에서 직접 입력받습니다.
+> 전화번호는 현재 받지 않습니다(추후 필요 시 문자 인증 또는 카카오 동의항목으로 추가 가능).
 
 ## 4. 리디렉션 허용 URL
 Supabase → Authentication → URL Configuration → **Redirect URLs**에 앱 주소의 콜백을 추가:
@@ -46,6 +43,6 @@ https://<배포도메인>/auth/callback        (배포)
    → supabase-js signInWithOAuth → 제공자 동의 → Supabase
    → /auth/callback (supabase-js가 세션 파싱)
    → POST /auth/session  (백엔드가 JWT 검증 → 교사 upsert → 세션 쿠키)
-   → 신규/미완료면 /onboarding (학교급·지역, 필요 시 전화번호)
+   → 신규/미완료면 /onboarding (학교급·지역·담당)
    → 완료면 /
 ```

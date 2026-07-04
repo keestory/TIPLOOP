@@ -29,9 +29,9 @@ TEACHERS = [
 def _seed_teacher(auth_id, name, provider, level, region, subject):
     t = teachers.upsert_by_auth(
         auth_id=auth_id, name=name, email=f"{auth_id}@example.kr",
-        avatar_url=None, provider=provider, phone=None, phone_verified=False,
+        avatar_url=None, provider=provider,
     )
-    return teachers.complete_profile(t.id, level, region, subject, "")
+    return teachers.complete_profile(t.id, level, region, subject)
 
 
 def main() -> None:

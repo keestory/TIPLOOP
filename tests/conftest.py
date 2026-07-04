@@ -40,15 +40,15 @@ def make_teacher():
     counter = {"n": 0}
 
     def _make(name="쌤", level="중학교", region="서울", subject="",
-              provider="google", phone=None, onboard=True):
+              provider="google", onboard=True):
         counter["n"] += 1
         n = counter["n"]
         teacher = teachers.upsert_by_auth(
             auth_id=f"auth-{n}", name=name, email=f"t{n}@s.kr",
-            avatar_url=None, provider=provider, phone=phone, phone_verified=bool(phone),
+            avatar_url=None, provider=provider,
         )
         if onboard:
-            teacher = teachers.complete_profile(teacher.id, level, region, subject, phone or "")
+            teacher = teachers.complete_profile(teacher.id, level, region, subject)
         return teacher
 
     return _make

@@ -32,11 +32,6 @@ class User:
         """학교급·지역을 채웠으면 온보딩 완료."""
         return bool(self.school_level and self.region)
 
-    @property
-    def needs_phone(self) -> bool:
-        """전화번호가 아직 없으면 입력받아야 한다(구글 가입자 등)."""
-        return not self.phone
-
 
 @dataclass(frozen=True)
 class Post:
