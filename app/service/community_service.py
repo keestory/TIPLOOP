@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 from app.config.settings import CATEGORIES
-from app.repo import comments, members, posts, reactions
-from app.types.models import Post, Thread, User
+from app.repo import comments, media_comments, members, posts, reactions
+from app.types.models import MediaComment, Post, Thread, User
 
 
 class CommunityError(ValueError):
@@ -16,13 +16,14 @@ class CommunityError(ValueError):
 
 def create_post(
     author_id: int, category: str, title: str, body: str,
-    link_url: str = "", image_url: str = "",
+    link_url: str = "", image_url: str = "", video_url: str = "",
 ) -> int:
-    """글을 작성한다. 레퍼런스면 참고 링크를, 어느 글이든 주석 이미지를 붙일 수 있다."""
+    """글을 작성한다. 레퍼런스면 참고 링크를, 어느 글이든 주석 이미지·영상을 붙일 수 있다."""
     title = (title or "").strip()
     body = (body or "").strip()
     link_url = (link_url or "").strip()
     image_url = (image_url or "").strip()
+    video_url = (video_url or "").strip()
 
     if category not in CATEGORIES:
         raise CommunityError("카테고리를 선택해 주세요.")
@@ -37,8 +38,28 @@ def create_post(
 
     return posts.create_post(
         author_id=author_id, category=category, title=title, body=body,
-        link_url=link_url or None, image_url=image_url or None,
+        link_url=link_url or None, image_url=image_url or None, video_url=video_url or None,
     )
+
+
+def add_media_comment(
+    post_id: int, author_id: int, t_seconds: float, x: float, y: float, body: str
+) -> MediaComment:
+    """영상의 특정 시각·위치에 코멘트를 단다. 대상 글에 영상이 있어야 한다."""
+    body = (body or "").strip()
+    if not body:
+        raise CommunityError("코멘트 내용을 입력해 주세요.")
+    post = posts.get_post(post_id)
+    if post is None or not post.video_url:
+        raise CommunityError("영상을 찾을 수 없습니다.")
+    x = min(1.0, max(0.0, x))
+    y = min(1.0, max(0.0, y))
+    t_seconds = max(0.0, t_seconds)
+    return media_comments.create(post_id, author_id, t_seconds, x, y, body)
+
+
+def list_media_comments(post_id: int) -> list[MediaComment]:
+    return media_comments.list_for_post(post_id)
 
 
 def list_feed(

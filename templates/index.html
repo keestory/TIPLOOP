@@ -55,6 +55,9 @@
     {% if post.image_url %}
       <a href="/posts/{{ post.id }}"><img class="feed-thumb" src="{{ post.image_url }}" alt="" loading="lazy"></a>
     {% endif %}
+    {% if post.video_url %}
+      <p class="feed-event">🎬 영상</p>
+    {% endif %}
     <div class="feed-actions">
       {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
       <a class="action-link" href="/posts/{{ post.id }}">💬 댓글 {{ post.comment_count }}</a>

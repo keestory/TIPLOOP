@@ -23,7 +23,20 @@ CREATE TABLE IF NOT EXISTS posts (
     body       TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     link_url   TEXT,                          -- 레퍼런스 참고 링크 (선택)
-    image_url  TEXT                           -- 주석 이미지 (Supabase Storage URL, 선택)
+    image_url  TEXT,                          -- 주석 이미지 (Supabase Storage URL, 선택)
+    video_url  TEXT                           -- 첨부 영상 (Supabase Storage URL, 선택)
+);
+
+-- 영상 위 특정 시각+위치에 달리는 코멘트 (Frame.io식)
+CREATE TABLE IF NOT EXISTS media_comments (
+    id         BIGSERIAL PRIMARY KEY,
+    post_id    BIGINT NOT NULL REFERENCES posts(id),
+    author_id  BIGINT NOT NULL REFERENCES members(id),
+    t_seconds  DOUBLE PRECISION NOT NULL,     -- 영상 재생 시각(초)
+    x          DOUBLE PRECISION NOT NULL,     -- 화면 가로 위치 0~1
+    y          DOUBLE PRECISION NOT NULL,     -- 화면 세로 위치 0~1
+    body       TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS comments (

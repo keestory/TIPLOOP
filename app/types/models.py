@@ -42,6 +42,7 @@ class Post:
     created_at: str
     link_url: str | None = None   # 레퍼런스 참고 링크 (선택)
     image_url: str | None = None  # 주석 이미지 (선택)
+    video_url: str | None = None  # 첨부 영상 (선택)
     # 조회 시 채워지는 작성자 표시 정보 (join 결과)
     author_name: str | None = None
     author_job_role: str | None = None
@@ -64,6 +65,21 @@ class Comment:
     author_name: str | None = None
     author_job_role: str | None = None
     reaction_count: int = 0
+
+
+@dataclass(frozen=True)
+class MediaComment:
+    """영상 위 특정 시각·위치에 달린 코멘트."""
+
+    id: int
+    post_id: int
+    author_id: int
+    t_seconds: float
+    x: float
+    y: float
+    body: str
+    created_at: str
+    author_name: str | None = None
 
 
 @dataclass(frozen=True)

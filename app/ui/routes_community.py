@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.service import community_service, reaction_service
 from app.service.community_service import CommunityError
@@ -75,18 +75,19 @@ def create_post(
     body: str = Form(...),
     link_url: str = Form(""),
     image_url: str = Form(""),
+    video_url: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if gate := _gate(user):
         return gate
     try:
         post_id = community_service.create_post(
-            user.id, category, title, body, link_url, image_url
+            user.id, category, title, body, link_url, image_url, video_url
         )
     except CommunityError as exc:
         return _render(request, "post_new.html", user, error=str(exc), form={
             "category": category, "title": title, "body": body,
-            "link_url": link_url, "image_url": image_url,
+            "link_url": link_url, "image_url": image_url, "video_url": video_url,
         })
     return RedirectResponse(f"/posts/{post_id}", status_code=303)
 
@@ -101,10 +102,41 @@ def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(g
     reacted_comments = reaction_service.viewer_comment_reactions(
         user.id if user else None, post_id
     )
+    mcs = community_service.list_media_comments(post_id) if post.video_url else []
+    media = [
+        {"id": m.id, "t": m.t_seconds, "x": m.x, "y": m.y,
+         "body": m.body, "author_name": m.author_name}
+        for m in mcs
+    ]
     return _render(
         request, "post_detail.html", user, post=post, threads=threads,
-        reacted=reacted, reacted_comments=reacted_comments,
+        reacted=reacted, reacted_comments=reacted_comments, media_comments=media,
     )
+
+
+@router.post("/posts/{post_id}/media-comments")
+def add_media_comment(
+    request: Request,
+    post_id: int,
+    t: float = Form(...),
+    x: float = Form(...),
+    y: float = Form(...),
+    body: str = Form(...),
+    user: Optional[User] = Depends(get_current_user),
+):
+    """영상 지점 코멘트 — 비동기(fetch)로 추가하고 만든 코멘트를 JSON으로 돌려준다."""
+    if user is None:
+        return JSONResponse({"error": "로그인이 필요합니다."}, status_code=401)
+    if not user.is_onboarded:
+        return JSONResponse({"error": "온보딩이 필요합니다."}, status_code=403)
+    try:
+        mc = community_service.add_media_comment(post_id, user.id, t, x, y, body)
+    except CommunityError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    return JSONResponse({
+        "id": mc.id, "t": mc.t_seconds, "x": mc.x, "y": mc.y,
+        "body": mc.body, "author_name": mc.author_name,
+    })
 
 
 @router.post("/posts/{post_id}/comments")

@@ -25,6 +25,26 @@
   <img class="post-image" src="{{ post.image_url }}" alt="첨부 이미지" loading="lazy">
   {% endif %}
 
+  {% if post.video_url %}
+  <section class="vp" id="vp" data-post="{{ post.id }}" data-can-comment="{{ '1' if current_user else '0' }}">
+    <div class="vp-bar">
+      {% if current_user %}
+        <button type="button" class="anno-op" id="vp-toggle">➕ 지점 코멘트 달기</button>
+        <span class="hint">버튼을 켜고 영상 위를 클릭하세요</span>
+      {% else %}
+        <span class="hint"><a href="/login">로그인</a>하면 영상 지점에 코멘트를 남길 수 있어요.</span>
+      {% endif %}
+    </div>
+    <div class="vp-stage">
+      <video id="vp-video" src="{{ post.video_url }}" controls playsinline preload="metadata"></video>
+      <div class="vp-overlay" id="vp-overlay"></div>
+    </div>
+    <ul class="vp-list" id="vp-list"></ul>
+  </section>
+  <script id="vp-data" type="application/json">{{ media_comments|tojson }}</script>
+  <script src="/static/videopin.js"></script>
+  {% endif %}
+
   <div class="post-actions">
     {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
     <span class="action-link">💬 댓글 {{ post.comment_count }}</span>
