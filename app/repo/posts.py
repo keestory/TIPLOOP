@@ -80,6 +80,7 @@ def list_posts(
     job_role: str | None = None,
     industry: str | None = None,
     author_id: int | None = None,
+    search: str | None = None,
     sort: str = "new",
 ) -> list[Post]:
     """필터를 AND로 적용하고 sort(new|top|buzz)로 정렬해 돌려준다."""
@@ -97,6 +98,11 @@ def list_posts(
     if author_id is not None:
         clauses.append("p.author_id = %s")
         params.append(author_id)
+    if search:
+        # 제목 또는 본문에 검색어 포함 (대소문자 무시). %/_ 는 리터럴로.
+        like = "%" + search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        clauses.append("(p.title ILIKE %s OR p.body ILIKE %s)")
+        params.extend([like, like])
 
     where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
     order = _ORDER.get(sort, _ORDER["new"])

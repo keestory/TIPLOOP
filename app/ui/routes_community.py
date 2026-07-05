@@ -58,8 +58,13 @@ def feed(
 
 
 @router.get("/explore")
-def explore(request: Request, user: Optional[User] = Depends(get_current_user)):
-    return _render(request, "soon.html", user, tab="explore", heading="탐색")
+def explore(request: Request, q: str = "", user: Optional[User] = Depends(get_current_user)):
+    query = q.strip()
+    if query:
+        results = community_service.list_feed(search=query, sort="new")
+        return _render(request, "explore.html", user, q=query, results=results, popular=None)
+    popular = community_service.list_feed(sort="top")[:6]
+    return _render(request, "explore.html", user, q="", results=None, popular=popular)
 
 
 @router.get("/notifications")

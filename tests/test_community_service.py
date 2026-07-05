@@ -63,6 +63,26 @@ def test_contribution_heatmap_ignores_old_and_bad():
     assert heat == [0] * 12
 
 
+def test_search_matches_title_and_body(make_member):
+    t = make_member()
+    community_service.create_post(t.id, "tip", "리텐션 올리는 법", "코호트 분석부터")
+    community_service.create_post(t.id, "tip", "결제 팁", "리텐션 지표도 함께 보세요")
+    community_service.create_post(t.id, "tip", "무관한 글", "관련 없는 내용")
+    hits = community_service.list_feed(search="리텐션")
+    assert len(hits) == 2                       # 제목 1 + 본문 1
+    titles = {p.title for p in hits}
+    assert "무관한 글" not in titles
+
+
+def test_search_escapes_wildcards(make_member):
+    t = make_member()
+    community_service.create_post(t.id, "tip", "100% 전환", "완전 전환 달성")
+    community_service.create_post(t.id, "tip", "일반 글", "그냥 내용")
+    # '%'는 리터럴로 처리 — 모든 글이 걸리면 안 된다
+    hits = community_service.list_feed(search="100%")
+    assert len(hits) == 1 and hits[0].title == "100% 전환"
+
+
 def test_reference_keeps_link(make_member):
     t = make_member()
     pid = community_service.create_post(

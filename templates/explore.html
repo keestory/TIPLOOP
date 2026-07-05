@@ -1,0 +1,58 @@
+{% extends "mobile.html" %}
+{% block title %}탐색{% endblock %}
+
+{% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
+{% macro post_card(post) %}
+<a class="tapcard" href="/posts/{{ post.id }}" style="gap:9px">
+  <div style="display:flex;align-items:center;gap:7px">
+    <span class="tag {% if post.category == 'tip' %}lime{% endif %}">{{ cat_tag(post.category) }}</span>
+    <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
+  </div>
+  <p class="ttl" style="font-weight:600">{{ post.title }}</p>
+  <div class="metas"><span class="meta">💡 {{ post.helpful_count }}</span><span class="meta">💬 {{ post.comment_count }}</span></div>
+</a>
+{% endmacro %}
+
+{% block app %}
+<div class="body" style="gap:16px">
+  <div class="topbar"><h1 style="margin:0;font:800 22px var(--head);letter-spacing:-.02em">탐색</h1></div>
+
+  <form class="searchbar" method="get" action="/explore">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#8A8578" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+    <input name="q" value="{{ q }}" placeholder="무엇이 궁금하세요?" autocomplete="off">
+  </form>
+
+  {% if results is not none %}
+    {# 검색 결과 #}
+    <div class="sec-head">
+      <span class="h2">'{{ q }}' 검색 결과</span>
+      <span class="meta">{{ results | length }}건</span>
+    </div>
+    {% for post in results %}
+      {{ post_card(post) }}
+    {% else %}
+    <p class="empty" style="margin:8px 0">'{{ q }}'에 대한 글이 아직 없어요.<br><a href="/posts/new">이 주제로 첫 글을 남겨보세요 →</a></p>
+    {% endfor %}
+  {% else %}
+    {# 기본 — 주제 칩 + 인기 글 #}
+    <span class="h2">지금 많이 찾는</span>
+    <div style="display:flex;flex-wrap:wrap;gap:9px">
+      {% for t in topics_list %}
+      <a class="chip" href="/explore?q={{ t | urlencode }}" style="padding:8px 14px">#{{ t }}</a>
+      {% endfor %}
+    </div>
+
+    <span class="h2" style="margin-top:2px">인기 글</span>
+    {% for post in popular %}
+      {{ post_card(post) }}
+    {% else %}
+    <p class="empty" style="margin:8px 0">아직 글이 없어요.</p>
+    {% endfor %}
+  {% endif %}
+
+  <div style="min-height:6px"></div>
+</div>
+
+{% set tab = "explore" %}
+{% include "_tabbar.html" %}
+{% endblock %}

@@ -65,13 +65,15 @@ def list_media_comments(post_id: int) -> list[MediaComment]:
 
 
 def list_feed(
-    category: str = "", job_role: str = "", industry: str = "", sort: str = "new"
+    category: str = "", job_role: str = "", industry: str = "",
+    search: str = "", sort: str = "new",
 ) -> list[Post]:
     """피드. 빈 문자열 필터는 무시한다. sort: new|top|buzz."""
     return posts.list_posts(
         category=category or None,
         job_role=job_role or None,
         industry=industry or None,
+        search=search or None,
         sort=sort,
     )
 
