@@ -94,7 +94,18 @@ def get_connection() -> psycopg.Connection:
     return psycopg.connect(DATABASE_URL, row_factory=dict_row, autocommit=True)
 
 
+# 나중에 추가된 nullable 컬럼들 — 옛 DB에도 안전하게 채워 넣는다(멱등).
+_MIGRATIONS = [
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS link_url TEXT",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS image_url TEXT",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS video_url TEXT",
+    "ALTER TABLE IF EXISTS comments ADD COLUMN IF NOT EXISTS parent_id BIGINT",
+]
+
+
 def init_db() -> None:
-    """스키마를 생성한다(이미 있으면 건너뜀)."""
+    """스키마를 생성하고(없으면), 뒤늦게 추가된 컬럼을 채운다(멱등)."""
     with get_connection() as conn:
         conn.execute(_SCHEMA)
+        for stmt in _MIGRATIONS:
+            conn.execute(stmt)
