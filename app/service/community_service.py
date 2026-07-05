@@ -7,8 +7,16 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from app.config.settings import CATEGORIES
-from app.repo import comments, media_comments, members, posts, reactions, reviews
+from app.config.settings import CATEGORIES, TOPICS
+from app.repo import (
+    comments,
+    media_comments,
+    members,
+    notifications,
+    posts,
+    reactions,
+    reviews,
+)
 from app.types.models import MediaComment, Post, Review, Thread, User
 
 
@@ -38,10 +46,27 @@ def create_post(
     if category != "reference":
         link_url = ""
 
-    return posts.create_post(
+    post_id = posts.create_post(
         author_id=author_id, category=category, title=title, body=body,
         link_url=link_url or None, image_url=image_url or None, video_url=video_url or None,
     )
+    _notify_topic_subscribers(post_id, author_id, title + " " + body)
+    return post_id
+
+
+def _notify_topic_subscribers(post_id: int, author_id: int, text: str) -> None:
+    """글이 언급한 관심 주제를 구독한 회원들에게 새 글 알림(중복 제거)."""
+    seen: set[int] = set()
+    for topic in TOPICS:
+        if topic not in text:
+            continue
+        for uid in members.subscribers_of_topic(topic):
+            if uid in seen:
+                continue
+            seen.add(uid)
+            notifications.create(
+                uid, "topic_post", actor_id=author_id, post_id=post_id, topic=topic
+            )
 
 
 def add_media_comment(
@@ -122,25 +147,37 @@ def add_comment(post_id: int, author_id: int, body: str, parent_id: int | None =
     body = (body or "").strip()
     if not body:
         raise CommunityError("댓글 내용을 입력해 주세요.")
-    if posts.get_post(post_id) is None:
+    post = posts.get_post(post_id)
+    if post is None:
         raise CommunityError("글을 찾을 수 없습니다.")
+    parent_author: int | None = None
     if parent_id is not None:
         parent = comments.get_comment(parent_id)
         if parent is None or parent.post_id != post_id:
             parent_id = None
-        elif parent.parent_id is not None:
-            parent_id = parent.parent_id  # 답글의 답글은 최상위로 평탄화
-    return comments.create_comment(post_id, author_id, body, parent_id)
+        else:
+            parent_author = parent.author_id
+            if parent.parent_id is not None:
+                parent_id = parent.parent_id  # 답글의 답글은 최상위로 평탄화
+    cid = comments.create_comment(post_id, author_id, body, parent_id)
+    # 글쓴이에겐 '댓글', 원댓글 작성자에겐 '답글' 알림 (겹치면 댓글만)
+    notifications.create(post.author_id, "comment", actor_id=author_id, post_id=post_id)
+    if parent_author is not None and parent_author != post.author_id:
+        notifications.create(parent_author, "reply", actor_id=author_id, post_id=post_id)
+    return cid
 
 
 def add_review(post_id: int, author_id: int, body: str) -> int:
-    """적용 후기를 남긴다. 대상 글이 있어야 한다."""
+    """적용 후기를 남긴다. 대상 글이 있어야 한다. 글쓴이에게 알림."""
     body = (body or "").strip()
     if not body:
         raise CommunityError("후기 내용을 입력해 주세요.")
-    if posts.get_post(post_id) is None:
+    post = posts.get_post(post_id)
+    if post is None:
         raise CommunityError("글을 찾을 수 없습니다.")
-    return reviews.create(post_id, author_id, body)
+    rid = reviews.create(post_id, author_id, body)
+    notifications.create(post.author_id, "review", actor_id=author_id, post_id=post_id)
+    return rid
 
 
 def list_reviews(post_id: int) -> list[Review]:

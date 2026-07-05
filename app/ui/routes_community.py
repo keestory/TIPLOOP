@@ -8,7 +8,12 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config.settings import CATEGORIES, WRITE_TEMPLATES
-from app.service import community_service, reaction_service
+from app.service import (
+    community_service,
+    follow_service,
+    notification_service,
+    reaction_service,
+)
 from app.service.community_service import CommunityError
 from app.types.models import User
 from app.ui.deps import get_current_user
@@ -16,6 +21,11 @@ from app.ui.deps import get_current_user
 router = APIRouter()
 
 FEED_SORTS = {"new": "최신", "top": "공감", "buzz": "화제"}
+
+
+def _nav_unread(user: Optional[User]) -> int:
+    """탭바의 알림 배지용 안 읽은 알림 수."""
+    return notification_service.unread_count(user.id if user else None)
 
 
 def _render(request: Request, name: str, current_user: Optional[User], **ctx):
@@ -53,23 +63,46 @@ def feed(
     return _render(
         request, "index.html", user,
         featured=featured, waiting=waiting, rest=rest,
-        sort=sort, active_category=category,
+        sort=sort, active_category=category, nav_unread=_nav_unread(user),
     )
 
 
 @router.get("/explore")
 def explore(request: Request, q: str = "", user: Optional[User] = Depends(get_current_user)):
     query = q.strip()
+    unread = _nav_unread(user)
     if query:
         results = community_service.list_feed(search=query, sort="new")
-        return _render(request, "explore.html", user, q=query, results=results, popular=None)
+        return _render(request, "explore.html", user, q=query, results=results,
+                       popular=None, nav_unread=unread)
     popular = community_service.list_feed(sort="top")[:6]
-    return _render(request, "explore.html", user, q="", results=None, popular=popular)
+    return _render(request, "explore.html", user, q="", results=None,
+                   popular=popular, nav_unread=unread)
 
 
 @router.get("/notifications")
-def notifications(request: Request, user: Optional[User] = Depends(get_current_user)):
-    return _render(request, "soon.html", user, tab="notifications", heading="알림")
+def notifications_page(request: Request, user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    items = notification_service.list_recent(user.id)
+    return _render(request, "notifications.html", user,
+                   items=items, nav_unread=_nav_unread(user))
+
+
+@router.post("/notifications/read")
+def notifications_read(request: Request, user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    notification_service.mark_all_read(user.id)
+    return RedirectResponse("/notifications", status_code=303)
+
+
+@router.post("/users/{user_id}/follow")
+def follow_user(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
+    if gate := _gate(user):
+        return gate
+    follow_service.toggle(user.id, user_id)
+    return _back(request, f"/users/{user_id}")
 
 
 @router.get("/posts/new")
@@ -239,7 +272,8 @@ def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_c
     except CommunityError as exc:
         return _render(request, "not_found.html", user, message=str(exc))
     heatmap = community_service.contribution_heatmap(posts)
+    follow = follow_service.status(user.id if user else None, user_id)
     return _render(
         request, "profile.html", user, teacher=member, posts=posts,
-        stats=stats, heatmap=heatmap,
+        stats=stats, heatmap=heatmap, follow=follow, nav_unread=_nav_unread(user),
     )

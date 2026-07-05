@@ -61,6 +61,15 @@ def get_by_auth(auth_id: str) -> User | None:
         return _to_user(row) if row else None
 
 
+def subscribers_of_topic(topic: str) -> list[int]:
+    """해당 주제를 관심 목록에 담은 회원 id들. 구독 알림 대상 산출용."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT id FROM members WHERE %s = ANY(topics)", (topic,)
+        ).fetchall()
+        return [r["id"] for r in rows]
+
+
 def set_topics(member_id: int, topics: list[str]) -> User:
     """온보딩 1단계 — 관심 주제를 저장한다."""
     sql = "UPDATE members SET topics = %s WHERE id = %s RETURNING *;"

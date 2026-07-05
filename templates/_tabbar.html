@@ -3,7 +3,7 @@
   <a class="tb {% if tab == 'home' %}on{% endif %}" href="/">홈</a>
   <a class="tb {% if tab == 'explore' %}on{% endif %}" href="/explore">탐색</a>
   <a class="tb write" href="/posts/new"><span style="font-size:17px;line-height:1">＋</span>글쓰기</a>
-  <a class="tb {% if tab == 'notifications' %}on{% endif %}" href="/notifications">알림</a>
+  <a class="tb {% if tab == 'notifications' %}on{% endif %}" href="/notifications" style="position:relative">알림{% if nav_unread is defined and nav_unread %}<span class="tb-dot"></span>{% endif %}</a>
   <a class="tb {% if tab == 'profile' %}on{% endif %}"
      href="{% if current_user %}/users/{{ current_user.id }}{% else %}/login{% endif %}">프로필</a>
 </nav>

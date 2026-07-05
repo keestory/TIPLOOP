@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from app.repo import comments, posts, reactions
+from app.repo import comments, notifications, posts, reactions
 
 
 def toggle_post(post_id: int, user_id: int) -> bool:
@@ -35,10 +35,14 @@ def received_count(user_id: int) -> int:
 
 
 def toggle_helpful(post_id: int, user_id: int) -> bool:
-    """'도움됐어요' 토글. 대상 글이 있을 때만."""
-    if posts.get_post(post_id) is None:
+    """'도움됐어요' 토글. 대상 글이 있을 때만. 새로 켜면 글쓴이에게 알림."""
+    post = posts.get_post(post_id)
+    if post is None:
         return False
-    return reactions.toggle_post_helpful(post_id, user_id)
+    now_on = reactions.toggle_post_helpful(post_id, user_id)
+    if now_on:
+        notifications.create(post.author_id, "helpful", actor_id=user_id, post_id=post_id)
+    return now_on
 
 
 def viewer_helpful(user_id: int | None) -> set[int]:

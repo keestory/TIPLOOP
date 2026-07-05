@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.repo import members
 from app.repo.database import init_db
 from app.service import community_service as C
+from app.service import follow_service as F
 from app.service import reaction_service as R
 
 MEMBERS = [
@@ -73,6 +74,12 @@ def main() -> None:
         hyun.id, "retro", "첫 라이브커머스 론칭 회고 — 잘한 것과 삽질",
         "3주 만에 붙인 라이브 방송 기능. 트래픽 예측을 너무 낙관했던 게 가장 큰 실수였어요.",
     )
+
+    # 팔로우 — 프로필 지표와 팔로우 알림 예시
+    F.toggle(sora.id, jun.id)
+    F.toggle(minp.id, jun.id)
+    F.toggle(jun.id, sora.id)
+
     print("데모 데이터 시드 완료.")
 
 

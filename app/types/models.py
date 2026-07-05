@@ -104,3 +104,25 @@ class Thread:
 
     comment: Comment
     replies: tuple[Comment, ...] = ()
+
+
+@dataclass(frozen=True)
+class Notification:
+    """활동 알림. 내 글에 달린 후기·도움·댓글, 팔로우, 구독 주제의 새 글."""
+
+    id: int
+    user_id: int                     # 받는 사람
+    kind: str                        # review | helpful | comment | follow | topic_post
+    created_at: str
+    actor_id: int | None = None      # 행동한 사람 (topic_post는 글쓴이)
+    post_id: int | None = None       # 관련 글
+    topic: str | None = None         # 관련 주제 (topic_post)
+    read_at: str | None = None       # 읽은 시각 (안 읽었으면 None)
+    # 조회 시 채워지는 표시 정보 (join)
+    actor_name: str | None = None
+    post_title: str | None = None
+    ago: str | None = None           # "5분 전" 등 표시용
+
+    @property
+    def is_unread(self) -> bool:
+        return self.read_at is None

@@ -1,0 +1,43 @@
+{% extends "mobile.html" %}
+{% block title %}알림{% endblock %}
+{% block app %}
+<div class="body" style="gap:4px">
+  <div class="topbar" style="margin-bottom:6px">
+    <h1 style="margin:0;font:800 22px var(--head);letter-spacing:-.02em">알림</h1>
+    {% if items %}
+    <form action="/notifications/read" method="post" style="margin:0">
+      <button type="submit" class="meta" style="background:none;border:none;cursor:pointer">모두 읽음</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% set emoji = {"review":"📝","helpful":"💡","comment":"💬","reply":"↩️","follow":"👤","topic_post":"🔖"} %}
+  {% for n in items %}
+  {% set href = "/users/" ~ n.actor_id if n.kind == "follow" else ("/posts/" ~ n.post_id if n.post_id else "/notifications") %}
+  <a class="nt" href="{{ href }}">
+    <span class="nt-ic {% if n.is_unread %}unread{% endif %}">{{ emoji.get(n.kind, "🔔") }}</span>
+    <div class="nt-body">
+      <p>
+        {% if n.kind == "review" %}<b>{{ n.actor_name }}</b>님이 내 글 「{{ n.post_title }}」에 후기를 남겼어요
+        {% elif n.kind == "helpful" %}<b>{{ n.actor_name }}</b>님이 내 글 「{{ n.post_title }}」에 <b>도움됐어요</b>를 눌렀어요
+        {% elif n.kind == "comment" %}<b>{{ n.actor_name }}</b>님이 내 글 「{{ n.post_title }}」에 댓글을 남겼어요
+        {% elif n.kind == "reply" %}<b>{{ n.actor_name }}</b>님이 「{{ n.post_title }}」에서 내 댓글에 답글을 남겼어요
+        {% elif n.kind == "follow" %}<b>{{ n.actor_name }}</b>님이 나를 팔로우해요
+        {% elif n.kind == "topic_post" %}구독한 <b>'{{ n.topic }}'</b>에 새 글이 올라왔어요{% if n.post_title %}: 「{{ n.post_title }}」{% endif %}
+        {% endif %}
+      </p>
+      <span class="meta">{{ n.ago }}</span>
+    </div>
+  </a>
+  {% else %}
+  <div class="grow"></div>
+  <p class="empty">아직 알림이 없어요.<br>글을 남기고 반응을 받아보세요.</p>
+  <div class="grow"></div>
+  {% endfor %}
+
+  <div style="min-height:6px"></div>
+</div>
+
+{% set tab = "notifications" %}
+{% include "_tabbar.html" %}
+{% endblock %}

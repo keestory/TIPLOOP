@@ -85,6 +85,27 @@ CREATE TABLE IF NOT EXISTS reviews (
     body       TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- 팔로우 (단방향)
+CREATE TABLE IF NOT EXISTS follows (
+    follower_id BIGINT NOT NULL REFERENCES members(id),
+    followee_id BIGINT NOT NULL REFERENCES members(id),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (follower_id, followee_id)
+);
+
+-- 활동 알림 (내 글 반응 · 팔로우 · 구독 주제의 새 글)
+CREATE TABLE IF NOT EXISTS notifications (
+    id         BIGSERIAL PRIMARY KEY,
+    user_id    BIGINT NOT NULL REFERENCES members(id),   -- 받는 사람
+    actor_id   BIGINT REFERENCES members(id),            -- 행동한 사람
+    kind       TEXT NOT NULL,                            -- review|helpful|comment|follow|topic_post
+    post_id    BIGINT REFERENCES posts(id),
+    topic      TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    read_at    TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
 """
 
 

@@ -13,8 +13,8 @@ import pytest
 
 _DB = os.environ.get("DATABASE_URL")
 _TABLES = (
-    "media_comments, reviews, post_helpful, comment_reactions, post_reactions, "
-    "comments, posts, members"
+    "notifications, follows, media_comments, reviews, post_helpful, "
+    "comment_reactions, post_reactions, comments, posts, members"
 )
 
 

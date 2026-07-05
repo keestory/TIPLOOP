@@ -17,6 +17,12 @@
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg>
       </button>
     </form>
+    {% elif current_user %}
+    <form action="/users/{{ teacher.id }}/follow" method="post" style="margin:0">
+      <button type="submit" class="btn pill {% if not follow.is_following %}{% else %}gh{% endif %}">
+        {% if follow.is_following %}팔로잉{% else %}팔로우{% endif %}
+      </button>
+    </form>
     {% endif %}
   </div>
 
@@ -30,6 +36,7 @@
         {% if teacher.years %}<span class="tag">{{ teacher.years }}</span>{% endif %}
         {% if teacher.industry %}<span class="tag lime">{{ teacher.industry }}</span>{% endif %}
       </div>
+      <div class="meta" style="margin-top:7px">팔로워 {{ follow.followers }} · 팔로잉 {{ follow.following }}</div>
     </div>
   </div>
 
