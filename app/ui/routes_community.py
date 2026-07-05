@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from app.config.settings import CATEGORIES, WRITE_TEMPLATES
 from app.service import community_service, reaction_service
 from app.service.community_service import CommunityError
 from app.types.models import User
@@ -67,12 +68,28 @@ def notifications(request: Request, user: Optional[User] = Depends(get_current_u
 
 
 @router.get("/posts/new")
-def new_post_form(
+def new_post_type(
     request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
 ):
+    """글쓰기 1단계 — 유형 선택."""
     if gate := _gate(user):
         return gate
-    return _render(request, "post_new.html", user, prefill_category=category)
+    return _render(request, "post_type.html", user, prefill_category=category)
+
+
+@router.get("/posts/new/write")
+def new_post_write(
+    request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
+):
+    """글쓰기 2단계 — 유형별 템플릿 작성."""
+    if gate := _gate(user):
+        return gate
+    if category not in CATEGORIES:
+        return RedirectResponse("/posts/new", status_code=303)
+    return _render(
+        request, "post_write.html", user,
+        category=category, sections=WRITE_TEMPLATES.get(category, []),
+    )
 
 
 @router.post("/posts")
@@ -93,10 +110,12 @@ def create_post(
             user.id, category, title, body, link_url, image_url, video_url
         )
     except CommunityError as exc:
-        return _render(request, "post_new.html", user, error=str(exc), form={
-            "category": category, "title": title, "body": body,
-            "link_url": link_url, "image_url": image_url, "video_url": video_url,
-        })
+        cat = category if category in CATEGORIES else "tip"
+        return _render(
+            request, "post_write.html", user, error=str(exc),
+            category=cat, sections=WRITE_TEMPLATES.get(cat, []),
+            form={"title": title, "body": body, "link_url": link_url},
+        )
     return RedirectResponse(f"/posts/{post_id}", status_code=303)
 
 

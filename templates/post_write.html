@@ -1,0 +1,121 @@
+{% extends "mobile.html" %}
+{% block title %}글쓰기 · {{ category_label(category) }}{% endblock %}
+{% block app %}
+<form class="body" style="gap:13px" method="post" action="/posts" id="post-form">
+  <input type="hidden" name="category" value="{{ category }}">
+  <input type="hidden" name="body" id="body-hidden">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+    <a class="cancel" href="/posts/new?category={{ category }}">‹ 유형</a>
+    <span class="tag lime">{{ category_label(category) }}</span>
+  </div>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <div class="wr-sec">
+    <span class="meta">제목</span>
+    <input class="title-input" name="title" placeholder="한 줄로 요약하면?" required
+           value="{{ form.title if form else '' }}">
+  </div>
+  <div class="divide"></div>
+
+  {% if category == "reference" %}
+  <div class="wr-sec">
+    <span class="meta">참고 링크 <span style="color:#B8B2A2">(선택)</span></span>
+    <input class="ta" name="link_url" type="url" placeholder="https://..." style="font-size:14px"
+           value="{{ form.link_url if form else '' }}">
+  </div>
+  {% endif %}
+
+  {% for s in sections %}
+  <div class="wr-sec">
+    <span class="meta" {% if s.hl %}style="color:#1A1917"{% endif %}>
+      {{ s.label }}{% if s.hint %} · {% if s.hl %}<span class="hl">{{ s.hint }}</span>{% else %}{{ s.hint }}{% endif %}{% endif %}
+    </span>
+    <textarea class="ta tpl-field" data-label="{{ s.label }}" rows="{{ 3 if loop.first else 2 }}"
+              placeholder="{{ s.ph }}"></textarea>
+  </div>
+  {% endfor %}
+
+  {% if supabase_url %}
+  <div class="wr-media">
+    <label class="chip" style="padding:8px 14px">🖼 이미지<input id="imgpick" type="file" accept="image/*" hidden></label>
+    <label class="chip" style="padding:8px 14px">🎬 영상<input id="vidpick" type="file" accept="video/*" hidden></label>
+    <span id="medianame" class="meta"></span>
+  </div>
+  <input type="hidden" id="image_url" name="image_url">
+  <input type="hidden" id="video_url" name="video_url">
+  {% endif %}
+
+  <div class="grow"></div>
+  <button type="submit" class="btn" id="submit-btn"><span>올리기</span><span style="font-size:17px">→</span></button>
+</form>
+{% endblock %}
+
+{% block script %}
+<script>
+  // 유형별 칸들을 하나의 본문으로 합친다. 비어 있으면 막는다.
+  // 이 리스너는 항상 등록되므로, 아래 업로드 모듈이 로드되지 않아도 제출은 동작한다.
+  window.buildBody = function () {
+    var parts = [];
+    document.querySelectorAll('.tpl-field').forEach(function (t) {
+      var v = t.value.trim();
+      if (v) parts.push(t.dataset.label + '\n' + v);
+    });
+    var body = parts.join('\n\n');
+    document.getElementById('body-hidden').value = body;
+    if (!body) { alert('내용을 한 칸 이상 채워 주세요.'); return false; }
+    return true;
+  };
+  document.getElementById('post-form').addEventListener('submit', function (e) {
+    if (!window.buildBody()) e.preventDefault();
+  });
+</script>
+{% if supabase_url %}
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const supabase = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}")
+  const form = document.getElementById('post-form')
+  const submitBtn = document.getElementById('submit-btn')
+  const imageUrl = document.getElementById('image_url')
+  const videoUrl = document.getElementById('video_url')
+  const name = document.getElementById('medianame')
+  let imgFile = null, vidFile = null
+
+  function label() {
+    name.textContent = [imgFile && imgFile.name, vidFile && vidFile.name].filter(Boolean).join(' · ')
+  }
+  document.getElementById('imgpick').addEventListener('change', (e) => { imgFile = e.target.files[0] || null; imageUrl.value = ''; label() })
+  document.getElementById('vidpick').addEventListener('change', (e) => { vidFile = e.target.files[0] || null; videoUrl.value = ''; label() })
+
+  async function upload(file, ext, type) {
+    const { data: u } = await supabase.auth.getUser()
+    const uid = u && u.user ? u.user.id : 'anon'
+    const path = `${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { data, error } = await supabase.storage.from('attachments').upload(path, file, { contentType: type, upsert: false })
+    if (error) throw error
+    return supabase.storage.from('attachments').getPublicUrl(data.path).data.publicUrl
+  }
+
+  // 업로드 전용 리스너. 본문 검증/조합은 위 스크립트가 이미 처리한다.
+  form.addEventListener('submit', (e) => {
+    if (e.defaultPrevented) return             // 본문 비어 검증 실패 → 이미 막힘
+    const needImg = imgFile && !imageUrl.value
+    const needVid = vidFile && !videoUrl.value
+    if (!needImg && !needVid) return           // 업로드할 게 없으면 그대로 제출
+    e.preventDefault()
+    submitBtn.disabled = true; submitBtn.querySelector('span').textContent = '업로드 중…'
+    ;(async () => {
+      try {
+        if (needImg) imageUrl.value = await upload(imgFile, 'png', imgFile.type || 'image/png')
+        if (needVid) { const ext = (vidFile.name.split('.').pop() || 'mp4').toLowerCase(); videoUrl.value = await upload(vidFile, ext, vidFile.type || 'video/mp4') }
+        form.submit()
+      } catch (err) {
+        alert('업로드 실패: ' + (err.message || err) + '\n(Supabase Storage의 attachments 버킷 확인)')
+        submitBtn.disabled = false; submitBtn.querySelector('span').textContent = '올리기'
+      }
+    })()
+  })
+</script>
+{% endif %}
+{% endblock %}

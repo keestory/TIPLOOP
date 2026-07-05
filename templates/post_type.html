@@ -1,0 +1,53 @@
+{% extends "mobile.html" %}
+{% block title %}글쓰기 · 유형{% endblock %}
+{% block app %}
+<div class="body" style="gap:15px">
+  <div style="margin-top:4px"><a class="cancel" href="/">✕ 취소</a></div>
+
+  <h1 class="title-lg" style="margin:6px 0 0">무엇을<br><span class="hl">남길까요?</span></h1>
+  <p class="sub">고른 유형에 딱 맞는 양식만 보여드려요.</p>
+
+  {% set meta = {
+    "tip": ("💡", "실무에서 통한 노하우"),
+    "reference": ("🔗", "참고한 사례·자료"),
+    "question": ("❓", "동료에게 물어보기"),
+    "retro": ("🔄", "돌아보고 배운 것")
+  } %}
+  <div class="type-grid" style="margin-top:2px">
+    {% for code, label in categories.items() %}
+    <button type="button" class="type-card {% if prefill_category == code %}on{% endif %}" data-cat="{{ code }}" data-label="{{ label }}">
+      <span class="emoji">{{ meta[code][0] }}</span>
+      <span class="t-label">{{ label }}</span>
+      <span class="t-desc">{{ meta[code][1] }}</span>
+    </button>
+    {% endfor %}
+  </div>
+
+  <div class="grow"></div>
+  <a class="btn" id="cta" href="#" aria-disabled="true"><span data-cta>유형을 골라주세요</span><span style="font-size:17px">→</span></a>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var cards = document.querySelectorAll('.type-card');
+  var cta = document.getElementById('cta');
+  var label = cta.querySelector('[data-cta]');
+  var selected = null;
+
+  function select(card) {
+    cards.forEach(function (c) { c.classList.toggle('on', c === card); });
+    selected = card.dataset.cat;
+    label.textContent = card.dataset.label + ' 남기기';
+    cta.href = '/posts/new/write?category=' + selected;
+    cta.removeAttribute('aria-disabled');
+  }
+  cards.forEach(function (c) { c.addEventListener('click', function () { select(c); }); });
+  cta.addEventListener('click', function (e) { if (!selected) e.preventDefault(); });
+
+  var pre = document.querySelector('.type-card.on');
+  if (pre) select(pre);
+})();
+</script>
+{% endblock %}
