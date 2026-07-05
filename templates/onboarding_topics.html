@@ -1,0 +1,58 @@
+{% extends "mobile.html" %}
+{% block title %}관심 주제{% endblock %}
+{% block app %}
+<form class="body" style="gap:16px" method="post" action="/onboarding">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+    <span class="brand">티핑<span class="d"></span></span>
+    <span class="meta">2 / 3</span>
+  </div>
+
+  <div class="steps">
+    <span class="on"></span><span class="on"></span><span></span>
+  </div>
+
+  <h1 class="title-lg" style="margin:14px 0 0">어떤 게<br><span class="hl">궁금하세요?</span></h1>
+  <p class="sub">고른 주제로 첫 피드를 채워드려요.<br>나중에 언제든 바꿀 수 있어요.</p>
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
+    {% for t in topics_list %}
+      {% set on = t in current_user.topics %}
+      <label class="chip{% if on %} on{% endif %}" data-chip>
+        <input type="checkbox" name="topics" value="{{ t }}" {% if on %}checked{% endif %}>
+        {{ t }}
+      </label>
+    {% endfor %}
+  </div>
+
+  <div class="grow"></div>
+
+  <button type="submit" class="btn" data-cta>
+    <span data-count>{{ current_user.topics | length }}개 선택됨 · 시작하기</span>
+    <span style="font-size:17px">→</span>
+  </button>
+</form>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var form = document.querySelector('form');
+  var chips = form.querySelectorAll('[data-chip]');
+  var count = form.querySelector('[data-count]');
+
+  function refresh() {
+    var n = form.querySelectorAll('input[name="topics"]:checked').length;
+    count.textContent = n + '개 선택됨 · 시작하기';
+  }
+  // 라벨이 체크박스 토글을 네이티브로 처리하므로 change만 듣는다(이중 토글 방지)
+  chips.forEach(function (chip) {
+    var box = chip.querySelector('input');
+    box.addEventListener('change', function () {
+      chip.classList.toggle('on', box.checked);
+      refresh();
+    });
+  });
+  refresh();
+})();
+</script>
+{% endblock %}

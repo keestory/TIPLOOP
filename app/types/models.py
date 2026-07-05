@@ -23,6 +23,7 @@ class User:
     job_role: str | None = None   # 직군
     years: str | None = None      # 연차
     industry: str | None = None   # 업종
+    topics: tuple[str, ...] = ()  # 관심 주제 (온보딩 2단계, 피드 개인화 씨앗)
 
     @property
     def is_onboarded(self) -> bool:

@@ -22,6 +22,7 @@ def _to_user(row: dict) -> User:
         job_role=row["job_role"],
         years=row["years"],
         industry=row["industry"],
+        topics=tuple(row.get("topics") or ()),
     )
 
 
@@ -58,6 +59,14 @@ def get_by_auth(auth_id: str) -> User | None:
     with get_connection() as conn:
         row = conn.execute("SELECT * FROM members WHERE auth_id = %s", (auth_id,)).fetchone()
         return _to_user(row) if row else None
+
+
+def set_topics(member_id: int, topics: list[str]) -> User:
+    """온보딩 1단계 — 관심 주제를 저장한다."""
+    sql = "UPDATE members SET topics = %s WHERE id = %s RETURNING *;"
+    with get_connection() as conn:
+        row = conn.execute(sql, (list(topics), member_id)).fetchone()
+        return _to_user(row)
 
 
 def complete_profile(member_id: int, job_role: str, years: str, industry: str) -> User:

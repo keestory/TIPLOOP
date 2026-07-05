@@ -64,17 +64,39 @@ def logout():
     return resp
 
 
+# ── 온보딩 ① 관심 주제 (2 / 3) ──────────────────────────────────────
 @router.get("/onboarding")
-def onboarding_form(request: Request, user: Optional[User] = Depends(get_current_user)):
+def onboarding_topics(request: Request, user: Optional[User] = Depends(get_current_user)):
     if user is None:
         return RedirectResponse("/login", status_code=303)
     if user.is_onboarded:
         return RedirectResponse("/", status_code=303)
-    return _render(request, "onboarding.html", user)
+    return _render(request, "onboarding_topics.html", user)
 
 
 @router.post("/onboarding")
-def onboarding_submit(
+def onboarding_topics_submit(
+    topics: Optional[list[str]] = Form(None),
+    user: Optional[User] = Depends(get_current_user),
+):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    auth_service.save_topics(user.id, topics or [])
+    return RedirectResponse("/onboarding/profile", status_code=303)
+
+
+# ── 온보딩 ② 프로필 직군·연차·업종 (3 / 3) ─────────────────────────
+@router.get("/onboarding/profile")
+def onboarding_profile(request: Request, user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    if user.is_onboarded:
+        return RedirectResponse("/", status_code=303)
+    return _render(request, "onboarding_profile.html", user)
+
+
+@router.post("/onboarding/profile")
+def onboarding_profile_submit(
     request: Request,
     job_role: str = Form(...),
     years: str = Form(...),
@@ -86,5 +108,5 @@ def onboarding_submit(
     try:
         auth_service.complete_onboarding(user.id, job_role, years, industry)
     except AuthError as exc:
-        return _render(request, "onboarding.html", user, error=str(exc))
+        return _render(request, "onboarding_profile.html", user, error=str(exc))
     return RedirectResponse("/", status_code=303)

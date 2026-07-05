@@ -1,0 +1,61 @@
+{% extends "mobile.html" %}
+{% block title %}프로필 완성{% endblock %}
+{% block app %}
+<form class="body" style="gap:16px" method="post" action="/onboarding/profile">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+    <span class="brand">티핑<span class="d"></span></span>
+    <span class="meta">3 / 3</span>
+  </div>
+
+  <div class="steps">
+    <span class="on"></span><span class="on"></span><span class="on"></span>
+  </div>
+
+  <h1 class="title-lg" style="margin:14px 0 0">거의<br><span class="hl">다 됐어요</span></h1>
+  <p class="sub">직군·연차·업종만 알려주시면 시작합니다.<br>피드 추천과 프로필에 쓰여요.</p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <div class="identity">
+    {% if current_user.avatar_url %}<img src="{{ current_user.avatar_url }}" alt="">{% endif %}
+    <div>
+      <strong>{{ current_user.name }}</strong>
+      <span class="meta">{% if current_user.email %}{{ current_user.email }} · {% endif %}{{ current_user.provider }} 계정</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="job_role">직군</label>
+    <select id="job_role" name="job_role" required>
+      <option value="">선택</option>
+      {% for r in job_roles %}
+        <option value="{{ r }}" {% if current_user.job_role == r %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="years">연차</label>
+    <select id="years" name="years" required>
+      <option value="">선택</option>
+      {% for y in years_list %}
+        <option value="{{ y }}" {% if current_user.years == y %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="industry">업종</label>
+    <select id="industry" name="industry" required>
+      <option value="">선택</option>
+      {% for i in industries %}
+        <option value="{{ i }}" {% if current_user.industry == i %}selected{% endif %}>{{ i }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="grow"></div>
+
+  <button type="submit" class="btn"><span>시작하기</span><span style="font-size:17px">→</span></button>
+</form>
+{% endblock %}

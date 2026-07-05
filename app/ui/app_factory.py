@@ -17,6 +17,7 @@ from app.config.settings import (
     SUPABASE_ANON_KEY,
     SUPABASE_URL,
     TAGLINE,
+    TOPICS,
     YEARS,
     category_label,
 )
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
         job_roles=JOB_ROLES,
         years_list=YEARS,
         industries=INDUSTRIES,
+        topics_list=TOPICS,
         brand=BRAND,
         tagline=TAGLINE,
         supabase_url=SUPABASE_URL,

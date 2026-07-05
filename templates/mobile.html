@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}{{ brand }}{% endblock %} · {{ brand }}</title>
+  <link rel="stylesheet" href="/static/tipping.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="app">
+    {% block app %}{% endblock %}
+  </div>
+  {% block script %}{% endblock %}
+</body>
+</html>

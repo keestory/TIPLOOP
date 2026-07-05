@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS members (
     job_role   TEXT,                          -- 직군 (온보딩 전엔 NULL)
     years      TEXT,                          -- 연차
     industry   TEXT,                          -- 업종
+    topics     TEXT[] NOT NULL DEFAULT '{}',  -- 관심 주제 (온보딩 2단계)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

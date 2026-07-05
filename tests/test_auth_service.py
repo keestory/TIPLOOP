@@ -69,6 +69,21 @@ def test_current_user_none_for_bad_cookie():
     assert auth_service.current_user("garbage.cookie.value") is None
 
 
+def test_save_topics_keeps_only_known(monkeypatch):
+    _patch(monkeypatch, _google_user())
+    member, _ = auth_service.establish_session("good")
+    done = auth_service.save_topics(member.id, ["리텐션", "우주여행", "A/B 테스트"])
+    assert done.topics == ("리텐션", "A/B 테스트")   # 모르는 주제는 버린다
+    assert done.is_onboarded is False               # 주제는 게이트가 아님
+
+
+def test_save_topics_allows_empty(monkeypatch):
+    _patch(monkeypatch, _google_user())
+    member, _ = auth_service.establish_session("good")
+    done = auth_service.save_topics(member.id, [])
+    assert done.topics == ()
+
+
 def test_onboarding_completes_profile(monkeypatch):
     _patch(monkeypatch, _google_user())
     member, _ = auth_service.establish_session("good")

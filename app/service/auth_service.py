@@ -12,6 +12,7 @@ from app.config.settings import (
     SESSION_TTL_DAYS,
     SUPABASE_ANON_KEY,
     SUPABASE_URL,
+    TOPICS,
     YEARS,
 )
 from app.providers import security
@@ -59,6 +60,12 @@ def current_user(cookie: str | None) -> User | None:
     if member_id is None:
         return None
     return members.get(member_id)
+
+
+def save_topics(member_id: int, topics: list[str]) -> User:
+    """온보딩 1단계 — 관심 주제를 저장한다. 아는 주제만 통과시킨다(빈 값 허용)."""
+    clean = [t for t in topics if t in TOPICS]
+    return members.set_topics(member_id, clean)
 
 
 def complete_onboarding(member_id: int, job_role: str, years: str, industry: str) -> User:

@@ -1,0 +1,201 @@
+/* 티핑 "Field Notes" 디자인 시스템 — 모바일 우선.
+   proto.dc.html 의 토큰/컴포넌트를 실제 앱용으로 옮김.
+   크림 페이퍼 · 잉크 블랙 · 라임 형광펜 / Gothic A1 · IBM Plex Sans KR · IBM Plex Mono */
+
+@import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800;900&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --paper: #EDE9E0;      /* 앱 바깥 배경 */
+  --screen: #FCFBF8;     /* 화면 배경 */
+  --ink: #1A1917;        /* 본문/헤드라인 */
+  --muted: #6B6659;      /* 보조 텍스트 */
+  --muted-2: #5C5850;
+  --meta: #8A8578;       /* 모노 메타 */
+  --lime: #CDFF47;       /* 형광펜 */
+  --lime-pale: #E6F5A8;
+  --card-border: #EBE7DD;
+  --chip-border: #E1DCCF;
+  --input-bg: #F7F5EF;
+  --tag-bg: #EFEBE1;
+  --tag-text: #5C5850;
+  --sans: 'IBM Plex Sans KR', system-ui, sans-serif;
+  --head: 'Gothic A1', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  font-family: var(--sans);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 모바일 앱 셸: 실제 풀뷰포트, 데스크톱에선 480px 중앙 ── */
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--screen);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+@media (min-width: 520px) {
+  .app {
+    min-height: auto;
+    margin: 24px auto 40px;
+    border-radius: 28px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 32px 64px -32px rgba(30, 26, 18, .4);
+    overflow: hidden;
+  }
+}
+
+/* 스크롤 본문 — proto .body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ── 타이포/형광펜 ── */
+.hl {
+  background: linear-gradient(180deg, transparent 58%, var(--lime) 58%);
+  padding: 0 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.title-lg { font: 800 27px/1.16 var(--head); letter-spacing: -.02em; }
+.h2 { font: 700 16px var(--head); letter-spacing: -.01em; }
+.brand {
+  font: 800 20px var(--head);
+  letter-spacing: -.02em;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 1px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.brand .d { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); margin-bottom: 5px; }
+.meta { font: 500 11px var(--mono); letter-spacing: .02em; color: var(--meta); }
+.sub { margin: 0; font: 400 14px/1.5 var(--sans); color: var(--muted); }
+
+/* ── 태그 / 칩 ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font: 600 10px var(--mono);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--tag-bg);
+  color: var(--tag-text);
+}
+.tag.lime { background: var(--lime); color: var(--ink); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 13px var(--sans);
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1.4px solid var(--chip-border);
+  background: #fff;
+  color: #3C3930;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.chip:active { transform: scale(.95); }
+.chip.on { background: var(--lime); border-color: var(--ink); color: var(--ink); }
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+
+/* ── 버튼 ── */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: 700 15px var(--sans);
+  padding: 15px;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform .12s, opacity .15s;
+  width: 100%;
+  text-decoration: none;
+}
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.lime { background: var(--lime); color: var(--ink); }
+.btn.gh { background: #fff; color: var(--ink); border: 1.5px solid var(--ink); }
+
+/* ── 카드/구분선 ── */
+.card {
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.divide { height: 1px; background: var(--card-border); }
+
+/* ── 진행 바 (온보딩 2/3, 3/3) ── */
+.steps { display: flex; gap: 6px; }
+.steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--chip-border); }
+.steps span.on { background: var(--ink); }
+
+/* ── 폼 (프로필 단계) ── */
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field > label { font: 600 13px var(--sans); color: var(--muted-2); }
+.field select {
+  font: 500 15px var(--sans);
+  color: var(--ink);
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1.4px solid var(--chip-border);
+  background: var(--input-bg);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236B6659' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.field select:focus { outline: none; border-color: var(--ink); }
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+}
+.identity img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.identity strong { font: 600 14px var(--sans); display: block; }
+.identity .meta { display: block; margin-top: 2px; }
+
+.error {
+  margin: 0;
+  font: 500 13px var(--sans);
+  color: #B4231F;
+  background: #FBEAE9;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.grow { flex: 1; min-height: 12px; }
