@@ -25,9 +25,12 @@
 
 * { box-sizing: border-box; }
 
+/* 모바일 기본: 페이지 배경을 앱 배경과 동일하게 —
+   노치/홈인디케이터(세이프 에어리어)에서 다른 색 띠가 안 보이도록. */
+html { background: var(--screen); }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--screen);
   font-family: var(--sans);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -45,6 +48,8 @@ body {
   position: relative;
 }
 @media (min-width: 520px) {
+  /* 데스크톱: 카드 프레임 주변만 페이퍼 배경으로 되살린다. */
+  html, body { background: var(--paper); }
   .app {
     height: calc(100dvh - 64px);
     max-height: 880px;
@@ -61,7 +66,8 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 16px 22px 28px;
+  /* 세이프 에어리어(노치·홈인디케이터)만큼 콘텐츠를 안쪽으로 — 배경은 가장자리까지 채움 */
+  padding: calc(16px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 15px;
