@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS members (
     years      TEXT,                          -- 연차
     industry   TEXT,                          -- 업종
     topics     TEXT[] NOT NULL DEFAULT '{}',  -- 관심 주제 (온보딩 2단계)
+    has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE,  -- 첫 로그인 코치마크 투어 시청 여부
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

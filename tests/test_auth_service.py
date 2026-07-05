@@ -84,6 +84,15 @@ def test_save_topics_allows_empty(monkeypatch):
     assert done.topics == ()
 
 
+def test_tour_seen_flag(monkeypatch):
+    from app.repo import members
+    _patch(monkeypatch, _google_user())
+    member, _ = auth_service.establish_session("good")
+    assert member.has_seen_tour is False        # 신규 회원은 투어 미시청
+    auth_service.mark_tour_seen(member.id)
+    assert members.get(member.id).has_seen_tour is True
+
+
 def test_onboarding_completes_profile(monkeypatch):
     _patch(monkeypatch, _google_user())
     member, _ = auth_service.establish_session("good")

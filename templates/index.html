@@ -10,7 +10,7 @@
   <div class="topbar">
     <a class="brand" href="/">티핑<span class="d"></span></a>
     <div class="topbar-r">
-      <a href="/explore" aria-label="탐색">
+      <a href="/explore" aria-label="탐색" data-tour="search">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8">
           <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
         </svg>
@@ -26,7 +26,7 @@
   </div>
 
   {# 카테고리 필터 #}
-  <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:-2px 0">
+  <div data-tour="category" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:-2px 0">
     <a href="/" class="chip {% if not active_category %}on{% endif %}" style="padding:8px 14px">전체</a>
     {% for code, label in categories.items() %}
       <a href="/?category={{ code }}"
@@ -71,7 +71,7 @@
 
   {# 나머지 피드 #}
   {% for post in rest %}
-  <a class="tapcard" href="/posts/{{ post.id }}">
+  <a class="tapcard" href="/posts/{{ post.id }}"{% if loop.first %} data-tour="react"{% endif %}>
     <div style="display:flex;align-items:center;gap:7px">
       <span class="tag">{{ taglabel(post.category) }}</span>
       <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
@@ -96,4 +96,8 @@
 
 {% set tab = "home" %}
 {% include "_tabbar.html" %}
+{% endblock %}
+
+{% block script %}
+{% if show_tour %}<script src="/static/tour.js"></script>{% endif %}
 {% endblock %}

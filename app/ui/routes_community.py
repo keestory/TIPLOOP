@@ -60,10 +60,12 @@ def feed(
     sort = sort if sort in FEED_SORTS else "new"
     posts = community_service.list_feed(category, sort=sort)
     featured, waiting, rest = community_service.home_feed(posts)
+    show_tour = bool(user and user.is_onboarded and not user.has_seen_tour)
     return _render(
         request, "index.html", user,
         featured=featured, waiting=waiting, rest=rest,
         sort=sort, active_category=category, nav_unread=_nav_unread(user),
+        show_tour=show_tour,
     )
 
 

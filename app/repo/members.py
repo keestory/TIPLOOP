@@ -23,6 +23,7 @@ def _to_user(row: dict) -> User:
         years=row["years"],
         industry=row["industry"],
         topics=tuple(row.get("topics") or ()),
+        has_seen_tour=bool(row.get("has_seen_tour")),
     )
 
 
@@ -59,6 +60,12 @@ def get_by_auth(auth_id: str) -> User | None:
     with get_connection() as conn:
         row = conn.execute("SELECT * FROM members WHERE auth_id = %s", (auth_id,)).fetchone()
         return _to_user(row) if row else None
+
+
+def mark_tour_seen(member_id: int) -> None:
+    """첫 로그인 코치마크 투어를 봤다고 표시한다(다시 안 뜸)."""
+    with get_connection() as conn:
+        conn.execute("UPDATE members SET has_seen_tour = TRUE WHERE id = %s", (member_id,))
 
 
 def subscribers_of_topic(topic: str) -> list[int]:

@@ -62,6 +62,11 @@ def current_user(cookie: str | None) -> User | None:
     return members.get(member_id)
 
 
+def mark_tour_seen(member_id: int) -> None:
+    """첫 로그인 코치마크 투어 시청 완료(또는 건너뛰기)를 저장한다."""
+    members.mark_tour_seen(member_id)
+
+
 def save_topics(member_id: int, topics: list[str]) -> User:
     """온보딩 1단계 — 관심 주제를 저장한다. 아는 주제만 통과시킨다(빈 값 허용)."""
     clean = [t for t in topics if t in TOPICS]

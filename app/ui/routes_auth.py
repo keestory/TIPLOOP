@@ -64,6 +64,14 @@ def logout():
     return resp
 
 
+@router.post("/tour/seen")
+def tour_seen(user: Optional[User] = Depends(get_current_user)):
+    """첫 로그인 코치마크 투어 완료/건너뛰기 저장 (프론트 fetch)."""
+    if user is not None:
+        auth_service.mark_tour_seen(user.id)
+    return JSONResponse({"ok": True})
+
+
 # ── 온보딩 ① 관심 주제 (2 / 3) ──────────────────────────────────────
 @router.get("/onboarding")
 def onboarding_topics(request: Request, user: Optional[User] = Depends(get_current_user)):
