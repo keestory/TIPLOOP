@@ -1,0 +1,16 @@
+# Vercel 배포에 불필요한 것들 — 함수 번들과 빌드에서 제외.
+# (웹앱: app/, api/, templates/, static/ 만 있으면 됨)
+
+/requirements.txt        # 루트는 오케스트레이터용 — api/requirements.txt를 쓰게 한다
+orchestrator/
+agents/
+linters/
+skills/
+docs/
+tests/
+run.py
+.harness/
+.claude/
+.venv/
+*.db
+.pytest_cache/

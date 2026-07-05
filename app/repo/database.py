@@ -110,10 +110,17 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, crea
 
 
 def get_connection() -> psycopg.Connection:
-    """요청마다 새 커넥션. dict_row로 컬럼명 접근."""
+    """요청마다 새 커넥션. dict_row로 컬럼명 접근.
+
+    prepare_threshold=None: 준비된 구문(prepared statement)을 끈다.
+    Supabase 트랜잭션 풀러(pgbouncer)·서버리스 환경에서 커넥션이 재사용될 때
+    'prepared statement already exists' 오류가 나지 않도록 하기 위함.
+    """
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL이 설정되지 않았습니다. Supabase Postgres 연결 문자열을 넣어주세요.")
-    return psycopg.connect(DATABASE_URL, row_factory=dict_row, autocommit=True)
+    return psycopg.connect(
+        DATABASE_URL, row_factory=dict_row, autocommit=True, prepare_threshold=None
+    )
 
 
 # 나중에 추가된 nullable 컬럼들 — 옛 DB에도 안전하게 채워 넣는다(멱등).

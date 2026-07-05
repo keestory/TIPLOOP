@@ -89,6 +89,7 @@ python3 run.py --quality           # 품질 평가
 | [docs/METRICS.md](./docs/METRICS.md) | 지표 설계 가이드 (Analyst 참조) |
 | [docs/KNOWN_ISSUES.md](./docs/KNOWN_ISSUES.md) | 발생한 에러와 해결법 (재발 방지) |
 | [docs/USAGE_GUIDE.md](./docs/USAGE_GUIDE.md) | 사용 가이드 |
+| [docs/VERCEL_DEPLOY.md](./docs/VERCEL_DEPLOY.md) | Vercel 배포 가이드 (서버리스) |
 
 ## 규칙
 

@@ -31,7 +31,12 @@ def create_app() -> FastAPI:
     from app.config.settings import DATABASE_URL
 
     if DATABASE_URL:
-        init_db()  # 스키마 보장. DB가 없으면 부팅은 하되 첫 쿼리에서 명확히 실패.
+        # 스키마 보장(멱등). 서버리스 콜드 스타트에서 DB가 잠깐 안 붙어도
+        # 앱 부팅 자체는 막지 않는다 — 실제 쿼리에서 명확히 실패하도록.
+        try:
+            init_db()
+        except Exception as exc:  # noqa: BLE001 - 부팅을 죽이지 않기 위한 광범위 캐치
+            print(f"[warn] init_db 건너뜀: {exc}")
 
     app = FastAPI(title=f"{BRAND} — 실무자 커뮤니티")
 
