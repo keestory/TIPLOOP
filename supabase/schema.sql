@@ -59,3 +59,19 @@ CREATE TABLE IF NOT EXISTS comment_reactions (
     user_id    BIGINT NOT NULL REFERENCES members(id),
     PRIMARY KEY (comment_id, user_id)
 );
+
+-- "도움됐어요" — 공감(♥)과 분리된 자기효능감 신호
+CREATE TABLE IF NOT EXISTS post_helpful (
+    post_id BIGINT NOT NULL REFERENCES posts(id),
+    user_id BIGINT NOT NULL REFERENCES members(id),
+    PRIMARY KEY (post_id, user_id)
+);
+
+-- 적용 후기 — 실제로 써보고 남기는 결과/후기 (강한 임팩트 신호)
+CREATE TABLE IF NOT EXISTS reviews (
+    id         BIGSERIAL PRIMARY KEY,
+    post_id    BIGINT NOT NULL REFERENCES posts(id),
+    author_id  BIGINT NOT NULL REFERENCES members(id),
+    body       TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

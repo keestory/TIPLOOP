@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 from app.config.settings import CATEGORIES
-from app.repo import comments, media_comments, members, posts, reactions
-from app.types.models import MediaComment, Post, Thread, User
+from app.repo import comments, media_comments, members, posts, reactions, reviews
+from app.types.models import MediaComment, Post, Review, Thread, User
 
 
 class CommunityError(ValueError):
@@ -108,9 +108,33 @@ def add_comment(post_id: int, author_id: int, body: str, parent_id: int | None =
     return comments.create_comment(post_id, author_id, body, parent_id)
 
 
-def get_profile(user_id: int) -> tuple[User, list[Post], int]:
-    """회원 프로필, 쓴 글, 받은 공감 합계. 없으면 CommunityError."""
+def add_review(post_id: int, author_id: int, body: str) -> int:
+    """적용 후기를 남긴다. 대상 글이 있어야 한다."""
+    body = (body or "").strip()
+    if not body:
+        raise CommunityError("후기 내용을 입력해 주세요.")
+    if posts.get_post(post_id) is None:
+        raise CommunityError("글을 찾을 수 없습니다.")
+    return reviews.create(post_id, author_id, body)
+
+
+def list_reviews(post_id: int) -> list[Review]:
+    return reviews.list_for_post(post_id)
+
+
+def get_profile(user_id: int) -> tuple[User, list[Post], dict]:
+    """회원 프로필, 쓴 글, 임팩트 지표. 없으면 CommunityError.
+
+    지표: 도움을 준 사람 수(helpful) · 받은 후기 · 받은 공감 · 글 수.
+    """
     user = members.get(user_id)
     if user is None:
         raise CommunityError("사용자를 찾을 수 없습니다.")
-    return user, posts.list_posts(author_id=user_id), reactions.received_reaction_count(user_id)
+    own_posts = posts.list_posts(author_id=user_id)
+    stats = {
+        "helpful": reactions.received_helpful_count(user_id),
+        "reviews": reviews.received_count(user_id),
+        "reactions": reactions.received_reaction_count(user_id),
+        "posts": len(own_posts),
+    }
+    return user, own_posts, stats

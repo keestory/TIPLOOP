@@ -12,7 +12,9 @@ SELECT p.id, p.author_id, p.category, p.title, p.body,
        p.link_url, p.image_url, p.video_url,
        u.name AS author_name, u.job_role AS author_job_role, u.years AS author_years,
        (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS reaction_count,
-       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count
+       (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
+       (SELECT COUNT(*) FROM post_helpful h WHERE h.post_id = p.id) AS helpful_count,
+       (SELECT COUNT(*) FROM reviews v WHERE v.post_id = p.id) AS review_count
 FROM posts p
 JOIN members u ON u.id = p.author_id
 """
@@ -41,6 +43,8 @@ def _to_post(row: dict) -> Post:
         author_years=row["author_years"],
         reaction_count=row["reaction_count"],
         comment_count=row["comment_count"],
+        helpful_count=row["helpful_count"],
+        review_count=row["review_count"],
     )
 
 

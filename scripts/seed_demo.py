@@ -57,7 +57,10 @@ def main() -> None:
     )
     C.add_comment(t1, hyun.id, "퍼널 단계 로깅 정말 중요… 뒤늦게 붙이느라 고생했어요.")
     for u in (sora, minp, hyun):
-        R.toggle_post(t1, u.id)
+        R.toggle_post(t1, u.id)          # 공감
+        R.toggle_helpful(t1, u.id)       # 도움됐어요
+    C.add_review(t1, hyun.id, "이 퍼널 로깅대로 붙였더니 이탈 지점이 바로 보였어요. 결제 단계 이탈 -12%.")
+    C.add_review(t1, minp.id, "장바구니 단계 로깅 추가했더니 원인 파악이 훨씬 빨라졌습니다.")
 
     q1 = C.create_post(
         minp.id, "question", "결제 실패 재시도, 어디까지 자동화하세요?",

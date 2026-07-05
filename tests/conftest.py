@@ -12,7 +12,10 @@ os.environ.setdefault("IEUM_SECRET", "test-session-secret")
 import pytest
 
 _DB = os.environ.get("DATABASE_URL")
-_TABLES = "comment_reactions, post_reactions, comments, posts, members"
+_TABLES = (
+    "media_comments, reviews, post_helpful, comment_reactions, post_reactions, "
+    "comments, posts, members"
+)
 
 
 def _reset_schema():

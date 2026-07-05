@@ -10,9 +10,13 @@
   </div>
 </section>
 
+<div class="profile-impact">
+  <span class="impact-num">{{ stats.helpful }}</span>명에게 도움을 줬어요
+</div>
 <div class="profile-stats">
-  <span class="stat"><strong>{{ posts|length }}</strong> 글</span>
-  <span class="stat"><strong>{{ received }}</strong> 받은 공감</span>
+  <span class="stat"><strong>{{ stats.posts }}</strong> 글</span>
+  <span class="stat"><strong>{{ stats.reviews }}</strong> 받은 후기</span>
+  <span class="stat"><strong>{{ stats.reactions }}</strong> 받은 공감</span>
 </div>
 
 <h2 class="section-title">남긴 글</h2>

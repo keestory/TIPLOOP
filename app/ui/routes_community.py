@@ -51,8 +51,9 @@ def feed(
     sort = sort if sort in FEED_SORTS else "new"
     posts = community_service.list_feed(category, job_role, industry, sort)
     reacted = reaction_service.viewer_post_reactions(user.id if user else None)
+    helped = reaction_service.viewer_helpful(user.id if user else None)
     return _render(
-        request, "index.html", user, posts=posts, reacted=reacted,
+        request, "index.html", user, posts=posts, reacted=reacted, helped=helped,
         sorts=FEED_SORTS, sort=sort,
         active={"category": category, "job_role": job_role, "industry": industry},
     )
@@ -99,9 +100,11 @@ def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(g
     except CommunityError as exc:
         return _render(request, "not_found.html", user, message=str(exc))
     reacted = reaction_service.viewer_post_reactions(user.id if user else None)
+    helped = reaction_service.viewer_helpful(user.id if user else None)
     reacted_comments = reaction_service.viewer_comment_reactions(
         user.id if user else None, post_id
     )
+    reviews = community_service.list_reviews(post_id)
     mcs = community_service.list_media_comments(post_id) if post.video_url else []
     media = [
         {"id": m.id, "t": m.t_seconds, "x": m.x, "y": m.y,
@@ -110,7 +113,8 @@ def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(g
     ]
     return _render(
         request, "post_detail.html", user, post=post, threads=threads,
-        reacted=reacted, reacted_comments=reacted_comments, media_comments=media,
+        reacted=reacted, helped=helped, reacted_comments=reacted_comments,
+        reviews=reviews, media_comments=media,
     )
 
 
@@ -173,12 +177,36 @@ def react_comment(request: Request, comment_id: int, user: Optional[User] = Depe
     return _back(request, f"/posts/{post_id}" if post_id else "/")
 
 
+@router.post("/posts/{post_id}/helpful")
+def helpful_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
+    if gate := _gate(user):
+        return gate
+    reaction_service.toggle_helpful(post_id, user.id)
+    return _back(request, f"/posts/{post_id}")
+
+
+@router.post("/posts/{post_id}/reviews")
+def add_review(
+    request: Request,
+    post_id: int,
+    body: str = Form(...),
+    user: Optional[User] = Depends(get_current_user),
+):
+    if gate := _gate(user):
+        return gate
+    try:
+        community_service.add_review(post_id, user.id, body)
+    except CommunityError:
+        pass  # 빈 후기 등은 조용히 무시
+    return RedirectResponse(f"/posts/{post_id}", status_code=303)
+
+
 @router.get("/users/{user_id}")
 def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
     try:
-        teacher, posts, received = community_service.get_profile(user_id)
+        member, posts, stats = community_service.get_profile(user_id)
     except CommunityError as exc:
         return _render(request, "not_found.html", user, message=str(exc))
     return _render(
-        request, "profile.html", user, teacher=teacher, posts=posts, received=received
+        request, "profile.html", user, teacher=member, posts=posts, stats=stats
     )

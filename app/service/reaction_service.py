@@ -32,3 +32,18 @@ def viewer_comment_reactions(user_id: int | None, post_id: int) -> set[int]:
 
 def received_count(user_id: int) -> int:
     return reactions.received_reaction_count(user_id)
+
+
+def toggle_helpful(post_id: int, user_id: int) -> bool:
+    """'도움됐어요' 토글. 대상 글이 있을 때만."""
+    if posts.get_post(post_id) is None:
+        return False
+    return reactions.toggle_post_helpful(post_id, user_id)
+
+
+def viewer_helpful(user_id: int | None) -> set[int]:
+    return reactions.helpful_post_ids(user_id) if user_id else set()
+
+
+def received_helpful(user_id: int) -> int:
+    return reactions.received_helpful_count(user_id)

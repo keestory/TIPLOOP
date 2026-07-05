@@ -48,8 +48,10 @@ class Post:
     author_job_role: str | None = None
     author_years: str | None = None
     # 인게이지먼트 지표 (집계 결과)
-    reaction_count: int = 0
+    reaction_count: int = 0   # 공감(♥)
     comment_count: int = 0
+    helpful_count: int = 0    # 도움됐어요(💡)
+    review_count: int = 0     # 적용 후기
 
 
 @dataclass(frozen=True)
@@ -65,6 +67,19 @@ class Comment:
     author_name: str | None = None
     author_job_role: str | None = None
     reaction_count: int = 0
+
+
+@dataclass(frozen=True)
+class Review:
+    """적용 후기 — 글을 실제로 써보고 남기는 결과/후기."""
+
+    id: int
+    post_id: int
+    author_id: int
+    body: str
+    created_at: str
+    author_name: str | None = None
+    author_job_role: str | None = None
 
 
 @dataclass(frozen=True)

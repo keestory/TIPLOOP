@@ -59,8 +59,10 @@
       <p class="feed-event">🎬 영상</p>
     {% endif %}
     <div class="feed-actions">
+      {{ ui.helpful_button(post.id, post.helpful_count, post.id in helped, current_user) }}
       {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
-      <a class="action-link" href="/posts/{{ post.id }}">💬 댓글 {{ post.comment_count }}</a>
+      <a class="action-link" href="/posts/{{ post.id }}">💬 {{ post.comment_count }}</a>
+      {% if post.review_count %}<a class="action-link" href="/posts/{{ post.id }}">📝 후기 {{ post.review_count }}</a>{% endif %}
     </div>
   </li>
   {% endfor %}

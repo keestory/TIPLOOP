@@ -17,3 +17,24 @@
   </a>
   {% endif %}
 {% endmacro %}
+
+{# 도움됐어요 버튼 — 자기효능감 신호. 공감(♥)과 분리된 별도 지표 #}
+{% macro helpful_button(post_id, count, is_on, current_user) %}
+  {% if current_user %}
+  <form class="react inline-form" method="post" action="/posts/{{ post_id }}/helpful">
+    <button type="submit" class="react-btn help-btn {% if is_on %}is-on{% endif %}"
+            aria-pressed="{{ 'true' if is_on else 'false' }}"
+            title="이 글이 실제로 도움됐어요">
+      <span class="react-heart">💡</span>
+      <span class="react-label">도움됐어요</span>
+      <span class="react-count">{{ count }}</span>
+    </button>
+  </form>
+  {% else %}
+  <a class="react-btn help-btn" href="/login" title="로그인하면 표시할 수 있어요">
+    <span class="react-heart">💡</span>
+    <span class="react-label">도움됐어요</span>
+    <span class="react-count">{{ count }}</span>
+  </a>
+  {% endif %}
+{% endmacro %}

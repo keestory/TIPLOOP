@@ -46,10 +46,35 @@
   {% endif %}
 
   <div class="post-actions">
+    {{ ui.helpful_button(post.id, post.helpful_count, post.id in helped, current_user) }}
     {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
     <span class="action-link">💬 댓글 {{ post.comment_count }}</span>
   </div>
 </article>
+
+<section class="reviews" id="reviews">
+  <h2>적용 후기 {{ reviews|length }}</h2>
+  <p class="reviews-sub">이 글을 실제로 써보셨나요? 결과·후기를 남기면 작성자에게 큰 힘이 돼요.</p>
+
+  {% if current_user %}
+  <form class="comment-form" method="post" action="/posts/{{ post.id }}/reviews">
+    <label for="review-body" class="sr-only">적용 후기</label>
+    <textarea id="review-body" name="body" rows="3" placeholder="예: 이 방법으로 이탈률이 12% 줄었어요" required></textarea>
+    <button type="submit" class="btn">후기 남기기</button>
+  </form>
+  {% else %}
+  <p class="login-hint"><a href="/login">로그인</a>하면 적용 후기를 남길 수 있어요.</p>
+  {% endif %}
+
+  {% for rv in reviews %}
+  <div class="review-card">
+    <p class="review-meta">📝 <a href="/users/{{ rv.author_id }}">{{ rv.author_name }}</a> · {{ rv.author_job_role }} · {{ rv.created_at }}</p>
+    <p class="review-body">{{ rv.body }}</p>
+  </div>
+  {% else %}
+  <p class="empty">아직 후기가 없어요. 처음으로 적용해보고 결과를 공유해보세요.</p>
+  {% endfor %}
+</section>
 
 <section class="comments" id="comments">
   <h2>댓글 {{ post.comment_count }}</h2>

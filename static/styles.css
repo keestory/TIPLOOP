@@ -168,8 +168,11 @@ select:focus, input:focus, textarea:focus {
 }
 .react-btn:hover { border-color: var(--ink); color: var(--ink); text-decoration: none; }
 .react-btn .react-heart { font-size: 14px; }
-.react-btn.is-on { background: var(--neon); border-color: var(--neon); color: var(--ink); }
-.react-btn.is-on:hover { background: var(--neon-press); }
+/* 공감(♥) on = 서브 신호(잉크 아웃라인) */
+.react-btn.is-on { background: var(--surface); border-color: var(--ink); color: var(--ink); }
+/* 도움됐어요(💡) on = 핵심 신호(형광) */
+.help-btn.is-on { background: var(--neon); border-color: var(--neon); color: var(--ink); }
+.help-btn.is-on:hover { background: var(--neon-press); border-color: var(--neon-press); }
 .react-count { font-variant-numeric: tabular-nums; }
 .action-link {
   display: inline-flex; align-items: center; gap: 5px;
@@ -204,6 +207,15 @@ select:focus, input:focus, textarea:focus {
 .link-box dt { color: var(--muted); font-size: 13px; font-weight: 700; }
 .link-box dd { margin: 0; font-weight: 600; word-break: break-all; }
 .post-actions { margin-top: calc(var(--unit) * 3); }
+
+/* ── 적용 후기 ── */
+.reviews { margin-top: calc(var(--unit) * 6); border-top: 1px solid var(--line); padding-top: calc(var(--unit) * 3); }
+.reviews h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.reviews-sub { color: var(--muted); font-size: 14px; margin: calc(var(--unit) * -0.5) 0 calc(var(--unit) * 2); }
+.review-card { border: 1px solid var(--line); border-left: 3px solid var(--neon); border-radius: var(--radius); padding: calc(var(--unit) * 2); margin-top: calc(var(--unit) * 1.5); background: var(--surface); }
+.review-meta { color: var(--muted); font-size: 13px; margin: 0; }
+.review-meta a { color: var(--ink-soft); font-weight: 600; }
+.review-body { margin: calc(var(--unit) * 0.75) 0 0; white-space: pre-wrap; }
 
 /* ── 댓글 ── */
 .comments { margin-top: calc(var(--unit) * 6); border-top: 1px solid var(--line); padding-top: calc(var(--unit) * 3); }
@@ -293,7 +305,9 @@ select:focus, input:focus, textarea:focus {
   font-weight: 800; font-size: 26px;
 }
 .profile-meta { color: var(--muted); margin: calc(var(--unit) * 0.5) 0 0; }
-.profile-stats { display: flex; gap: calc(var(--unit) * 4); margin-top: calc(var(--unit) * 2.5); padding: calc(var(--unit) * 2.5) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.profile-impact { margin-top: calc(var(--unit) * 2.5); font-size: 19px; font-weight: 700; color: var(--ink-soft); }
+.impact-num { font-size: 34px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); border-bottom: 4px solid var(--neon); padding-bottom: 1px; }
+.profile-stats { display: flex; gap: calc(var(--unit) * 4); margin-top: calc(var(--unit) * 2); padding: calc(var(--unit) * 2.5) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .stat { color: var(--muted); font-size: 13px; font-weight: 600; }
 .stat strong { display: block; color: var(--ink); font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
 

@@ -40,6 +40,34 @@ def test_received_reaction_count_sums_posts_and_comments(make_member):
     assert reaction_service.received_count(author.id) == 2
 
 
+def test_helpful_is_separate_from_reaction(make_member):
+    author = make_member()
+    reader = make_member()
+    pid = community_service.create_post(author.id, "tip", "글", "내용")
+
+    # 공감과 도움됐어요는 독립적으로 집계
+    reaction_service.toggle_post(pid, reader.id)      # 공감만
+    post, _ = community_service.get_post_with_threads(pid)
+    assert post.reaction_count == 1 and post.helpful_count == 0
+
+    assert reaction_service.toggle_helpful(pid, reader.id) is True
+    post, _ = community_service.get_post_with_threads(pid)
+    assert post.reaction_count == 1 and post.helpful_count == 1
+    assert pid in reaction_service.viewer_helpful(reader.id)
+
+
+def test_received_helpful_counts_across_posts(make_member):
+    author = make_member()
+    r1 = make_member()
+    r2 = make_member()
+    p1 = community_service.create_post(author.id, "tip", "a", "내용")
+    p2 = community_service.create_post(author.id, "tip", "b", "내용")
+    reaction_service.toggle_helpful(p1, r1.id)
+    reaction_service.toggle_helpful(p1, r2.id)
+    reaction_service.toggle_helpful(p2, r1.id)
+    assert reaction_service.received_helpful(author.id) == 3
+
+
 def test_toggle_comment_returns_post_id(make_member):
     author = make_member()
     pid = community_service.create_post(author.id, "tip", "글", "내용")

@@ -87,14 +87,29 @@ def test_comments_flow(make_member):
         community_service.add_comment(pid, t.id, "   ")
 
 
-def test_profile_lists_own_posts_and_received_reactions(make_member):
+def test_profile_lists_own_posts_and_stats(make_member):
     t = make_member(name="이소라")
     community_service.create_post(t.id, "tip", "글1", "내용")
     community_service.create_post(t.id, "tip", "글2", "내용")
-    member, posts, received = community_service.get_profile(t.id)
+    member, posts, stats = community_service.get_profile(t.id)
     assert member.name == "이소라"
     assert len(posts) == 2
-    assert received == 0
+    assert stats == {"helpful": 0, "reviews": 0, "reactions": 0, "posts": 2}
+
+
+def test_review_add_and_list(make_member):
+    author = make_member()
+    reader = make_member()
+    pid = community_service.create_post(author.id, "tip", "팁", "내용")
+    community_service.add_review(pid, reader.id, "적용했더니 이탈 12% 감소")
+    revs = community_service.list_reviews(pid)
+    assert len(revs) == 1 and revs[0].body == "적용했더니 이탈 12% 감소"
+    assert revs[0].author_name is not None
+    # 후기가 프로필 지표에 반영
+    _, _, stats = community_service.get_profile(author.id)
+    assert stats["reviews"] == 1
+    with pytest.raises(CommunityError):
+        community_service.add_review(pid, reader.id, "   ")
 
 
 def test_missing_post_raises(make_member):
