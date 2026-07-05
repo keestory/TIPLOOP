@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
+
 from app.config.settings import CATEGORIES
 from app.repo import comments, media_comments, members, posts, reactions, reviews
 from app.types.models import MediaComment, Post, Review, Thread, User
@@ -141,6 +143,33 @@ def add_review(post_id: int, author_id: int, body: str) -> int:
 
 def list_reviews(post_id: int) -> list[Review]:
     return reviews.list_for_post(post_id)
+
+
+def _post_date(created_at: str) -> date | None:
+    """created_at 문자열(맨 앞 10자 YYYY-MM-DD)만 안전하게 파싱. 3.9 호환."""
+    try:
+        return datetime.strptime(created_at[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+
+
+def contribution_heatmap(
+    own_posts: list[Post], weeks: int = 12, today: date | None = None
+) -> list[int]:
+    """최근 N주 기여 강도(주별). 0=없음, 1=1~2건, 2=3건 이상. 오래된→최근 순.
+
+    실제 작성글 날짜로 계산하는 순수 함수 — DB를 건드리지 않는다.
+    """
+    today = today or date.today()
+    counts = [0] * weeks
+    for p in own_posts:
+        d = _post_date(p.created_at)
+        if d is None:
+            continue
+        w = (today - d).days // 7
+        if 0 <= w < weeks:
+            counts[weeks - 1 - w] += 1  # 최근 주가 오른쪽 끝
+    return [2 if c >= 3 else 1 if c >= 1 else 0 for c in counts]
 
 
 def get_profile(user_id: int) -> tuple[User, list[Post], dict]:

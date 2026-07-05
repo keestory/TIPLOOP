@@ -233,6 +233,8 @@ def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_c
         member, posts, stats = community_service.get_profile(user_id)
     except CommunityError as exc:
         return _render(request, "not_found.html", user, message=str(exc))
+    heatmap = community_service.contribution_heatmap(posts)
     return _render(
-        request, "profile.html", user, teacher=member, posts=posts, stats=stats
+        request, "profile.html", user, teacher=member, posts=posts,
+        stats=stats, heatmap=heatmap,
     )

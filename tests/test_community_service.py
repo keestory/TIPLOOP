@@ -34,6 +34,35 @@ def test_home_feed_empty():
     assert community_service.home_feed([]) == (None, [], [])
 
 
+def test_contribution_heatmap_levels():
+    from datetime import date
+    from app.types.models import Post
+
+    def _p(days_ago):
+        d = date(2026, 7, 5).toordinal() - days_ago
+        from datetime import date as _d
+        return Post(id=1, author_id=1, category="tip", title="t", body="b",
+                    created_at=_d.fromordinal(d).isoformat())
+
+    today = date(2026, 7, 5)
+    # 이번 주에 3건 → 레벨 2, 지지난 주 1건 → 레벨 1, 나머지 0
+    posts = [_p(0), _p(1), _p(2), _p(15)]
+    heat = community_service.contribution_heatmap(posts, weeks=12, today=today)
+    assert len(heat) == 12
+    assert heat[-1] == 2            # 최근 주(오른쪽 끝) 3건
+    assert heat[-3] == 1            # 2주 전 1건
+    assert heat[0] == 0            # 11주 전 없음
+
+
+def test_contribution_heatmap_ignores_old_and_bad():
+    from datetime import date
+    from app.types.models import Post
+    old = Post(id=1, author_id=1, category="tip", title="t", body="b", created_at="2020-01-01")
+    bad = Post(id=2, author_id=1, category="tip", title="t", body="b", created_at="")
+    heat = community_service.contribution_heatmap([old, bad], today=date(2026, 7, 5))
+    assert heat == [0] * 12
+
+
 def test_reference_keeps_link(make_member):
     t = make_member()
     pid = community_service.create_post(

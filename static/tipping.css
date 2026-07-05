@@ -425,6 +425,20 @@ a.plain { text-decoration: none; color: inherit; }
 .wr-media { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .wr-media label { cursor: pointer; }
 
+/* ══ 프로필 ══ */
+.gear { background: none; border: none; cursor: pointer; padding: 0; color: var(--ink); }
+.pf-id { display: flex; align-items: center; gap: 13px; }
+.pf-id .av { width: 58px; height: 58px; }
+.pf-name { font: 800 20px var(--head); letter-spacing: -.01em; }
+.pf-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+.impact-card { border-color: var(--ink); gap: 4px; padding: 19px; }
+.impact-row { display: flex; align-items: baseline; gap: 9px; }
+.impact-num { font: 900 42px var(--head); letter-spacing: -.03em; }
+.impact-txt { font: 700 15px var(--sans); }
+.pf-substats { display: flex; gap: 14px; flex-wrap: wrap; }
+.heatrow { display: flex; gap: 4px; flex-wrap: wrap; }
+.heat { width: 15px; height: 15px; border-radius: 3px; }
+
 /* ── 영상 지점 코멘트 (videopin.js) ── */
 .hint { font: 500 12px var(--sans); color: #9A9384; display: flex; align-items: center; gap: 8px; }
 .anno-op {
