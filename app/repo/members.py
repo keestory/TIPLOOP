@@ -23,6 +23,7 @@ def _to_user(row: dict) -> User:
         years=row["years"],
         industry=row["industry"],
         topics=tuple(row.get("topics") or ()),
+        agreed_terms=bool(row.get("agreed_terms")),
         has_seen_tour=bool(row.get("has_seen_tour")),
     )
 
@@ -60,6 +61,12 @@ def get_by_auth(auth_id: str) -> User | None:
     with get_connection() as conn:
         row = conn.execute("SELECT * FROM members WHERE auth_id = %s", (auth_id,)).fetchone()
         return _to_user(row) if row else None
+
+
+def agree_terms(member_id: int) -> None:
+    """약관·개인정보 동의를 저장한다."""
+    with get_connection() as conn:
+        conn.execute("UPDATE members SET agreed_terms = TRUE WHERE id = %s", (member_id,))
 
 
 def mark_tour_seen(member_id: int) -> None:

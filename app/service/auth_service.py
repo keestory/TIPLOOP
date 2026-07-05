@@ -62,6 +62,11 @@ def current_user(cookie: str | None) -> User | None:
     return members.get(member_id)
 
 
+def agree_terms(member_id: int) -> None:
+    """약관·개인정보 동의를 저장한다(신규 가입 첫 단계)."""
+    members.agree_terms(member_id)
+
+
 def mark_tour_seen(member_id: int) -> None:
     """첫 로그인 코치마크 투어 시청 완료(또는 건너뛰기)를 저장한다."""
     members.mark_tour_seen(member_id)

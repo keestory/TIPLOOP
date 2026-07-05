@@ -1,0 +1,58 @@
+{% extends "mobile.html" %}
+{% block title %}약관 동의{% endblock %}
+{% block app %}
+<form class="body" style="gap:16px" method="post" action="/terms" id="terms-form">
+  <div style="margin-top:4px"><span class="brand">티핑<span class="d"></span></span></div>
+
+  <h1 class="title-lg" style="margin:14px 0 0">시작하기 전에<br><span class="hl">잠깐만요</span></h1>
+  <p class="sub">커머스·IT 실무자 커뮤니티 이용을 위한<br>최소한의 동의예요.</p>
+
+  <div class="consent" style="margin-top:4px">
+    <label class="consent-all">
+      <input type="checkbox" id="agree-all">
+      <span>전체 동의</span>
+    </label>
+    <div class="divide"></div>
+    <label>
+      <input type="checkbox" class="req" name="terms">
+      <span><b>[필수]</b> 서비스 이용약관 동의</span>
+    </label>
+    <label>
+      <input type="checkbox" class="req" name="privacy">
+      <span><b>[필수]</b> 개인정보 수집·이용 동의</span>
+    </label>
+  </div>
+
+  <div class="grow"></div>
+
+  <button type="submit" class="btn" id="agree-btn" aria-disabled="true">
+    <span>동의하고 시작</span><span style="font-size:17px">→</span>
+  </button>
+</form>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  var form = document.getElementById('terms-form');
+  var all = document.getElementById('agree-all');
+  var reqs = [].slice.call(form.querySelectorAll('.req'));
+  var btn = document.getElementById('agree-btn');
+
+  function allChecked() { return reqs.every(function (c) { return c.checked; }); }
+  function sync() {
+    var ok = allChecked();
+    all.checked = ok;
+    if (ok) btn.removeAttribute('aria-disabled');
+    else btn.setAttribute('aria-disabled', 'true');
+  }
+  all.addEventListener('change', function () {
+    reqs.forEach(function (c) { c.checked = all.checked; });
+    sync();
+  });
+  reqs.forEach(function (c) { c.addEventListener('change', sync); });
+  form.addEventListener('submit', function (e) { if (!allChecked()) e.preventDefault(); });
+  sync();
+})();
+</script>
+{% endblock %}

@@ -51,7 +51,13 @@ def auth_session(access_token: str = Form(...)):
         teacher, cookie = auth_service.establish_session(access_token)
     except AuthError as exc:
         return JSONResponse({"error": str(exc)}, status_code=401)
-    next_url = "/" if teacher.is_onboarded else "/onboarding"
+    # 재방문자(온보딩 완료)는 곧장 피드로. 신규는 약관 → 온보딩 순서.
+    if teacher.is_onboarded:
+        next_url = "/"
+    elif not teacher.agreed_terms:
+        next_url = "/terms"
+    else:
+        next_url = "/onboarding"
     resp = JSONResponse({"next": next_url})
     resp.set_cookie(SESSION_COOKIE, cookie, httponly=True, samesite="lax", max_age=_MAX_AGE)
     return resp
@@ -72,6 +78,26 @@ def tour_seen(user: Optional[User] = Depends(get_current_user)):
     return JSONResponse({"ok": True})
 
 
+# ── 약관 동의 (신규 가입 첫 단계) ────────────────────────────────────
+@router.get("/terms")
+def terms_form(request: Request, user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    if user.is_onboarded:
+        return RedirectResponse("/", status_code=303)
+    if user.agreed_terms:
+        return RedirectResponse("/onboarding", status_code=303)
+    return _render(request, "terms.html", user)
+
+
+@router.post("/terms")
+def terms_submit(user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    auth_service.agree_terms(user.id)
+    return RedirectResponse("/onboarding", status_code=303)
+
+
 # ── 온보딩 ① 관심 주제 (2 / 3) ──────────────────────────────────────
 @router.get("/onboarding")
 def onboarding_topics(request: Request, user: Optional[User] = Depends(get_current_user)):
@@ -79,6 +105,8 @@ def onboarding_topics(request: Request, user: Optional[User] = Depends(get_curre
         return RedirectResponse("/login", status_code=303)
     if user.is_onboarded:
         return RedirectResponse("/", status_code=303)
+    if not user.agreed_terms:
+        return RedirectResponse("/terms", status_code=303)
     return _render(request, "onboarding_topics.html", user)
 
 
@@ -100,6 +128,8 @@ def onboarding_profile(request: Request, user: Optional[User] = Depends(get_curr
         return RedirectResponse("/login", status_code=303)
     if user.is_onboarded:
         return RedirectResponse("/", status_code=303)
+    if not user.agreed_terms:
+        return RedirectResponse("/terms", status_code=303)
     return _render(request, "onboarding_profile.html", user)
 
 

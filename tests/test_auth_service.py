@@ -84,6 +84,15 @@ def test_save_topics_allows_empty(monkeypatch):
     assert done.topics == ()
 
 
+def test_agree_terms_flag(monkeypatch):
+    from app.repo import members
+    _patch(monkeypatch, _google_user())
+    member, _ = auth_service.establish_session("good")
+    assert member.agreed_terms is False        # 신규 회원은 미동의
+    auth_service.agree_terms(member.id)
+    assert members.get(member.id).agreed_terms is True
+
+
 def test_tour_seen_flag(monkeypatch):
     from app.repo import members
     _patch(monkeypatch, _google_user())
