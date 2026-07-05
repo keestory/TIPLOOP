@@ -35,8 +35,8 @@ body {
 
 /* ── 모바일 앱 셸: 실제 풀뷰포트, 데스크톱에선 480px 중앙 ── */
 .app {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;          /* 정해진 높이라야 .body(overflow) 스크롤 + 탭바 고정 */
   max-width: 480px;
   margin: 0 auto;
   background: var(--screen);
@@ -46,7 +46,8 @@ body {
 }
 @media (min-width: 520px) {
   .app {
-    min-height: auto;
+    height: calc(100dvh - 64px);
+    max-height: 880px;
     margin: 24px auto 40px;
     border-radius: 28px;
     border: 1px solid var(--card-border);
@@ -55,15 +56,19 @@ body {
   }
 }
 
-/* 스크롤 본문 — proto .body */
+/* 스크롤 본문 — proto .body. min-height:0 이라야 탭바가 바닥에 고정된다. */
 .body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 22px 28px;
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
+/* 세로 플렉스 스크롤 컨테이너 — 자식이 쪼그라들지 않고 넘치면 스크롤되도록 */
+.body > * { flex-shrink: 0; }
+.body > .grow { flex: 1; }
 
 /* ── 타이포/형광펜 ── */
 .hl {
@@ -199,3 +204,118 @@ body {
 }
 
 .grow { flex: 1; min-height: 12px; }
+
+/* ── 헤더 / 아바타 ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+.topbar-r { display: flex; gap: 14px; align-items: center; }
+.icon { width: 22px; height: 22px; flex: none; cursor: pointer; color: var(--ink); }
+.av {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  flex: none;
+  background: #E7E2D6;
+  border: 1px solid #DCD6C8;
+  background-size: cover;
+  background-position: center;
+  display: inline-block;
+}
+.av.sm { width: 24px; height: 24px; }
+.av.header { width: 30px; height: 30px; }
+
+/* ── 섹션 헤더 ── */
+.sec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sec-head .meta.hot { color: #B39400; }
+
+/* ── 오늘의 글 히어로 ── */
+.hero {
+  border: 1px solid var(--ink);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: transform .12s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.hero:active { transform: scale(.98); }
+.hero-top {
+  height: 120px;
+  background: linear-gradient(135deg, #1A1917, #3A362B);
+  position: relative;
+  padding: 14px 16px;
+}
+.hero-top .tag { position: absolute; top: 14px; left: 16px; }
+.hero-top .date {
+  position: absolute; top: 16px; right: 16px;
+  font: 600 11px var(--mono); color: var(--lime);
+}
+.hero-body { padding: 15px 16px 17px; display: flex; flex-direction: column; gap: 10px; }
+.hero-body h2 { margin: 0; font: 800 20px/1.24 var(--head); letter-spacing: -.02em; }
+.byline { display: flex; align-items: center; gap: 8px; }
+
+/* ── 피드 카드 (탭 → 상세) ── */
+.tapcard {
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  cursor: pointer;
+  transition: transform .12s;
+  text-decoration: none;
+  color: inherit;
+}
+.tapcard:active { transform: scale(.98); }
+.tapcard.ask { border-color: var(--lime); gap: 11px; }
+.tapcard .ttl { margin: 0; font: 600 15px/1.4 var(--sans); }
+.tapcard .metas { display: flex; gap: 16px; }
+.btn.sm { padding: 11px; font-size: 13px; border-radius: 12px; }
+
+.empty {
+  margin: 24px 0;
+  text-align: center;
+  font: 500 14px var(--sans);
+  color: var(--muted);
+}
+.empty a { color: var(--ink); font-weight: 700; }
+
+/* ── 하단 탭바 ── */
+.tabbar {
+  height: 66px;
+  flex: none;
+  border-top: 1px solid var(--card-border);
+  background: var(--screen);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tb {
+  font: 700 13px var(--sans);
+  color: #A19B8C;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  text-decoration: none;
+}
+.tb.on { color: var(--ink); }
+.tb.write {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--lime); color: var(--ink);
+  border-radius: 999px; padding: 11px 18px;
+  box-shadow: 0 6px 14px rgba(151, 196, 0, .35);
+}

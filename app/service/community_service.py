@@ -74,6 +74,27 @@ def list_feed(
     )
 
 
+def home_feed(
+    posts: list[Post], waiting_limit: int = 3
+) -> tuple[Post | None, list[Post], list[Post]]:
+    """홈 화면용 묶음: (오늘의 글, 답변 기다리는 질문들, 나머지 피드).
+
+    맨 앞 글을 히어로로, 답변 0인 질문을 별도 섹션으로 끌어올린다(최대 waiting_limit).
+    나머지는 순서대로 피드에 남긴다. 순수 함수 — DB를 건드리지 않는다.
+    """
+    if not posts:
+        return None, [], []
+    featured, tail = posts[0], posts[1:]
+    waiting: list[Post] = []
+    rest: list[Post] = []
+    for p in tail:
+        if p.category == "question" and p.comment_count == 0 and len(waiting) < waiting_limit:
+            waiting.append(p)
+        else:
+            rest.append(p)
+    return featured, waiting, rest
+
+
 def get_post_with_threads(post_id: int) -> tuple[Post, list[Thread]]:
     """글과, 답글까지 묶은 댓글 스레드를 가져온다. 없으면 CommunityError."""
     post = posts.get_post(post_id)

@@ -1,82 +1,99 @@
-{% extends "base.html" %}
-{% import "macros.html" as ui %}
-{% block title %}피드{% endblock %}
-{% block content %}
+{% extends "mobile.html" %}
+{% block title %}홈{% endblock %}
 
-{# 정렬 탭 — 다시 올 이유 #}
-<div class="sorttabs">
-  {% for code, label in sorts.items() %}
-    <a class="sorttab {% if sort == code %}is-active{% endif %}"
-       href="/?sort={{ code }}&category={{ active.category }}&job_role={{ active.job_role }}&industry={{ active.industry }}">{{ label }}</a>
-  {% endfor %}
-</div>
+{% macro taglabel(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
 
-<form class="filters" method="get" action="/">
-  <input type="hidden" name="sort" value="{{ sort }}">
-  <div class="filter-cats">
-    <a href="/?sort={{ sort }}" class="chip {% if not active.category %}is-active{% endif %}">전체</a>
+{% block app %}
+<div class="body" style="gap:16px">
+
+  {# 헤더 — 브랜드 · 탐색 · 내 프로필 #}
+  <div class="topbar">
+    <a class="brand" href="/">티핑<span class="d"></span></a>
+    <div class="topbar-r">
+      <a href="/explore" aria-label="탐색">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
+        </svg>
+      </a>
+      {% if current_user %}
+        <a href="/users/{{ current_user.id }}" class="av header"
+           {% if current_user.avatar_url %}style="background-image:url('{{ current_user.avatar_url }}')"{% endif %}
+           aria-label="내 프로필"></a>
+      {% else %}
+        <a href="/login" class="tb" style="padding:6px 4px">로그인</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# 카테고리 필터 #}
+  <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:-2px 0">
+    <a href="/" class="chip {% if not active_category %}on{% endif %}" style="padding:8px 14px">전체</a>
     {% for code, label in categories.items() %}
-      <a href="/?sort={{ sort }}&category={{ code }}"
-         class="chip {% if active.category == code %}is-active{% endif %}">{{ label }}</a>
+      <a href="/?category={{ code }}"
+         class="chip {% if active_category == code %}on{% endif %}" style="padding:8px 14px">{{ label }}</a>
     {% endfor %}
   </div>
-  <div class="filter-selects">
-    <input type="hidden" name="category" value="{{ active.category }}">
-    <select name="job_role" onchange="this.form.submit()">
-      <option value="">직군 전체</option>
-      {% for r in job_roles %}
-        <option value="{{ r }}" {% if active.job_role == r %}selected{% endif %}>{{ r }}</option>
-      {% endfor %}
-    </select>
-    <select name="industry" onchange="this.form.submit()">
-      <option value="">업종 전체</option>
-      {% for i in industries %}
-        <option value="{{ i }}" {% if active.industry == i %}selected{% endif %}>{{ i }}</option>
-      {% endfor %}
-    </select>
+
+  {# 오늘의 글 (히어로) #}
+  {% if featured %}
+  <a class="hero" href="/posts/{{ featured.id }}">
+    <div class="hero-top">
+      <span class="tag lime">오늘의 {{ taglabel(featured.category) }}</span>
+      <span class="date">{{ featured.created_at[5:7] }} / {{ featured.created_at[8:10] }}</span>
+    </div>
+    <div class="hero-body">
+      <h2>{{ featured.title }}</h2>
+      <div class="byline">
+        <span class="av sm"></span>
+        <span class="meta">{{ featured.author_name }}{% if featured.author_years %} · {{ featured.author_years }}{% endif %}{% if featured.author_job_role %} · {{ featured.author_job_role }}{% endif %}</span>
+      </div>
+    </div>
+  </a>
+  {% endif %}
+
+  {# 답변을 기다려요 #}
+  {% if waiting %}
+  <div class="sec-head">
+    <span class="h2">답변을 기다려요</span>
+    <span class="meta hot">답변 대기 · {{ waiting | length }}</span>
   </div>
-</form>
-
-{% if posts %}
-<ul class="feed">
-  {% for post in posts %}
-  <li class="feed-item">
-    <div class="feed-head">
-      <span class="tag tag-{{ post.category }}">{{ category_label(post.category) }}</span>
-      <span class="feed-meta">
-        <a href="/users/{{ post.author_id }}">{{ post.author_name }}</a>
-        · {{ post.author_job_role }}{% if post.author_years %} · {{ post.author_years }}{% endif %}
-      </span>
+  {% for q in waiting %}
+  <div class="tapcard ask">
+    <div style="display:flex;align-items:center;gap:7px">
+      <span class="tag">질문</span>
+      <span class="meta">{{ q.author_name }}{% if q.author_job_role %} · {{ q.author_job_role }}{% endif %} · 답변 0</span>
     </div>
-    <a class="feed-title" href="/posts/{{ post.id }}">{{ post.title }}</a>
-    {% if post.category == "reference" and post.link_url %}
-      <p class="feed-event">🔗 {{ post.link_url }}</p>
-    {% endif %}
-    {% if post.image_url %}
-      <a href="/posts/{{ post.id }}"><img class="feed-thumb" src="{{ post.image_url }}" alt="" loading="lazy"></a>
-    {% endif %}
-    {% if post.video_url %}
-      <p class="feed-event">🎬 영상</p>
-    {% endif %}
-    <div class="feed-actions">
-      {{ ui.helpful_button(post.id, post.helpful_count, post.id in helped, current_user) }}
-      {{ ui.react_button("posts", post.id, post.reaction_count, post.id in reacted, current_user) }}
-      <a class="action-link" href="/posts/{{ post.id }}">💬 {{ post.comment_count }}</a>
-      {% if post.review_count %}<a class="action-link" href="/posts/{{ post.id }}">📝 후기 {{ post.review_count }}</a>{% endif %}
-    </div>
-  </li>
+    <p class="ttl" style="font-weight:600">{{ q.title }}</p>
+    <a class="btn lime sm" href="/posts/{{ q.id }}">내 경험으로 답하기 →</a>
+  </div>
   {% endfor %}
-</ul>
-{% else %}
-<p class="empty">아직 글이 없습니다. <a href="/posts/new">첫 글을 남겨보세요.</a></p>
-{% endif %}
+  {% endif %}
 
-{% endblock %}
+  {# 나머지 피드 #}
+  {% for post in rest %}
+  <a class="tapcard" href="/posts/{{ post.id }}">
+    <div style="display:flex;align-items:center;gap:7px">
+      <span class="tag">{{ taglabel(post.category) }}</span>
+      <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
+    </div>
+    <p class="ttl">{{ post.title }}</p>
+    <div class="metas">
+      <span class="meta">💡 {{ post.helpful_count }}</span>
+      <span class="meta">💬 {{ post.comment_count }}</span>
+      {% if post.review_count %}<span class="meta">📝 {{ post.review_count }}</span>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
 
-{# 카테고리 탭마다 다른 CTA — 누르면 그 카테고리가 선택된 글쓰기로 #}
-{% block fab %}
-{% set cta = {"": "글쓰기", "tip": "팁 공유", "reference": "레퍼런스 남기기", "question": "질문하기", "retro": "회고 쓰기"} %}
-<a class="fab" href="/posts/new?category={{ active.category }}">
-  <span class="fab-icon">✏️</span><span class="fab-label">{{ cta.get(active.category, "글쓰기") }}</span>
-</a>
+  {% if not featured and not waiting and not rest %}
+  <div class="grow"></div>
+  <p class="empty">아직 글이 없어요.<br><a href="/posts/new">첫 글을 남겨보세요 →</a></p>
+  <div class="grow"></div>
+  {% endif %}
+
+  <div style="min-height:6px"></div>
+</div>
+
+{% set tab = "home" %}
+{% include "_tabbar.html" %}
 {% endblock %}

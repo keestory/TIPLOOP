@@ -15,6 +15,25 @@ def test_create_and_get_post(make_member):
     assert threads == []
 
 
+def test_home_feed_partitions_hero_and_waiting(make_member):
+    from app.types.models import Post
+
+    def _p(pid, cat, comments=0):
+        return Post(id=pid, author_id=1, category=cat, title=f"글{pid}",
+                    body="x", created_at="2026-07-05", comment_count=comments)
+
+    posts = [_p(1, "tip"), _p(2, "question", 0), _p(3, "reference"),
+             _p(4, "question", 2), _p(5, "question", 0)]
+    featured, waiting, rest = community_service.home_feed(posts)
+    assert featured.id == 1                       # 맨 앞이 히어로
+    assert [q.id for q in waiting] == [2, 5]       # 답변 0인 질문만
+    assert [r.id for r in rest] == [3, 4]          # 나머지(답변 있는 질문 포함)
+
+
+def test_home_feed_empty():
+    assert community_service.home_feed([]) == (None, [], [])
+
+
 def test_reference_keeps_link(make_member):
     t = make_member()
     pid = community_service.create_post(

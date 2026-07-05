@@ -1,0 +1,16 @@
+{% extends "mobile.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block app %}
+<div class="body">
+  <div class="topbar">
+    <span class="brand">티핑<span class="d"></span></span>
+  </div>
+  <div class="grow"></div>
+  <div style="text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center">
+    <h1 class="title-lg">{{ heading }}<br><span class="hl">곧 만나요</span></h1>
+    <p class="sub">이 화면은 준비 중이에요.<br>조금만 기다려 주세요.</p>
+  </div>
+  <div class="grow"></div>
+</div>
+{% include "_tabbar.html" %}
+{% endblock %}

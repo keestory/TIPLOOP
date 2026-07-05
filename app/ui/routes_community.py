@@ -44,19 +44,26 @@ def feed(
     request: Request,
     sort: str = "new",
     category: str = "",
-    job_role: str = "",
-    industry: str = "",
     user: Optional[User] = Depends(get_current_user),
 ):
     sort = sort if sort in FEED_SORTS else "new"
-    posts = community_service.list_feed(category, job_role, industry, sort)
-    reacted = reaction_service.viewer_post_reactions(user.id if user else None)
-    helped = reaction_service.viewer_helpful(user.id if user else None)
+    posts = community_service.list_feed(category, sort=sort)
+    featured, waiting, rest = community_service.home_feed(posts)
     return _render(
-        request, "index.html", user, posts=posts, reacted=reacted, helped=helped,
-        sorts=FEED_SORTS, sort=sort,
-        active={"category": category, "job_role": job_role, "industry": industry},
+        request, "index.html", user,
+        featured=featured, waiting=waiting, rest=rest,
+        sort=sort, active_category=category,
     )
+
+
+@router.get("/explore")
+def explore(request: Request, user: Optional[User] = Depends(get_current_user)):
+    return _render(request, "soon.html", user, tab="explore", heading="탐색")
+
+
+@router.get("/notifications")
+def notifications(request: Request, user: Optional[User] = Depends(get_current_user)):
+    return _render(request, "soon.html", user, tab="notifications", heading="알림")
 
 
 @router.get("/posts/new")
