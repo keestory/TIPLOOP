@@ -1,0 +1,12 @@
+{
+  "appId": "com.keestory.tipping",
+  "appName": "티핑",
+  "webDir": "www",
+  "server": {
+    "url": "https://fortomorrow.vercel.app",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}

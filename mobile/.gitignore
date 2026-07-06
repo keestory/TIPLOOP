@@ -1,0 +1,7 @@
+# Capacitor / Node — 생성물은 각자 Mac에서
+node_modules/
+# 네이티브 프로젝트(cap add ios/android로 생성). 커밋하려면 이 줄을 지우세요.
+ios/
+android/
+DerivedData/
+*.log
