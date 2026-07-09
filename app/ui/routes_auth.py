@@ -98,6 +98,17 @@ def terms_submit(user: Optional[User] = Depends(get_current_user)):
     return RedirectResponse("/onboarding", status_code=303)
 
 
+# 법률 문서 — 로그인 없이 열람 가능(App Store 개인정보처리방침 URL로도 사용)
+@router.get("/terms/service")
+def legal_service(request: Request, user: Optional[User] = Depends(get_current_user)):
+    return _render(request, "legal_service.html", user)
+
+
+@router.get("/terms/privacy")
+def legal_privacy(request: Request, user: Optional[User] = Depends(get_current_user)):
+    return _render(request, "legal_privacy.html", user)
+
+
 # ── 온보딩 ① 관심 주제 (2 / 3) ──────────────────────────────────────
 @router.get("/onboarding")
 def onboarding_topics(request: Request, user: Optional[User] = Depends(get_current_user)):

@@ -212,7 +212,18 @@ body {
 
 .grow { flex: 1; min-height: 12px; }
 
+/* ── 약관·개인정보 문서 ── */
+.legal { display: flex; flex-direction: column; gap: 14px; }
+.legal h1 { margin: 8px 0 0; font: 800 22px var(--head); letter-spacing: -.02em; }
+.legal .updated { font: 500 12px var(--mono); color: var(--meta); }
+.legal section { display: flex; flex-direction: column; gap: 6px; }
+.legal h2 { margin: 10px 0 0; font: 700 15px var(--head); }
+.legal p, .legal li { margin: 0; font: 400 14px/1.65 var(--sans); color: #3C3930; }
+.legal ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.legal .note { font: 500 12px/1.5 var(--sans); color: var(--muted); background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 11px 13px; }
+
 /* ── 약관 동의 ── */
+.consent .view { margin-left: auto; font: 500 12px var(--sans); color: var(--meta); text-decoration: underline; }
 .consent {
   display: flex; flex-direction: column; gap: 2px;
   background: #fff; border: 1px solid var(--card-border);
