@@ -24,14 +24,34 @@
 </div>
 
 {% if supabase_url %}
+<script src="/static/native-auth.js"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-  const sb = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}")
-  const redirectTo = location.origin + '/auth/callback'
-  document.getElementById('google').addEventListener('click', () =>
-    sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } }))
-  document.getElementById('kakao').addEventListener('click', () =>
-    sb.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo } }))
+  const native = !!(window.tippingNative && window.tippingNative.isNative)
+  // 앱: implicit 플로우로 토큰이 URL 프래그먼트에 실려 오게 한다 (native-auth.js가 처리)
+  const sb = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}",
+    native ? { auth: { flowType: 'implicit' } } : undefined)
+
+  async function login(provider) {
+    if (!native) {
+      // 웹: 기존 그대로 — 현재 창에서 OAuth 후 /auth/callback 복귀
+      return sb.auth.signInWithOAuth({
+        provider, options: { redirectTo: location.origin + '/auth/callback' }
+      })
+    }
+    // 앱: WebView 안 OAuth는 구글이 차단 → 시스템 브라우저로 열고 딥링크로 복귀
+    const { data, error } = await sb.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: 'tipping://auth-callback', skipBrowserRedirect: true }
+    })
+    if (error || !data || !data.url) {
+      alert('로그인을 시작하지 못했습니다. 다시 시도해 주세요.')
+      return
+    }
+    window.tippingNative.openBrowser(data.url)
+  }
+  document.getElementById('google').addEventListener('click', () => login('google'))
+  document.getElementById('kakao').addEventListener('click', () => login('kakao'))
 </script>
 {% endif %}
 {% endblock %}

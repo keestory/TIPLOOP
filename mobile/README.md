@@ -54,16 +54,32 @@ Xcode에서:
 **네이티브 기능 1개**를 붙이는 걸 권장한다 → **푸시 알림**(`@capacitor/push-notifications`).
 첫 제출은 그대로 넣어보고, 4.2로 반려되면 그때 푸시를 추가해도 된다.
 
-### (b) 구글 로그인이 WebView에서 막힘 (반드시 해결 필요)
-구글은 보안상 **임베디드 WebView 안에서의 OAuth를 차단**한다
-(`disallowed_useragent` 오류). 즉 Capacitor 셸 안에서 "구글로 로그인"이 안 될 수 있다.
-해결책(둘 중 하나):
-- **시스템 브라우저로 OAuth 처리 후 딥링크 복귀**: `@capacitor/browser`로 로그인만 사파리에서
-  열고, 커스텀 스킴(`tipping://auth`)으로 앱에 토큰을 돌려받기.
-- **supabase-js의 Capacitor 네이티브 OAuth 플로우** 사용.
+### (b) 구글 로그인이 WebView에서 막힘 — ✅ 해결됨 (설정 2가지만 하면 됨)
+구글은 임베디드 WebView 안 OAuth를 차단한다(`disallowed_useragent`).
+웹 코드에 앱 분기가 이미 들어가 있다: 앱에서는 로그인만 **시스템 브라우저**
+(SFSafariViewController)로 열고, `tipping://auth-callback` 딥링크로 토큰을
+받아 세션을 만든다. (`templates/login.html` + `static/native-auth.js`)
 
-이건 웹 코드에 약간의 분기(앱일 때 다른 로그인 경로)가 필요하다.
-**여기까지 오면 알려줘 — 이 부분은 같이 구현하자.**
+**당신이 할 설정 2가지:**
+
+1. **iOS URL 스킴 등록** — Xcode에서 App 타겟 → **Info → URL Types → +**
+   - URL Schemes: `tipping`  (Identifier는 `com.keestory.tipping` 등 아무거나)
+   - 또는 `ios/App/App/Info.plist`에 직접:
+   ```xml
+   <key>CFBundleURLTypes</key>
+   <array><dict>
+     <key>CFBundleURLSchemes</key><array><string>tipping</string></array>
+   </dict></array>
+   ```
+
+2. **Supabase Redirect URL 추가** — 대시보드 → Authentication → URL Configuration
+   → Redirect URLs에 추가:
+   ```
+   tipping://auth-callback
+   ```
+
+플러그인(`@capacitor/app`, `@capacitor/browser`)은 package.json에 포함돼 있어
+`npm install && npx cap sync` 하면 적용된다.
 
 ---
 
