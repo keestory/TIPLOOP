@@ -416,6 +416,10 @@ body {
 }
 .tour-next.lime { background: var(--lime); color: var(--ink); }
 
+/* ══ 주간 다이제스트 (6a) ══ */
+.digest-sec { display: flex; flex-direction: column; gap: 9px; }
+.digest-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; margin: 24px 0; }
+
 /* ══ 알림 ══ */
 .nt {
   display: flex; gap: 12px; align-items: flex-start;

@@ -23,7 +23,7 @@ from app.config.settings import (
     category_label,
 )
 from app.repo.database import init_db
-from app.ui import routes_auth, routes_community, routes_crew, routes_pwa
+from app.ui import routes_auth, routes_community, routes_crew, routes_post, routes_pwa
 
 _ROOT = Path(__file__).resolve().parents[2]
 
@@ -63,5 +63,6 @@ def create_app() -> FastAPI:
     app.include_router(routes_pwa.router)
     app.include_router(routes_auth.router)
     app.include_router(routes_crew.router)
+    app.include_router(routes_post.router)
     app.include_router(routes_community.router)
     return app

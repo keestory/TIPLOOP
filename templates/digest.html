@@ -1,0 +1,89 @@
+{% extends "mobile.html" %}
+{% block title %}이번 주 티핑{% endblock %}
+
+{% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
+{% macro post_card(post) %}
+<a class="tapcard" href="/posts/{{ post.id }}" style="gap:9px">
+  <div style="display:flex;align-items:center;gap:7px">
+    <span class="tag {% if post.category == 'tip' %}lime{% endif %}">{{ cat_tag(post.category) }}</span>
+    <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
+  </div>
+  <p class="ttl" style="font-weight:600">{{ post.title }}</p>
+  <div class="metas"><span class="meta">💡 {{ post.helpful_count }}</span><span class="meta">💬 {{ post.comment_count }}</span></div>
+</a>
+{% endmacro %}
+
+{% block app %}
+<div class="body" style="gap:16px">
+  <div class="topbar">
+    <a href="/notifications" aria-label="뒤로">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+  </div>
+
+  <div>
+    <h1 class="title-lg" style="margin:2px 0 0">이번 주<br><span class="hl">티핑</span></h1>
+    <span class="meta">{{ digest.week_start.strftime("%m/%d") }} 주</span>
+  </div>
+
+  {% if not digest.has_any %}
+  <div class="digest-empty">
+    <div class="grow" style="min-height:20px"></div>
+    <p class="sub">이번 주는 아직 요약할 게 없어요.<br>첫 글을 남기거나 동료를 팔로우해보세요.</p>
+    <a class="btn" href="/posts/new" style="max-width:220px"><span>글쓰기</span><span style="font-size:17px">→</span></a>
+  </div>
+  {% endif %}
+
+  {% if digest.top_post %}
+  <div class="digest-sec">
+    <span class="h2">🏆 이번 주 가장 도움된 글</span>
+    {{ post_card(digest.top_post) }}
+  </div>
+  {% endif %}
+
+  {% if digest.waiting %}
+  <div class="digest-sec">
+    <span class="h2">답변을 기다려요</span>
+    {% for q in digest.waiting %}
+    <div class="tapcard ask">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="tag">질문</span>
+        <span class="meta">{{ q.author_name }}{% if q.author_job_role %} · {{ q.author_job_role }}{% endif %}</span>
+      </div>
+      <p class="ttl" style="font-weight:600">{{ q.title }}</p>
+      <a class="btn lime sm" href="/posts/{{ q.id }}">내 경험으로 답하기 →</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if digest.followed_posts %}
+  <div class="digest-sec">
+    <span class="h2">팔로우한 동료의 새 글</span>
+    {% for p in digest.followed_posts %}{{ post_card(p) }}{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if digest.my_reviews %}
+  <div class="digest-sec">
+    <span class="h2">내 글에 남겨진 후기</span>
+    {% for r in digest.my_reviews %}
+    <a class="rev-card" href="/posts/{{ r.post_id }}" style="text-decoration:none;color:inherit">
+      <div class="rev-head">
+        <span class="av sm"></span>
+        <span class="meta">{{ r.author_name }}{% if r.author_job_role %} · {{ r.author_job_role }}{% endif %}</span>
+        <span class="tag lime" style="margin-left:auto">효과 봄</span>
+      </div>
+      <p class="rev-body">{{ r.body }}</p>
+      {% if r.post_title %}<span class="meta">「{{ r.post_title }}」</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="min-height:8px"></div>
+</div>
+
+{% set tab = "notifications" %}
+{% include "_tabbar.html" %}
+{% endblock %}

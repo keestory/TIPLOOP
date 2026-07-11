@@ -5,11 +5,12 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from app.config.settings import CATEGORIES, TOPICS
 from app.repo import (
     comments,
+    follows,
     media_comments,
     members,
     notifications,
@@ -201,6 +202,48 @@ def onboarding_checklist(user: User | None) -> dict | None:
     if all(i["done"] for i in items):
         return None
     return {"items": items, "done": sum(1 for i in items if i["done"]), "total": len(items)}
+
+
+def week_start(today: date | None = None) -> date:
+    """이번 주 월요일 날짜. 다이제스트의 '이번 주' 기준."""
+    today = today or date.today()
+    return today - timedelta(days=today.weekday())
+
+
+def weekly_digest(user: User) -> dict:
+    """'이번 주 티핑' 요약 (6a) — 가장 도움된 팁 · 팔로우 새 글 · 답변 대기 · 내 글 받은 후기.
+
+    사이트 전체를 훑는 무거운 집계 대신, 최근 글 목록 하나를 여러 조건으로
+    나눠 쓰는 방식 — 지금 규모(수십~수백 글/주)에서는 충분히 가볍다.
+    """
+    start = week_start()
+    recent = posts.list_posts(sort="new")
+    this_week = [p for p in recent if (_post_date(p.created_at) or date.min) >= start]
+
+    top_post = max(this_week, key=lambda p: p.helpful_count, default=None)
+    if top_post is not None and top_post.helpful_count == 0:
+        top_post = None
+
+    following = set(follows.followee_ids(user.id))
+    followed_posts = [
+        p for p in this_week if p.author_id in following and p.author_id != user.id
+    ][:5]
+
+    waiting = [
+        p for p in recent
+        if p.category == "question" and p.comment_count == 0 and p.author_id != user.id
+    ][:3]
+
+    my_reviews = reviews.received_since(user.id, start)
+
+    return {
+        "week_start": start,
+        "top_post": top_post,
+        "followed_posts": followed_posts,
+        "waiting": waiting,
+        "my_reviews": my_reviews,
+        "has_any": bool(top_post or followed_posts or waiting or my_reviews),
+    }
 
 
 def _post_date(created_at: str) -> date | None:

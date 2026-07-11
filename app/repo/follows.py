@@ -33,6 +33,15 @@ def is_following(follower_id: int, followee_id: int) -> bool:
         return row is not None
 
 
+def followee_ids(member_id: int) -> list[int]:
+    """내가 팔로우하는 사람들의 id 목록 (주간 다이제스트 등에서 필터링용)."""
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT followee_id FROM follows WHERE follower_id = %s", (member_id,)
+        ).fetchall()
+        return [r["followee_id"] for r in rows]
+
+
 def followers_count(member_id: int) -> int:
     with get_connection() as conn:
         row = conn.execute(

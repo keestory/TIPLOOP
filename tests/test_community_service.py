@@ -114,6 +114,95 @@ def test_search_escapes_wildcards(make_member):
     assert len(hits) == 1 and hits[0].title == "100% 전환"
 
 
+def _backdate_post(post_id, days_ago):
+    from app.repo.database import get_connection
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE posts SET created_at = now() - interval '%s days' WHERE id = %s"
+            % (days_ago, post_id)
+        )
+
+
+def _backdate_review(review_id, days_ago):
+    from app.repo.database import get_connection
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE reviews SET created_at = now() - interval '%s days' WHERE id = %s"
+            % (days_ago, review_id)
+        )
+
+
+def test_week_start_is_monday():
+    from datetime import date
+    # 2026-07-11은 토요일 → 그 주 월요일은 07-06
+    assert community_service.week_start(date(2026, 7, 11)) == date(2026, 7, 6)
+
+
+def test_weekly_digest_top_post_only_counts_this_week(make_member):
+    from app.repo import reactions
+
+    me = make_member()
+    old_author = make_member()
+    pid_old = community_service.create_post(old_author.id, "tip", "지난주 인기글", "본문")
+    reactions.toggle_post_helpful(pid_old, me.id)
+    _backdate_post(pid_old, 10)  # 지난 주로 밀어냄
+
+    pid_new = community_service.create_post(old_author.id, "tip", "이번주 글", "본문")
+    reactions.toggle_post_helpful(pid_new, me.id)
+
+    d = community_service.weekly_digest(me)
+    assert d["top_post"].id == pid_new       # 지난주 글은 helpful이 더 많아도 제외
+
+
+def test_weekly_digest_followed_posts_excludes_self_and_others(make_member):
+    from app.service import follow_service
+
+    me = make_member()
+    friend = make_member()
+    stranger = make_member()
+    follow_service.toggle(me.id, friend.id)
+    community_service.create_post(friend.id, "tip", "친구 글", "본문")
+    community_service.create_post(stranger.id, "tip", "모르는 사람 글", "본문")
+    community_service.create_post(me.id, "tip", "내 글", "본문")
+
+    d = community_service.weekly_digest(me)
+    titles = {p.title for p in d["followed_posts"]}
+    assert titles == {"친구 글"}
+
+
+def test_weekly_digest_waiting_excludes_my_own_questions(make_member):
+    me = make_member()
+    other = make_member()
+    community_service.create_post(other.id, "question", "동료 질문", "본문")
+    community_service.create_post(me.id, "question", "내 질문", "본문")
+
+    d = community_service.weekly_digest(me)
+    titles = {q.title for q in d["waiting"]}
+    assert titles == {"동료 질문"}
+
+
+def test_weekly_digest_my_reviews_since_week_start(make_member):
+    me = make_member()
+    reviewer = make_member()
+    pid = community_service.create_post(me.id, "tip", "내 글", "본문")
+    rid_new = community_service.add_review(pid, reviewer.id, "최근 후기")
+    rid_old = community_service.add_review(pid, reviewer.id, "오래된 후기")
+    _backdate_review(rid_old, 10)
+
+    d = community_service.weekly_digest(me)
+    bodies = {r.body for r in d["my_reviews"]}
+    assert bodies == {"최근 후기"}
+    assert d["my_reviews"][0].post_title == "내 글"
+
+
+def test_weekly_digest_empty_when_nothing(make_member):
+    me = make_member()
+    d = community_service.weekly_digest(me)
+    assert d["has_any"] is False
+    assert d["top_post"] is None
+    assert d["followed_posts"] == d["waiting"] == d["my_reviews"] == []
+
+
 def test_reference_keeps_link(make_member):
     t = make_member()
     pid = community_service.create_post(

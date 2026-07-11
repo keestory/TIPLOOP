@@ -84,6 +84,7 @@ class Review:
     created_at: str
     author_name: str | None = None
     author_job_role: str | None = None
+    post_title: str | None = None  # 주간 다이제스트 등 글 목록 없이 보여줄 때만 채움
 
 
 @dataclass(frozen=True)
