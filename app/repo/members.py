@@ -25,6 +25,7 @@ def _to_user(row: dict) -> User:
         topics=tuple(row.get("topics") or ()),
         agreed_terms=bool(row.get("agreed_terms")),
         has_seen_tour=bool(row.get("has_seen_tour")),
+        checklist_dismissed=bool(row.get("checklist_dismissed")),
     )
 
 
@@ -73,6 +74,12 @@ def mark_tour_seen(member_id: int) -> None:
     """첫 로그인 코치마크 투어를 봤다고 표시한다(다시 안 뜸)."""
     with get_connection() as conn:
         conn.execute("UPDATE members SET has_seen_tour = TRUE WHERE id = %s", (member_id,))
+
+
+def dismiss_checklist(member_id: int) -> None:
+    """홈 시작 체크리스트를 닫는다(다시 안 뜸)."""
+    with get_connection() as conn:
+        conn.execute("UPDATE members SET checklist_dismissed = TRUE WHERE id = %s", (member_id,))
 
 
 def subscribers_of_topic(topic: str) -> list[int]:

@@ -109,6 +109,27 @@ def legal_privacy(request: Request, user: Optional[User] = Depends(get_current_u
     return _render(request, "legal_privacy.html", user)
 
 
+# ── 관심 주제 수정 (온보딩 완료 후 언제든) ──────────────────────────
+@router.get("/topics")
+def topics_form(request: Request, user: Optional[User] = Depends(get_current_user)):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    if not user.is_onboarded:
+        return RedirectResponse("/onboarding", status_code=303)
+    return _render(request, "onboarding_topics.html", user, edit=True)
+
+
+@router.post("/topics")
+def topics_submit(
+    topics: Optional[list[str]] = Form(None),
+    user: Optional[User] = Depends(get_current_user),
+):
+    if user is None:
+        return RedirectResponse("/login", status_code=303)
+    auth_service.save_topics(user.id, topics or [])
+    return RedirectResponse("/", status_code=303)
+
+
 # ── 온보딩 ① 관심 주제 (2 / 3) ──────────────────────────────────────
 @router.get("/onboarding")
 def onboarding_topics(request: Request, user: Optional[User] = Depends(get_current_user)):

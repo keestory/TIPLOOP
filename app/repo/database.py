@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS members (
     topics     TEXT[] NOT NULL DEFAULT '{}',  -- 관심 주제 (온보딩 2단계)
     agreed_terms  BOOLEAN NOT NULL DEFAULT FALSE,  -- 약관·개인정보 동의 (신규 첫 단계)
     has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE,  -- 첫 로그인 코치마크 투어 시청 여부
+    checklist_dismissed BOOLEAN NOT NULL DEFAULT FALSE,  -- 홈 시작 체크리스트 닫음
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -134,6 +135,7 @@ _MIGRATIONS = [
     "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS topics TEXT[] NOT NULL DEFAULT '{}'",
     "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE",
     "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS agreed_terms BOOLEAN NOT NULL DEFAULT FALSE",
+    "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS checklist_dismissed BOOLEAN NOT NULL DEFAULT FALSE",
 ]
 
 

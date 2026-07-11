@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config.settings import CATEGORIES, WRITE_TEMPLATES
 from app.service import (
+    auth_service,
     community_service,
     follow_service,
     notification_service,
@@ -65,8 +66,16 @@ def feed(
         request, "index.html", user,
         featured=featured, waiting=waiting, rest=rest,
         sort=sort, active_category=category, nav_unread=_nav_unread(user),
-        show_tour=show_tour,
+        show_tour=show_tour, checklist=community_service.onboarding_checklist(user),
     )
+
+
+@router.post("/checklist/dismiss")
+def dismiss_checklist(request: Request, user: Optional[User] = Depends(get_current_user)):
+    """홈 시작 체크리스트 닫기 — 다시 뜨지 않는다."""
+    if user is not None:
+        auth_service.dismiss_checklist(user.id)
+    return RedirectResponse("/", status_code=303)
 
 
 @router.get("/explore")

@@ -184,6 +184,25 @@ def list_reviews(post_id: int) -> list[Review]:
     return reviews.list_for_post(post_id)
 
 
+def onboarding_checklist(user: User | None) -> dict | None:
+    """홈 상단 시작 체크리스트 (8c). 대상이 아니거나 닫았거나 전부 완료면 None.
+
+    항목: 프로필 완성(온보딩에서 이미 완료 — 첫 성취감) → 관심 주제 → 첫 글·반응.
+    """
+    if user is None or not user.is_onboarded or user.checklist_dismissed:
+        return None
+    wrote = bool(posts.list_posts(author_id=user.id))
+    reacted = bool(reactions.reacted_post_ids(user.id)) or bool(reactions.helpful_post_ids(user.id))
+    items = [
+        {"label": "프로필 완성", "done": True, "href": None},
+        {"label": "관심 주제 고르기", "done": bool(user.topics), "href": "/topics"},
+        {"label": "첫 글·반응 남기기", "done": wrote or reacted, "href": "/posts/new"},
+    ]
+    if all(i["done"] for i in items):
+        return None
+    return {"items": items, "done": sum(1 for i in items if i["done"]), "total": len(items)}
+
+
 def _post_date(created_at: str) -> date | None:
     """created_at 문자열(맨 앞 10자 YYYY-MM-DD)만 안전하게 파싱. 3.9 호환."""
     try:

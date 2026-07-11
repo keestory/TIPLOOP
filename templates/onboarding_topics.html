@@ -1,7 +1,16 @@
 {% extends "mobile.html" %}
 {% block title %}관심 주제{% endblock %}
 {% block app %}
-<form class="body" style="gap:16px" method="post" action="/onboarding">
+<form class="body" style="gap:16px" method="post" action="{{ '/topics' if edit else '/onboarding' }}">
+  {% if edit %}
+  <div class="topbar">
+    <a href="/" aria-label="뒤로">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+  </div>
+  <h1 class="title-lg" style="margin:6px 0 0">관심 주제<br><span class="hl">바꿔볼까요?</span></h1>
+  <p class="sub">고른 주제의 새 글 알림을 받아요.</p>
+  {% else %}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
     <span class="brand">티핑<span class="d"></span></span>
     <span class="meta">2 / 3</span>
@@ -13,6 +22,7 @@
 
   <h1 class="title-lg" style="margin:14px 0 0">어떤 게<br><span class="hl">궁금하세요?</span></h1>
   <p class="sub">고른 주제로 첫 피드를 채워드려요.<br>나중에 언제든 바꿀 수 있어요.</p>
+  {% endif %}
 
   <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
     {% for t in topics_list %}
@@ -26,8 +36,8 @@
 
   <div class="grow"></div>
 
-  <button type="submit" class="btn" data-cta>
-    <span data-count>{{ current_user.topics | length }}개 선택됨 · 시작하기</span>
+  <button type="submit" class="btn" data-cta data-verb="{{ '저장하기' if edit else '시작하기' }}">
+    <span data-count>{{ current_user.topics | length }}개 선택됨 · {{ '저장하기' if edit else '시작하기' }}</span>
     <span style="font-size:17px">→</span>
   </button>
 </form>
@@ -39,10 +49,11 @@
   var form = document.querySelector('form');
   var chips = form.querySelectorAll('[data-chip]');
   var count = form.querySelector('[data-count]');
+  var verb = form.querySelector('[data-cta]').dataset.verb || '시작하기';
 
   function refresh() {
     var n = form.querySelectorAll('input[name="topics"]:checked').length;
-    count.textContent = n + '개 선택됨 · 시작하기';
+    count.textContent = n + '개 선택됨 · ' + verb;
   }
   // 라벨이 체크박스 토글을 네이티브로 처리하므로 change만 듣는다(이중 토글 방지)
   chips.forEach(function (chip) {

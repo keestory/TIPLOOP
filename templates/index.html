@@ -34,6 +34,26 @@
     {% endfor %}
   </div>
 
+  {# 시작 체크리스트 — 신규 회원 안내 (닫으면 다시 안 뜸) #}
+  {% if checklist %}
+  <div class="card check-card">
+    <div class="sec-head">
+      <span class="h2">시작하기 · {{ checklist.done }}/{{ checklist.total }} 완료</span>
+      <form method="post" action="/checklist/dismiss" style="margin:0">
+        <button type="submit" class="check-close">닫기 ✕</button>
+      </form>
+    </div>
+    <div class="check-bar"><span style="width:{{ (checklist.done * 100 // checklist.total) }}%"></span></div>
+    {% for it in checklist["items"] %}
+    <div class="check-item">
+      <span class="check-dot {% if it.done %}on{% endif %}">✓</span>
+      <span class="lbl {% if it.done %}done{% endif %}">{{ it.label }}</span>
+      {% if not it.done and it.href %}<a class="chip go" href="{{ it.href }}" style="padding:7px 13px">하기</a>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {# 오늘의 글 (히어로) #}
   {% if featured %}
   <a class="hero" href="/posts/{{ featured.id }}">

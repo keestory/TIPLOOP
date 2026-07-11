@@ -54,6 +54,37 @@ def test_contribution_heatmap_levels():
     assert heat[0] == 0            # 11주 전 없음
 
 
+def test_checklist_progress_and_completion(make_member):
+    from app.repo import members
+    from app.service import reaction_service as R
+
+    m = make_member()                       # 온보딩 완료, 주제 없음
+    cl = community_service.onboarding_checklist(m)
+    assert cl["done"] == 1 and cl["total"] == 3       # 프로필만 완료
+    assert [i["done"] for i in cl["items"]] == [True, False, False]
+
+    m = members.set_topics(m.id, ["리텐션"])          # 주제 선택 → 2/3
+    cl = community_service.onboarding_checklist(m)
+    assert cl["done"] == 2
+
+    other = make_member()
+    pid = community_service.create_post(other.id, "tip", "글", "본문")
+    R.toggle_helpful(pid, m.id)                        # 첫 반응 → 전부 완료
+    assert community_service.onboarding_checklist(members.get(m.id)) is None
+
+
+def test_checklist_hidden_when_dismissed_or_not_onboarded(make_member):
+    from app.repo import members
+
+    m = make_member()
+    members.dismiss_checklist(m.id)
+    assert community_service.onboarding_checklist(members.get(m.id)) is None
+
+    raw = make_member(onboard=False)                   # 온보딩 미완료
+    assert community_service.onboarding_checklist(raw) is None
+    assert community_service.onboarding_checklist(None) is None
+
+
 def test_contribution_heatmap_ignores_old_and_bad():
     from datetime import date
     from app.types.models import Post

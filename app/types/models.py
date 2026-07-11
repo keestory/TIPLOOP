@@ -26,6 +26,7 @@ class User:
     topics: tuple[str, ...] = ()  # 관심 주제 (온보딩 2단계, 피드 개인화 씨앗)
     agreed_terms: bool = False    # 약관·개인정보 동의 (신규 가입 첫 단계)
     has_seen_tour: bool = False   # 첫 로그인 코치마크 투어를 봤는지
+    checklist_dismissed: bool = False  # 홈 시작 체크리스트를 닫았는지
 
     @property
     def is_onboarded(self) -> bool:
