@@ -1,0 +1,29 @@
+{% extends "mobile.html" %}
+{% block title %}크루 만들기{% endblock %}
+{% block app %}
+<form class="body" style="gap:16px" method="post" action="/crews">
+  <div class="topbar">
+    <a class="cancel" href="/crews">‹ 크루</a>
+  </div>
+
+  <h1 class="title-lg" style="margin:6px 0 0">어떤 크루를<br><span class="hl">만들까요?</span></h1>
+  <p class="sub">만들면 초대 링크가 생겨요. 2~12명이 함께<br>매주 한 줄씩 기록합니다.</p>
+
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+  <div class="wr-sec">
+    <span class="meta">크루 이름</span>
+    <input class="ta" name="name" required maxlength="40"
+           placeholder="예: 그로스 스터디, 우리 팀 회고단" value="{{ form_name or '' }}" style="font-size:15px">
+  </div>
+
+  <div class="wr-sec">
+    <span class="meta">주제 <span style="color:#B8B2A2">(선택)</span></span>
+    <input class="ta" name="topic" maxlength="20"
+           placeholder="예: 리텐션, 체크아웃" value="{{ form_topic or '' }}" style="font-size:15px">
+  </div>
+
+  <div class="grow"></div>
+  <button type="submit" class="btn"><span>만들고 초대하기</span><span style="font-size:17px">→</span></button>
+</form>
+{% endblock %}

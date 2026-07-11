@@ -88,14 +88,42 @@ CREATE TABLE IF NOT EXISTS follows (
     PRIMARY KEY (follower_id, followee_id)
 );
 
--- 활동 알림 (내 글 반응 · 팔로우 · 구독 주제의 새 글)
+-- 크루 — 동료들과 함께 쓰는 주간 기록 (셋로그식 소그룹)
+CREATE TABLE IF NOT EXISTS crews (
+    id          BIGSERIAL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    topic       TEXT,
+    invite_code TEXT UNIQUE NOT NULL,
+    created_by  BIGINT NOT NULL REFERENCES members(id),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS crew_members (
+    crew_id   BIGINT NOT NULL REFERENCES crews(id),
+    member_id BIGINT NOT NULL REFERENCES members(id),
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (crew_id, member_id)
+);
+
+CREATE TABLE IF NOT EXISTS crew_entries (
+    id         BIGSERIAL PRIMARY KEY,
+    crew_id    BIGINT NOT NULL REFERENCES crews(id),
+    author_id  BIGINT NOT NULL REFERENCES members(id),
+    week       TEXT NOT NULL,                 -- ISO 주 (예: 2026-W28)
+    body       TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_crew_entries ON crew_entries(crew_id, week);
+
+-- 활동 알림 (내 글 반응 · 팔로우 · 구독 주제의 새 글 · 크루)
 CREATE TABLE IF NOT EXISTS notifications (
     id         BIGSERIAL PRIMARY KEY,
     user_id    BIGINT NOT NULL REFERENCES members(id),
     actor_id   BIGINT REFERENCES members(id),
-    kind       TEXT NOT NULL,   -- review|helpful|comment|reply|follow|topic_post
+    kind       TEXT NOT NULL,   -- review|helpful|comment|reply|follow|topic_post|crew
     post_id    BIGINT REFERENCES posts(id),
     topic      TEXT,
+    crew_id    BIGINT REFERENCES crews(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     read_at    TIMESTAMPTZ
 );

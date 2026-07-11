@@ -110,16 +110,43 @@ class Thread:
 
 
 @dataclass(frozen=True)
+class Crew:
+    """크루 — 동료들과 함께 쓰는 주간 기록 공간 (2~12명)."""
+
+    id: int
+    name: str
+    invite_code: str
+    created_by: int
+    created_at: str
+    topic: str | None = None
+    member_count: int = 0
+
+
+@dataclass(frozen=True)
+class CrewEntry:
+    """크루의 주간 기록 한 조각 — 한 줄 팁·배움·근황."""
+
+    id: int
+    crew_id: int
+    author_id: int
+    week: str  # ISO 주 (예: 2026-W28)
+    body: str
+    created_at: str
+    author_name: str | None = None
+
+
+@dataclass(frozen=True)
 class Notification:
     """활동 알림. 내 글에 달린 후기·도움·댓글, 팔로우, 구독 주제의 새 글."""
 
     id: int
     user_id: int                     # 받는 사람
-    kind: str                        # review | helpful | comment | follow | topic_post
+    kind: str                        # review | helpful | comment | reply | follow | topic_post | crew
     created_at: str
     actor_id: int | None = None      # 행동한 사람 (topic_post는 글쓴이)
     post_id: int | None = None       # 관련 글
-    topic: str | None = None         # 관련 주제 (topic_post)
+    topic: str | None = None         # 관련 주제 (topic_post) 또는 크루 이름 (crew)
+    crew_id: int | None = None       # 관련 크루
     read_at: str | None = None       # 읽은 시각 (안 읽었으면 None)
     # 조회 시 채워지는 표시 정보 (join)
     actor_name: str | None = None

@@ -1,0 +1,100 @@
+{% extends "mobile.html" %}
+{% block title %}{{ crew.name }}{% endblock %}
+{% block app %}
+<div class="body" style="gap:14px">
+  <div class="topbar">
+    <a href="/crews" aria-label="뒤로">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <button type="button" class="chip" id="invite" style="padding:8px 14px"
+            data-url="/crews/join/{{ crew.invite_code }}">동료 초대 ↗</button>
+  </div>
+
+  <div>
+    <h1 class="title-lg" style="margin:2px 0 0">{{ crew.name }}</h1>
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+      {% if crew.topic %}<span class="tag lime">{{ crew.topic }}</span>{% endif %}
+      <span class="meta">멤버 {{ crew.member_count }} · {{ week }}</span>
+    </div>
+  </div>
+
+  {# 이번 주 프롬프트 #}
+  <div class="card prompt-card">
+    <span class="tag">이번 주</span>
+    <p class="prompt-q">“{{ prompt }}”</p>
+    <div class="pdots">
+      {% for m in members %}<span class="pdot {% if m.done %}on{% endif %}" title="{{ m.name }}"></span>{% endfor %}
+      <span class="meta" style="margin-left:6px">{{ members | selectattr("done") | list | length }}/{{ members | length }} 참여</span>
+    </div>
+  </div>
+
+  {# 멤버 참여 현황 #}
+  <div style="display:flex;flex-wrap:wrap;gap:7px">
+    {% for m in members %}
+    <span class="crew-member"><span class="pdot {% if m.done %}on{% endif %}"></span>{{ m.name }}</span>
+    {% endfor %}
+  </div>
+
+  {# 내 기록 남기기 #}
+  <form class="cmt-form" method="post" action="/crews/{{ crew.id }}/entries">
+    <textarea class="ta" name="body" rows="2" maxlength="300" required
+              placeholder="{% if me_done %}한 조각 더 남겨도 좋아요{% else %}한 줄이면 충분해요{% endif %}"></textarea>
+    <button type="submit" class="btn btn-small {% if not me_done %}lime{% endif %}" style="align-self:flex-start">
+      {% if me_done %}더 남기기{% else %}이번 주 기록 남기기 ✏️{% endif %}
+    </button>
+  </form>
+
+  {# 이번 주 로그 #}
+  {% if entries %}
+  <div class="card" style="gap:0;padding:5px 16px">
+    {% for e in entries %}
+    <div class="entry-item">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="av sm"></span>
+        <span class="meta">{{ e.author_name }} · {{ e.created_at }}</span>
+      </div>
+      <p class="entry-body" style="margin-left:31px">{{ e.body }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="hint">아직 이번 주 기록이 없어요. 첫 조각을 남겨보세요.</p>
+  {% endif %}
+
+  {# 지난 주 로그 #}
+  {% for p in past %}
+  <div class="sec-head" style="margin-top:4px">
+    <span class="h2">{{ p.week }}</span>
+    <span class="meta">“{{ p.prompt }}”</span>
+  </div>
+  <div class="card" style="gap:0;padding:5px 16px">
+    {% for e in p.entries %}
+    <div class="entry-item">
+      <span class="meta">{{ e.author_name }}</span>
+      <p class="entry-body">{{ e.body }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div style="min-height:6px"></div>
+</div>
+
+{% include "_tabbar.html" %}
+{% endblock %}
+
+{% block script %}
+<script>
+  // 초대 — 모바일은 공유 시트, 그 외엔 링크 복사
+  document.getElementById('invite').addEventListener('click', async function () {
+    var url = location.origin + this.dataset.url;
+    if (navigator.share) {
+      try { await navigator.share({ title: '티핑 크루 초대', text: '{{ crew.name }} 크루에서 같이 기록해요', url: url }); return } catch (e) {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      this.textContent = '링크 복사됨 ✓';
+    } catch (e) { prompt('초대 링크를 복사하세요:', url); }
+  });
+</script>
+{% endblock %}

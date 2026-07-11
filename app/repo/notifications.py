@@ -12,7 +12,7 @@ from app.types.models import Notification
 _SELECT = """
 SELECT n.id, n.user_id, n.actor_id, n.kind,
        to_char(n.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-       n.post_id, n.topic,
+       n.post_id, n.topic, n.crew_id,
        to_char(n.read_at, 'YYYY-MM-DD HH24:MI:SS') AS read_at,
        a.name AS actor_name, p.title AS post_title
 FROM notifications n
@@ -30,6 +30,7 @@ def _to_notification(row: dict) -> Notification:
         actor_id=row["actor_id"],
         post_id=row["post_id"],
         topic=row["topic"],
+        crew_id=row["crew_id"],
         read_at=row["read_at"],
         actor_name=row["actor_name"],
         post_title=row["post_title"],
@@ -42,16 +43,17 @@ def create(
     actor_id: int | None = None,
     post_id: int | None = None,
     topic: str | None = None,
+    crew_id: int | None = None,
 ) -> None:
     """알림 한 건을 남긴다. 자기 자신에게는 남기지 않는다."""
     if actor_id is not None and actor_id == user_id:
         return
     sql = (
-        "INSERT INTO notifications (user_id, actor_id, kind, post_id, topic) "
-        "VALUES (%s, %s, %s, %s, %s)"
+        "INSERT INTO notifications (user_id, actor_id, kind, post_id, topic, crew_id) "
+        "VALUES (%s, %s, %s, %s, %s, %s)"
     )
     with get_connection() as conn:
-        conn.execute(sql, (user_id, actor_id, kind, post_id, topic))
+        conn.execute(sql, (user_id, actor_id, kind, post_id, topic, crew_id))
 
 
 def list_for(user_id: int, limit: int = 40) -> list[Notification]:

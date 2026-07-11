@@ -11,6 +11,7 @@ from app.config.settings import CATEGORIES, WRITE_TEMPLATES
 from app.service import (
     auth_service,
     community_service,
+    crew_service,
     follow_service,
     notification_service,
     reaction_service,
@@ -67,6 +68,7 @@ def feed(
         featured=featured, waiting=waiting, rest=rest,
         sort=sort, active_category=category, nav_unread=_nav_unread(user),
         show_tour=show_tour, checklist=community_service.onboarding_checklist(user),
+        my_crews=crew_service.my_crews(user.id) if (user and user.is_onboarded) else [],
     )
 
 
