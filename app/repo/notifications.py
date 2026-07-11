@@ -65,6 +65,16 @@ def list_for(user_id: int, limit: int = 40) -> list[Notification]:
         return [_to_notification(r) for r in rows]
 
 
+def crew_nudge_sent_this_week(user_id: int, crew_id: int) -> bool:
+    """이번 주(월요일 시작)에 이미 마감 넛지를 보냈는지 — 크론 중복 방지."""
+    sql = (
+        "SELECT 1 FROM notifications WHERE user_id = %s AND crew_id = %s "
+        "AND kind = 'crew_nudge' AND created_at >= date_trunc('week', now())"
+    )
+    with get_connection() as conn:
+        return conn.execute(sql, (user_id, crew_id)).fetchone() is not None
+
+
 def unread_count(user_id: int) -> int:
     with get_connection() as conn:
         row = conn.execute(

@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
+from app.config.settings import CRON_SECRET
 from app.service import crew_service
 from app.service.crew_service import CrewError
 from app.types.models import User
@@ -27,6 +28,15 @@ def _gate(user: Optional[User]) -> Optional[RedirectResponse]:
     if not user.is_onboarded:
         return RedirectResponse("/onboarding", status_code=303)
     return None
+
+
+@router.get("/cron/weekly-nudge", include_in_schema=False)
+def cron_weekly_nudge(request: Request):
+    """주간 마감 넛지 (Vercel Cron, 일요일 저녁). Bearer CRON_SECRET 필수."""
+    auth = request.headers.get("authorization", "")
+    if not CRON_SECRET or auth != f"Bearer {CRON_SECRET}":
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return JSONResponse({"sent": crew_service.send_weekly_nudges()})
 
 
 @router.get("/crews")

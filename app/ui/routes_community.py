@@ -130,16 +130,23 @@ def new_post_type(
 
 @router.get("/posts/new/write")
 def new_post_write(
-    request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
+    request: Request,
+    category: str = "",
+    from_entry: int = 0,
+    user: Optional[User] = Depends(get_current_user),
 ):
-    """글쓰기 2단계 — 유형별 템플릿 작성."""
+    """글쓰기 2단계 — 유형별 템플릿 작성. from_entry면 내 크루 조각을 채워서 시작."""
     if gate := _gate(user):
         return gate
     if category not in CATEGORIES:
         return RedirectResponse("/posts/new", status_code=303)
+    prefill = ""
+    if from_entry:
+        entry = crew_service.my_entry(from_entry, user.id)
+        prefill = entry.body if entry else ""
     return _render(
         request, "post_write.html", user,
-        category=category, sections=WRITE_TEMPLATES.get(category, []),
+        category=category, sections=WRITE_TEMPLATES.get(category, []), prefill=prefill,
     )
 
 

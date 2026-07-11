@@ -32,6 +32,9 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 
+# 크론 엔드포인트 보호 — Vercel이 Authorization: Bearer <CRON_SECRET>로 호출
+CRON_SECRET = os.environ.get("CRON_SECRET", "")
+
 # ── 세션 (자체 서명 쿠키) ────────────────────────────────────────────
 SESSION_COOKIE = "tipping_session"
 SESSION_SECRET = os.environ.get("IEUM_SECRET", "dev-only-change-me")

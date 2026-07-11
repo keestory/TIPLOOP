@@ -50,6 +50,12 @@ def get(crew_id: int) -> Crew | None:
         return _to_crew(row) if row else None
 
 
+def list_all() -> list[Crew]:
+    """전체 크루 — 주간 넛지 스윕용."""
+    with get_connection() as conn:
+        return [_to_crew(r) for r in conn.execute(_SELECT + " ORDER BY c.id").fetchall()]
+
+
 def get_by_code(invite_code: str) -> Crew | None:
     with get_connection() as conn:
         row = conn.execute(_SELECT + " WHERE c.invite_code = %s", (invite_code,)).fetchone()
@@ -124,6 +130,19 @@ def entries(crew_id: int, week: str) -> list[CrewEntry]:
     """
     with get_connection() as conn:
         return [_to_entry(r) for r in conn.execute(sql, (crew_id, week)).fetchall()]
+
+
+def get_entry(entry_id: int) -> CrewEntry | None:
+    sql = """
+    SELECT e.id, e.crew_id, e.author_id, e.week, e.body,
+           to_char(e.created_at, 'MM-DD HH24:MI') AS created_at,
+           u.name AS author_name
+    FROM crew_entries e JOIN members u ON u.id = e.author_id
+    WHERE e.id = %s
+    """
+    with get_connection() as conn:
+        row = conn.execute(sql, (entry_id,)).fetchone()
+        return _to_entry(row) if row else None
 
 
 def participant_ids(crew_id: int, week: str) -> set[int]:

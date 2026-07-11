@@ -20,7 +20,10 @@
 
   {# 이번 주 프롬프트 #}
   <div class="card prompt-card">
-    <span class="tag">이번 주</span>
+    <div style="display:flex;align-items:center;gap:7px">
+      <span class="tag">이번 주</span>
+      {% if streak >= 2 %}<span class="tag lime">🔥 {{ streak }}주 연속 전원 참여</span>{% endif %}
+    </div>
     <p class="prompt-q">“{{ prompt }}”</p>
     <div class="pdots">
       {% for m in members %}<span class="pdot {% if m.done %}on{% endif %}" title="{{ m.name }}"></span>{% endfor %}
@@ -52,6 +55,10 @@
       <div style="display:flex;align-items:center;gap:7px">
         <span class="av sm"></span>
         <span class="meta">{{ e.author_name }} · {{ e.created_at }}</span>
+        {% if current_user and e.author_id == current_user.id %}
+        <a class="meta plain" style="margin-left:auto;text-decoration:underline"
+           href="/posts/new/write?category=tip&from_entry={{ e.id }}">글로 발행 →</a>
+        {% endif %}
       </div>
       <p class="entry-body" style="margin-left:31px">{{ e.body }}</p>
     </div>

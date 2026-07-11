@@ -64,7 +64,7 @@
   <a class="tapcard" href="/crews/{{ s.crew.id }}" style="gap:9px{% if not s.me_done %};border-color:#CDFF47{% endif %}">
     <div style="display:flex;align-items:center;gap:7px">
       <span class="tag lime">크루</span>
-      <span class="meta">{{ s.crew.name }} · {{ s.done }}/{{ s.total }} 참여</span>
+      <span class="meta">{{ s.crew.name }} · {{ s.done }}/{{ s.total }} 참여{% if s.streak >= 2 %} · 🔥 {{ s.streak }}주{% endif %}</span>
     </div>
     <p class="ttl" style="font-weight:700">“{{ s.prompt }}”</p>
     <div class="pdots">

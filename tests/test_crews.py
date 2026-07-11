@@ -85,6 +85,62 @@ def test_prompt_rotates_weekly():
     assert p1 != crew_service.prompt_for(1, "2026-W29")   # 주가 바뀌면 로테이션
 
 
+def test_full_streak_counts_consecutive_full_weeks(make_member):
+    from datetime import date, timedelta
+    from app.repo import crews as crews_repo
+
+    a = make_member()
+    b = make_member()
+    crew = crew_service.create_crew(a.id, "스트릭")
+    crew_service.join_by_code(b.id, crew.invite_code)
+
+    today = date.today()
+    wk = crew_service.current_week
+    # 지난 2주 전원 참여 + 이번 주 미완 → 스트릭 2 (진행 중인 주는 미포함)
+    for back in (1, 2):
+        week = wk(today - timedelta(days=7 * back))
+        crews_repo.add_entry(crew.id, a.id, week, "a")
+        crews_repo.add_entry(crew.id, b.id, week, "b")
+    assert crew_service.full_streak(crew.id, 2, today) == 2
+
+    # 이번 주도 전원 참여하면 3
+    crew_service.add_entry(crew.id, a.id, "a 이번주")
+    crew_service.add_entry(crew.id, b.id, "b 이번주")
+    assert crew_service.full_streak(crew.id, 2, today) == 3
+
+    # 3주 전은 한 명만 → 스트릭은 3에서 멈춘다
+    old = wk(today - timedelta(days=21))
+    crews_repo.add_entry(crew.id, a.id, old, "혼자")
+    assert crew_service.full_streak(crew.id, 2, today) == 3
+
+
+def test_my_entry_only_returns_own(make_member):
+    a = make_member()
+    b = make_member()
+    crew = crew_service.create_crew(a.id, "발행")
+    eid = crew_service.add_entry(crew.id, a.id, "발행할 조각")
+    assert crew_service.my_entry(eid, a.id).body == "발행할 조각"
+    assert crew_service.my_entry(eid, b.id) is None       # 남의 조각은 안 줌
+    assert crew_service.my_entry(99999, a.id) is None
+
+
+def test_weekly_nudge_targets_only_laggards_once(make_member):
+    a = make_member(name="부지런")
+    b = make_member(name="미참여")
+    solo = make_member(name="혼자")
+    crew = crew_service.create_crew(a.id, "넛지")
+    crew_service.join_by_code(b.id, crew.invite_code)
+    crew_service.create_crew(solo.id, "1인 크루")     # 혼자인 크루는 제외
+    crew_service.add_entry(crew.id, a.id, "이번 주 기록")
+
+    assert crew_service.send_weekly_nudges() == 1      # b에게만
+    items = [n for n in N.list_recent(b.id) if n.kind == "crew_nudge"]
+    assert len(items) == 1 and items[0].crew_id == crew.id
+    assert crew_service.send_weekly_nudges() == 0      # 같은 주 중복 발송 없음
+    assert not any(n.kind == "crew_nudge" for n in N.list_recent(a.id))
+    assert not any(n.kind == "crew_nudge" for n in N.list_recent(solo.id))
+
+
 def test_my_crews_summary(make_member):
     a = make_member()
     crew = crew_service.create_crew(a.id, "요약")

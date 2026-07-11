@@ -23,6 +23,11 @@ Production·Preview 둘 다에 넣어주세요.
 | `SUPABASE_ANON_KEY` | anon 키 | 브라우저 노출 공개값 |
 | `IEUM_SECRET` | 긴 랜덤 문자열 | 세션 쿠키 서명용 (비밀) |
 | `SUPABASE_JWT_SECRET` | (비워도 됨) | 토큰 검증은 Supabase에 위임 |
+| `CRON_SECRET` | 긴 랜덤 문자열 | 크론 엔드포인트 보호 — Vercel이 자동으로 Bearer 헤더에 실어 호출 |
+
+> **크론**: `vercel.json`의 `crons`가 일요일 09:00 UTC(한국 18:00)에
+> `/cron/weekly-nudge`를 호출해 이번 주 미참여 크루원에게 마감 넛지 알림을 보낸다.
+> `CRON_SECRET`이 없으면 엔드포인트는 401로 잠긴다.
 
 ### DATABASE_URL — 서버리스용 풀러
 Supabase 대시보드 → **Connect** → **Transaction pooler**(포트 `6543`, IPv4)의

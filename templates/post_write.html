@@ -33,7 +33,7 @@
       {{ s.label }}{% if s.hint %} · {% if s.hl %}<span class="hl">{{ s.hint }}</span>{% else %}{{ s.hint }}{% endif %}{% endif %}
     </span>
     <textarea class="ta tpl-field" data-label="{{ s.label }}" rows="{{ 3 if loop.first else 2 }}"
-              placeholder="{{ s.ph }}"></textarea>
+              placeholder="{{ s.ph }}">{% if loop.first and prefill %}{{ prefill }}{% endif %}</textarea>
   </div>
   {% endfor %}
 

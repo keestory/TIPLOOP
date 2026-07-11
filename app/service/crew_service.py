@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import date
+from datetime import date, timedelta
 
 from app.config.settings import CREW_MAX_MEMBERS, CREW_PROMPTS
 from app.repo import crews, notifications
@@ -29,6 +29,27 @@ def prompt_for(crew_id: int, week: str) -> str:
     """이번 주 프롬프트 — 주가 바뀌면 자동 로테이션, 크루마다 다른 질문."""
     week_num = int(week.split("-W")[1])
     return CREW_PROMPTS[(crew_id + week_num) % len(CREW_PROMPTS)]
+
+
+def full_streak(crew_id: int, total: int, today: date | None = None) -> int:
+    """연속 '전원 참여' 주 수 (🔥 게임화). 진행 중인 이번 주는 완주 시에만 포함.
+
+    멤버가 없거나 기록이 없으면 0. 최대 52주까지 거슬러 본다.
+    """
+    if total <= 0:
+        return 0
+    today = today or date.today()
+    streak = 0
+    if len(crews.participant_ids(crew_id, current_week(today))) >= total:
+        streak += 1
+    day = today - timedelta(days=7)
+    for _ in range(52):
+        if len(crews.participant_ids(crew_id, current_week(day))) >= total:
+            streak += 1
+            day -= timedelta(days=7)
+        else:
+            break
+    return streak
 
 
 def create_crew(creator_id: int, name: str, topic: str = "") -> Crew:
@@ -64,6 +85,7 @@ def my_crews(member_id: int) -> list[dict]:
             "done": len(done),
             "total": crew.member_count,
             "me_done": member_id in done,
+            "streak": full_streak(crew.id, crew.member_count),
         })
     return summaries
 
@@ -85,7 +107,37 @@ def crew_home(crew_id: int, viewer_id: int) -> dict:
         "crew": crew, "week": week, "prompt": prompt_for(crew_id, week),
         "members": members, "entries": crews.entries(crew_id, week),
         "me_done": viewer_id in done, "past": past[:3],
+        "streak": full_streak(crew_id, crew.member_count),
     }
+
+
+def send_weekly_nudges() -> int:
+    """주간 마감 넛지 (크론) — 이번 주 미참여 크루원에게 알림. 보낸 수를 돌려준다.
+
+    이미 이번 주에 넛지를 받았거나, 혼자인 크루(기다리는 사람 없음)는 건너뛴다.
+    """
+    week = current_week()
+    sent = 0
+    for crew in crews.list_all():
+        if crew.member_count < 2:
+            continue
+        done = crews.participant_ids(crew.id, week)
+        if not done:  # 아무도 안 남긴 크루는 '기다리는 사람'이 없다
+            continue
+        for uid in crews.member_ids(crew.id):
+            if uid in done or notifications.crew_nudge_sent_this_week(uid, crew.id):
+                continue
+            notifications.create(uid, "crew_nudge", topic=crew.name, crew_id=crew.id)
+            sent += 1
+    return sent
+
+
+def my_entry(entry_id: int, viewer_id: int):
+    """글 발행용 — 내가 쓴 조각만 돌려준다. 아니면 None."""
+    entry = crews.get_entry(entry_id)
+    if entry is None or entry.author_id != viewer_id:
+        return None
+    return entry
 
 
 def add_entry(crew_id: int, author_id: int, body: str) -> int:

@@ -11,10 +11,10 @@
     {% endif %}
   </div>
 
-  {% set emoji = {"review":"📝","helpful":"💡","comment":"💬","reply":"↩️","follow":"👤","topic_post":"🔖","crew":"👥"} %}
+  {% set emoji = {"review":"📝","helpful":"💡","comment":"💬","reply":"↩️","follow":"👤","topic_post":"🔖","crew":"👥","crew_nudge":"⏰"} %}
   {% for n in items %}
   {% set href = "/users/" ~ n.actor_id if n.kind == "follow"
-     else ("/crews/" ~ n.crew_id if n.kind == "crew" and n.crew_id
+     else ("/crews/" ~ n.crew_id if n.kind in ("crew", "crew_nudge") and n.crew_id
      else ("/posts/" ~ n.post_id if n.post_id else "/notifications")) %}
   <a class="nt" href="{{ href }}">
     <span class="nt-ic {% if n.is_unread %}unread{% endif %}">{{ emoji.get(n.kind, "🔔") }}</span>
@@ -27,6 +27,7 @@
         {% elif n.kind == "follow" %}<b>{{ n.actor_name }}</b>님이 나를 팔로우해요
         {% elif n.kind == "topic_post" %}구독한 <b>'{{ n.topic }}'</b>에 새 글이 올라왔어요{% if n.post_title %}: 「{{ n.post_title }}」{% endif %}
         {% elif n.kind == "crew" %}<b>{{ n.actor_name }}</b>님이 <b>'{{ n.topic }}'</b> 크루에 이번 주 기록을 남겼어요
+        {% elif n.kind == "crew_nudge" %}<b>'{{ n.topic }}'</b> 로그가 곧 닫혀요 — 크루원들이 기다리고 있어요
         {% endif %}
       </p>
       <span class="meta">{{ n.ago }}</span>
