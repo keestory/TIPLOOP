@@ -4,6 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ brand }}{% endblock %} · {{ brand }}</title>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ brand }}">
+  <meta property="og:title" content="{{ self.title() }} · {{ brand }}">
+  <meta property="og:description" content="{{ tagline }}">
+  <meta property="og:image" content="{{ site_url }}/static/og-default.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="/static/styles.css">

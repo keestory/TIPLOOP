@@ -1,6 +1,17 @@
 {% extends "mobile.html" %}
 {% block title %}{{ post.title }}{% endblock %}
 
+{# 글 공유 카드 — 제목·본문 요약·첨부 이미지(없으면 브랜드 이미지) #}
+{% block og %}
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{{ brand }}">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.body | replace('\n', ' ') | truncate(90) }}">
+<meta property="og:url" content="{{ site_url }}/posts/{{ post.id }}">
+<meta property="og:image" content="{{ post.image_url or (site_url ~ '/static/og-default.png') }}">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
 {% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
 
 {# 댓글 공감 — 작은 알약 #}

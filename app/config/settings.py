@@ -22,6 +22,9 @@ except ImportError:
 BRAND = "티핑"
 TAGLINE = "실무 팁과 레퍼런스를 쌓고 나누는 곳"
 
+# 공유 카드(OG)의 절대 URL 기준 — 스크레이퍼는 절대 경로만 읽는다
+SITE_URL = os.environ.get("SITE_URL", "https://fortomorrow.vercel.app")
+
 # ── Supabase / Postgres ──────────────────────────────────────────────
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 

@@ -4,6 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}{{ brand }}{% endblock %} · {{ brand }}</title>
+  {# ── 공유 미리보기 (OG) — 화면별로 og 블록을 덮어쓸 수 있다 ── #}
+  {% block og %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ brand }}">
+  <meta property="og:title" content="{{ self.title() }} · {{ brand }}">
+  <meta property="og:description" content="{{ tagline }}">
+  <meta property="og:image" content="{{ site_url }}/static/og-default.png">
+  <meta name="twitter:card" content="summary_large_image">
+  {% endblock %}
   <link rel="stylesheet" href="/static/tipping.css">
   {# ── PWA (홈 화면 설치) ── #}
   <link rel="manifest" href="/static/manifest.webmanifest">
