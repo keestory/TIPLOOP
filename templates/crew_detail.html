@@ -31,6 +31,12 @@
     </div>
   </div>
 
+  {% if streak >= 2 %}
+  <a class="tapcard" href="/crews/{{ crew.id }}/share" style="gap:2px;padding:12px 14px">
+    <p class="ttl" style="font-weight:700;margin:0">🔥 우리 크루 스트릭, 스토리에 자랑하기 →</p>
+  </a>
+  {% endif %}
+
   {# 멤버 참여 현황 #}
   <div style="display:flex;flex-wrap:wrap;gap:7px">
     {% for m in members %}

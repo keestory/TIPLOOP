@@ -416,6 +416,14 @@ body {
 }
 .tour-next.lime { background: var(--lime); color: var(--ink); }
 
+/* ══ 공유 카드 (인스타 스토리) ══ */
+.share-frame {
+  width: 100%; max-width: 320px; border-radius: 22px; overflow: hidden;
+  box-shadow: 0 24px 60px -24px rgba(20, 18, 12, .55); background: #1A1917;
+}
+#share-canvas { width: 100%; height: auto; display: block; }
+.share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; }
+
 /* ══ 주간 다이제스트 (6a) ══ */
 .digest-sec { display: flex; flex-direction: column; gap: 9px; }
 .digest-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; margin: 24px 0; }

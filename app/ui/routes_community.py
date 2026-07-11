@@ -16,6 +16,7 @@ from app.service import (
     crew_service,
     follow_service,
     notification_service,
+    share_service,
 )
 from app.service.community_service import CommunityError
 from app.types.models import User
@@ -121,3 +122,14 @@ def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_c
         request, "profile.html", user, teacher=member, posts=posts,
         stats=stats, heatmap=heatmap, follow=follow, nav_unread=_nav_unread(user),
     )
+
+
+@router.get("/users/{user_id}/share")
+def profile_share(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
+    """인스타 스토리용 공유 카드 — 내가 도움을 준 사람 수를 자랑."""
+    try:
+        member, _, stats = community_service.get_profile(user_id)
+    except CommunityError as exc:
+        return render(request, "not_found.html", user, message=str(exc))
+    spec = share_service.profile_card(member, stats["helpful"])
+    return render(request, "share.html", user, spec=spec)

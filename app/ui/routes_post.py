@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config.settings import CATEGORIES, WRITE_TEMPLATES
-from app.service import community_service, crew_service, reaction_service
+from app.service import community_service, crew_service, reaction_service, share_service
 from app.service.community_service import CommunityError
 from app.types.models import User
 from app.ui.deps import get_current_user
@@ -99,6 +99,16 @@ def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(g
         reacted=reacted, helped=helped, reacted_comments=reacted_comments,
         reviews=reviews, media_comments=media,
     )
+
+
+@router.get("/posts/{post_id}/share")
+def post_share(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
+    """인스타 스토리용 공유 카드 — 이 팁이 도움된 사람 수를 자랑."""
+    try:
+        post, _ = community_service.get_post_with_threads(post_id)
+    except CommunityError as exc:
+        return render(request, "not_found.html", user, message=str(exc))
+    return render(request, "share.html", user, spec=share_service.post_card(post))
 
 
 @router.post("/posts/{post_id}/media-comments")

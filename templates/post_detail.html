@@ -83,6 +83,12 @@
     {% endif %}
   </div>
 
+  {% if post.helpful_count >= 1 %}
+  <a class="tapcard" href="/posts/{{ post.id }}/share" style="gap:2px;padding:12px 14px">
+    <p class="ttl" style="font-weight:700;margin:0">🎉 이 팁, 스토리에 자랑하기 →</p>
+  </a>
+  {% endif %}
+
   {# 공감 (♥) — 도움됐어요와 분리된 가벼운 신호 #}
   {% set react_on = post.id in reacted %}
   {% if current_user %}

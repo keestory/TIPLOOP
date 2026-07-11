@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config.settings import CRON_SECRET
-from app.service import crew_service
+from app.service import crew_service, share_service
 from app.service.crew_service import CrewError
 from app.types.models import User
 from app.ui.deps import get_current_user
@@ -91,6 +91,19 @@ def crew_detail(request: Request, crew_id: int, user: Optional[User] = Depends(g
     except CrewError:
         return RedirectResponse("/crews", status_code=303)
     return _render(request, "crew_detail.html", user, **home)
+
+
+@router.get("/crews/{crew_id}/share")
+def crew_share(request: Request, crew_id: int, user: Optional[User] = Depends(get_current_user)):
+    """인스타 스토리용 공유 카드 — 크루 스트릭 자랑."""
+    if gate := _gate(user):
+        return gate
+    try:
+        home = crew_service.crew_home(crew_id, user.id)
+    except CrewError:
+        return RedirectResponse("/crews", status_code=303)
+    spec = share_service.crew_card(home["crew"], home["streak"], home["prompt"])
+    return _render(request, "share.html", user, spec=spec)
 
 
 @router.post("/crews/{crew_id}/entries")

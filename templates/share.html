@@ -1,0 +1,38 @@
+{% extends "mobile.html" %}
+{% block title %}스토리에 공유{% endblock %}
+{% block app %}
+<div class="body" style="gap:16px;align-items:center">
+  <div class="topbar" style="width:100%">
+    <a href="javascript:history.back()" aria-label="뒤로">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+  </div>
+
+  <div style="text-align:center">
+    <h1 class="title-lg" style="margin:0 0 4px">스토리에<br><span class="hl">자랑해보세요</span></h1>
+    <p class="sub">움직이는 카드를 만들어 인스타그램에 공유해요</p>
+  </div>
+
+  <div class="share-frame">
+    <canvas id="share-canvas" width="720" height="1280"></canvas>
+  </div>
+
+  <div class="share-actions">
+    <button type="button" class="btn lime" id="share-btn">
+      <span id="share-btn-label">스토리에 공유하기</span><span style="font-size:17px">→</span>
+    </button>
+    <button type="button" class="btn gh" id="save-btn" style="font-size:14px">
+      <span id="save-btn-label">이미지로 저장</span>
+    </button>
+  </div>
+  <p class="hint" id="share-hint" style="text-align:center;min-height:18px"></p>
+
+  <div style="min-height:8px"></div>
+</div>
+
+<script id="share-spec" type="application/json">{{ spec | tojson }}</script>
+{% endblock %}
+
+{% block script %}
+<script src="/static/share-card.js"></script>
+{% endblock %}
