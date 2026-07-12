@@ -4,9 +4,23 @@
 아래는 **당신 Mac에서** 실행하는 순서다. (샌드박스에선 빌드·서명·제출 불가)
 
 ## 0. 준비물
-- **Apple Developer Program** 가입 ($99/년, 승인 1~2일) — 제일 먼저 신청
+- ✅ **Apple Developer Program** — 승인 완료
 - **Xcode** (App Store에서 설치) + Command Line Tools
 - **Node.js 18+**, CocoaPods (`sudo gem install cocoapods`)
+
+## 0.5 App Store Connect에 앱 레코드 미리 만들기 (권장)
+Xcode 아카이브 전에 미리 해두면 이름 중복 등을 일찍 발견한다.
+1. [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → **나의 앱 → +**
+2. **플랫폼**: iOS, **이름**: 티핑 (중복이면 "티핑 — 실무 팁 커뮤니티" 등으로),
+   **기본 언어**: 한국어, **Bundle ID**: `com.keestory.tipping` (드롭다운에 없으면
+   먼저 [Certificates, IDs & Profiles](https://developer.apple.com/account/resources/identifiers/list)
+   에서 App ID로 등록), **SKU**: `tipping-001` (아무 고유 문자열)
+3. 준비해둘 정보:
+   - **개인정보처리방침 URL**: `https://fortomorrow.vercel.app/terms/privacy` (이미 구현됨)
+   - **지원 URL**: 배포 도메인 그대로 써도 됨
+   - **카테고리**: 소셜 네트워킹 또는 생산성
+   - **연령 등급**: 설문 진행(특이 콘텐츠 없어 4+ 예상)
+   - **스크린샷**: 아래 "스크린샷" 섹션 참고 — 5장 준비돼 있음
 
 ## 1. Capacitor iOS 프로젝트 생성
 ```bash
@@ -44,6 +58,14 @@ Xcode에서:
 4. [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → **앱 생성**(같은 Bundle ID)
    → 이름·설명·스크린샷·개인정보 처리방침 URL·연령등급 입력 → **심사 제출**
    (먼저 **TestFlight**로 본인 폰에서 테스트 후 제출 추천)
+
+---
+
+## 스크린샷 (App Store Connect 필수)
+2026년 기준 **6.9인치 iPhone 크기(1320×2868px) 한 세트만 있으면** 애플이
+나머지 기기 크기에 자동으로 맞춰준다. 실제 데이터로 만든 5장을 채팅에서
+전달받았다 — 홈 피드·글 상세(후기)·크루(스트릭)·주간 다이제스트·공유 카드.
+App Store Connect → 앱 → **스크린샷** 섹션에 그대로 업로드하면 된다.
 
 ---
 
