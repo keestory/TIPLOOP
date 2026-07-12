@@ -1,7 +1,8 @@
-{# 하단 탭바 — 상위에서 `tab` 변수로 활성 탭을 지정한다 (home|explore|notifications|profile) #}
+{# 하단 탭바 — 상위에서 `tab` 변수로 활성 탭을 지정한다 (home|crew|notifications|profile).
+   탐색은 홈 상단 검색 아이콘이 담당하고, 탭 자리는 핵심 기능인 크루가 차지한다(1c). #}
 <nav class="tabbar">
   <a class="tb {% if tab == 'home' %}on{% endif %}" href="/">홈</a>
-  <a class="tb {% if tab == 'explore' %}on{% endif %}" href="/explore">탐색</a>
+  <a class="tb {% if tab == 'crew' %}on{% endif %}" href="/crews">크루</a>
   <a class="tb write" href="/posts/new" data-tour="write"><span style="font-size:17px;line-height:1">＋</span>글쓰기</a>
   <a class="tb {% if tab == 'notifications' %}on{% endif %}" href="/notifications" style="position:relative">알림{% if nav_unread is defined and nav_unread %}<span class="tb-dot"></span>{% endif %}</a>
   <a class="tb {% if tab == 'profile' %}on{% endif %}"

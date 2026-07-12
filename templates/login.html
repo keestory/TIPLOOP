@@ -1,28 +1,36 @@
-{% extends "base.html" %}
+{% extends "mobile.html" %}
 {% block title %}시작하기{% endblock %}
-{% block fab %}{% endblock %}
-{% block content %}
+{% block app %}
+<div class="body" style="gap:0">
+  <div><span class="brand">{{ brand }}<span class="d"></span></span></div>
 
-<div class="auth">
-  <h1 class="page-title">{{ brand }} 시작하기</h1>
-  <p class="auth-sub">커머스·IT 실무자들의 팁·레퍼런스 커뮤니티.<br>구글이나 카카오로 3초 만에 시작하세요.</p>
+  <div class="grow"></div>
+
+  <h1 class="title-lg">3초 만에<br><span class="hl">시작하기</span></h1>
+  <p class="sub" style="margin-top:12px">커머스·IT 실무자들의 팁·레퍼런스 커뮤니티.<br>구글이나 카카오 계정이면 충분해요.</p>
 
   {% if not supabase_url %}
-    <p class="error">로그인이 아직 설정되지 않았습니다. (관리자: Supabase 키를 넣어주세요)</p>
+  <p class="error" style="margin-top:16px">로그인이 아직 설정되지 않았습니다. (관리자: Supabase 키를 넣어주세요)</p>
   {% endif %}
 
+  <div class="grow"></div>
+
   <div class="auth-buttons">
-    <button id="google" class="social social-google" type="button">
-      <span class="social-logo">G</span> 구글로 시작하기
+    <button id="google" class="social-btn" type="button">
+      <span class="social-badge g">G</span> 구글로 시작하기
     </button>
-    <button id="kakao" class="social social-kakao" type="button">
-      <span class="social-logo">K</span> 카카오로 시작하기
+    <button id="kakao" class="social-btn kakao" type="button">
+      <span class="social-badge k">K</span> 카카오로 시작하기
     </button>
   </div>
 
-  <p class="auth-fine">계속하면 {{ brand }}의 이용약관과 개인정보 처리방침에 동의하는 것으로 간주됩니다.</p>
-</div>
+  <p class="auth-fine">계속하면 이용약관·개인정보 처리방침에 동의하게 됩니다</p>
 
+  <div style="min-height:6px"></div>
+</div>
+{% endblock %}
+
+{% block script %}
 {% if supabase_url %}
 <script src="/static/native-auth.js"></script>
 <script type="module">

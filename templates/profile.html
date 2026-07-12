@@ -1,22 +1,18 @@
 {% extends "mobile.html" %}
+{% from "_tags.html" import cat_tag %}
+{% from "_back.html" import back %}
 {% block title %}{{ teacher.name }}{% endblock %}
-
-{% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
 
 {% block app %}
 <div class="body" style="gap:14px">
   {% set is_me = current_user and current_user.id == teacher.id %}
 
   <div class="topbar">
-    <a href="/" aria-label="홈">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/") }}
     {% if is_me %}
-    <form action="/logout" method="post" style="margin:0">
-      <button type="submit" class="gear" aria-label="로그아웃" title="로그아웃">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg>
-      </button>
-    </form>
+    <a class="gear" href="#settings" aria-label="설정" title="설정">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </a>
     {% elif current_user %}
     <form action="/users/{{ teacher.id }}/follow" method="post" style="margin:0">
       <button type="submit" class="btn pill {% if not follow.is_following %}{% else %}gh{% endif %}">
@@ -59,6 +55,29 @@
   </a>
   {% endif %}
 
+  {# 설정 (본인만) — 관심 주제 · 프로필 정보 · 로그아웃 (2a) #}
+  {% if is_me %}
+  <div class="card set-card" id="settings">
+    <a class="set-row" href="/topics">
+      <div class="set-main">
+        <span class="set-label">관심 주제</span>
+        <div class="pf-tags" style="margin-top:6px">
+          {% for t in current_user.topics %}<span class="tag">{{ t }}</span>{% endfor %}
+          {% if not current_user.topics %}<span class="meta">아직 고른 주제가 없어요</span>{% endif %}
+        </div>
+      </div>
+      <span class="set-go">수정 →</span>
+    </a>
+    <a class="set-row" href="/onboarding/profile?edit=1">
+      <span class="set-label">프로필 정보</span>
+      <span class="meta">{{ teacher.job_role }}{% if teacher.years %} · {{ teacher.years }}{% endif %}{% if teacher.industry %} · {{ teacher.industry }}{% endif %} →</span>
+    </a>
+    <form action="/logout" method="post" style="margin:0" onsubmit="return confirm('로그아웃할까요?')">
+      <button type="submit" class="set-row danger">로그아웃</button>
+    </form>
+  </div>
+  {% endif %}
+
   {# 기여 히트맵 (최근 12주) #}
   <div style="display:flex;flex-direction:column;gap:8px">
     <span class="meta">최근 기여 · 12주</span>
@@ -75,7 +94,7 @@
   {% for post in posts %}
   <a class="tapcard" href="/posts/{{ post.id }}" style="gap:7px;padding:14px">
     <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag {% if post.category == 'tip' %}lime{% endif %}">{{ cat_tag(post.category) }}</span>
+      <span class="tag">{{ cat_tag(post.category) }}</span>
       <span class="meta">💡 {{ post.helpful_count }} · 💬 {{ post.comment_count }}</span>
     </div>
     <p class="ttl" style="font-weight:600">{{ post.title }}</p>

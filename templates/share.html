@@ -1,11 +1,10 @@
 {% extends "mobile.html" %}
+{% from "_back.html" import back %}
 {% block title %}스토리에 공유{% endblock %}
 {% block app %}
 <div class="body" style="gap:16px;align-items:center">
   <div class="topbar" style="width:100%">
-    <a href="javascript:history.back()" aria-label="뒤로">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/") }}
   </div>
 
   <div style="text-align:center">

@@ -1,7 +1,16 @@
 {% extends "mobile.html" %}
+{% from "_back.html" import back %}
 {% block title %}프로필 완성{% endblock %}
 {% block app %}
 <form class="body" style="gap:16px" method="post" action="/onboarding/profile">
+  {% if edit %}
+  <input type="hidden" name="edit" value="1">
+  <div class="topbar">
+    {{ back("/") }}
+  </div>
+  <h1 class="title-lg" style="margin:6px 0 0">프로필<br><span class="hl">정보 수정</span></h1>
+  <p class="sub">직군·연차·업종을 바꿀 수 있어요.<br>피드 추천과 프로필에 쓰여요.</p>
+  {% else %}
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
     <span class="brand">티핑<span class="d"></span></span>
     <span class="meta">3 / 3</span>
@@ -13,6 +22,7 @@
 
   <h1 class="title-lg" style="margin:14px 0 0">거의<br><span class="hl">다 됐어요</span></h1>
   <p class="sub">직군·연차·업종만 알려주시면 시작합니다.<br>피드 추천과 프로필에 쓰여요.</p>
+  {% endif %}
 
   {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
@@ -56,6 +66,6 @@
 
   <div class="grow"></div>
 
-  <button type="submit" class="btn"><span>시작하기</span><span style="font-size:17px">→</span></button>
+  <button type="submit" class="btn"><span>{{ '저장하기' if edit else '시작하기' }}</span><span style="font-size:17px">→</span></button>
 </form>
 {% endblock %}

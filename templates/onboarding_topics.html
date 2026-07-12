@@ -1,12 +1,11 @@
 {% extends "mobile.html" %}
+{% from "_back.html" import back %}
 {% block title %}관심 주제{% endblock %}
 {% block app %}
 <form class="body" style="gap:16px" method="post" action="{{ '/topics' if edit else '/onboarding' }}">
   {% if edit %}
   <div class="topbar">
-    <a href="/" aria-label="뒤로">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/") }}
   </div>
   <h1 class="title-lg" style="margin:6px 0 0">관심 주제<br><span class="hl">바꿔볼까요?</span></h1>
   <p class="sub">고른 주제의 새 글 알림을 받아요.</p>

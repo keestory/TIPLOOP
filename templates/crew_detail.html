@@ -1,11 +1,10 @@
 {% extends "mobile.html" %}
+{% from "_back.html" import back %}
 {% block title %}{{ crew.name }}{% endblock %}
 {% block app %}
 <div class="body" style="gap:14px">
   <div class="topbar">
-    <a href="/crews" aria-label="뒤로">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/crews") }}
     <button type="button" class="chip" id="invite" style="padding:8px 14px"
             data-url="/crews/join/{{ crew.invite_code }}">동료 초대 ↗</button>
   </div>
@@ -93,6 +92,7 @@
   <div style="min-height:6px"></div>
 </div>
 
+{% set tab = "crew" %}
 {% include "_tabbar.html" %}
 {% endblock %}
 

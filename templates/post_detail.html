@@ -12,7 +12,8 @@
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
 
-{% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
+{% from "_tags.html" import cat_tag %}
+{% from "_back.html" import back %}
 
 {# 댓글 공감 — 작은 알약 #}
 {% macro comment_react(c, is_on, current_user) %}
@@ -28,15 +29,14 @@
 {% block app %}
 <div class="body" style="gap:13px">
 
-  {# 상단 — 뒤로 #}
+  {# 상단 — 뒤로 (직전 목록의 필터·검색 맥락 유지) #}
   <div class="topbar">
-    <a href="/" aria-label="뒤로">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/") }}
   </div>
 
+  {% set is_q = post.category == "question" %}
   <div style="display:flex;align-items:center;gap:8px">
-    <span class="tag lime">{{ cat_tag(post.category) }}</span>
+    <span class="tag">{{ cat_tag(post.category) }}</span>
     <span class="meta">{{ post.created_at[0:10] }}</span>
   </div>
 
@@ -65,23 +65,27 @@
   <img class="post-image" src="{{ post.image_url }}" alt="첨부 이미지" loading="lazy">
   {% endif %}
 
-  {# 도움됐어요 — 자기효능감 신호 #}
-  <div class="help-card">
-    <div>
-      <div class="help-q">이 글이 도움 됐나요?</div>
-      <span class="meta">{{ post.helpful_count }}명이 도움받았어요</span>
-    </div>
-    {% set helped_on = post.id in helped %}
+  {# 반응 — 같은 알약 패밀리 1열 (💡 도움됐어요 · ♡ 공감) #}
+  {% set helped_on = post.id in helped %}
+  {% set react_on = post.id in reacted %}
+  <div class="react-row">
     {% if current_user %}
-      <form method="post" action="/posts/{{ post.id }}/helpful">
-        <button type="submit" class="help-toggle {% if helped_on %}on{% endif %}">
-          {% if helped_on %}✓ 도움받음{% else %}도움됐어요{% endif %}
-        </button>
-      </form>
+      <span class="react-pill help {% if helped_on %}on{% endif %}">
+        <form method="post" action="/posts/{{ post.id }}/helpful">
+          <button type="submit">💡 도움됐어요 {{ post.helpful_count }}</button>
+        </form>
+      </span>
+      <span class="react-pill {% if react_on %}on{% endif %}">
+        <form method="post" action="/posts/{{ post.id }}/react">
+          <button type="submit">{{ "♥" if react_on else "♡" }} 공감 {{ post.reaction_count }}</button>
+        </form>
+      </span>
     {% else %}
-      <a class="help-toggle" href="/login">도움됐어요</a>
+      <a class="react-pill help" href="/login">💡 도움됐어요 {{ post.helpful_count }}</a>
+      <a class="react-pill" href="/login">♡ 공감 {{ post.reaction_count }}</a>
     {% endif %}
   </div>
+  <span class="meta">💡 = 실제로 적용해봤어요 · ♡ = 좋았어요</span>
 
   {% if post.helpful_count >= 1 %}
   <a class="tapcard" href="/posts/{{ post.id }}/share" style="gap:2px;padding:12px 14px">
@@ -89,27 +93,20 @@
   </a>
   {% endif %}
 
-  {# 공감 (♥) — 도움됐어요와 분리된 가벼운 신호 #}
-  {% set react_on = post.id in reacted %}
-  {% if current_user %}
-    <span class="react-pill {% if react_on %}on{% endif %}">
-      <form method="post" action="/posts/{{ post.id }}/react">
-        <button type="submit">{{ "♥" if react_on else "♡" }} 공감 {{ post.reaction_count }}</button>
-      </form>
-    </span>
-  {% else %}
-    <a class="react-pill" href="/login">♡ 공감 {{ post.reaction_count }}</a>
-  {% endif %}
-
-  {# 탭 — 후기 / 댓글 / 영상 #}
+  {# 탭 — 질문은 답변(댓글)이 기본, 그 외는 후기가 기본 #}
   <div class="pctabs">
+    {% if is_q %}
+    <button type="button" class="pctab on" data-tab="comments">답변 {{ post.comment_count }}</button>
+    <button type="button" class="pctab" data-tab="reviews">후기 {{ reviews|length }}</button>
+    {% else %}
     <button type="button" class="pctab on" data-tab="reviews">후기 {{ reviews|length }}</button>
     <button type="button" class="pctab" data-tab="comments">댓글 {{ post.comment_count }}</button>
+    {% endif %}
     {% if post.video_url %}<button type="button" class="pctab" data-tab="videos">영상</button>{% endif %}
   </div>
 
   {# 후기 패널 #}
-  <div class="panel" data-panel="reviews">
+  <div class="panel" data-panel="reviews"{% if is_q %} hidden{% endif %}>
     <p class="sub" style="font-size:13px">이 글을 실제로 써보셨나요? 결과·후기를 남기면 작성자에게 큰 힘이 돼요.</p>
     {% if current_user %}
     <form class="cmt-form" method="post" action="/posts/{{ post.id }}/reviews">
@@ -133,15 +130,15 @@
     {% endfor %}
   </div>
 
-  {# 댓글 패널 #}
-  <div class="panel" data-panel="comments" hidden>
+  {# 댓글/답변 패널 #}
+  <div class="panel" data-panel="comments"{% if not is_q %} hidden{% endif %}>
     {% if current_user %}
     <form class="cmt-form" method="post" action="/posts/{{ post.id }}/comments">
-      <textarea class="ta" name="body" rows="3" placeholder="동료에게 한마디 남기기" required></textarea>
-      <button type="submit" class="btn btn-small" style="align-self:flex-start">댓글 남기기</button>
+      <textarea class="ta" name="body" rows="3" placeholder="{{ '내 경험으로 답하기…' if is_q else '동료에게 한마디 남기기' }}" required></textarea>
+      <button type="submit" class="btn btn-small {% if is_q %}lime{% endif %}" style="align-self:flex-start">{{ '답변 남기기 →' if is_q else '댓글 남기기' }}</button>
     </form>
     {% else %}
-    <p class="hint"><a href="/login">로그인</a>하면 댓글을 남길 수 있어요.</p>
+    <p class="hint"><a href="/login">로그인</a>하면 {{ '답변을' if is_q else '댓글을' }} 남길 수 있어요.</p>
     {% endif %}
 
     {% for t in threads %}
@@ -175,7 +172,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="empty" style="margin:6px 0">첫 댓글을 남겨보세요.</p>
+    <p class="empty" style="margin:6px 0">{{ '첫 답변을 남겨보세요.' if is_q else '첫 댓글을 남겨보세요.' }}</p>
     {% endfor %}
   </div>
 

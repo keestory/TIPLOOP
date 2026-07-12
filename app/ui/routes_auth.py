@@ -155,14 +155,18 @@ def onboarding_topics_submit(
 
 # ── 온보딩 ② 프로필 직군·연차·업종 (3 / 3) ─────────────────────────
 @router.get("/onboarding/profile")
-def onboarding_profile(request: Request, user: Optional[User] = Depends(get_current_user)):
+def onboarding_profile(
+    request: Request, edit: str = "", user: Optional[User] = Depends(get_current_user)
+):
     if user is None:
         return RedirectResponse("/login", status_code=303)
-    if user.is_onboarded:
-        return RedirectResponse("/", status_code=303)
-    if not user.agreed_terms:
-        return RedirectResponse("/terms", status_code=303)
-    return _render(request, "onboarding_profile.html", user)
+    # edit 모드(프로필 설정에서 진입)는 온보딩 완료 후에도 열 수 있다.
+    if not edit:
+        if user.is_onboarded:
+            return RedirectResponse("/", status_code=303)
+        if not user.agreed_terms:
+            return RedirectResponse("/terms", status_code=303)
+    return _render(request, "onboarding_profile.html", user, edit=bool(edit))
 
 
 @router.post("/onboarding/profile")
@@ -171,6 +175,7 @@ def onboarding_profile_submit(
     job_role: str = Form(...),
     years: str = Form(...),
     industry: str = Form(...),
+    edit: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if user is None:
@@ -178,5 +183,6 @@ def onboarding_profile_submit(
     try:
         auth_service.complete_onboarding(user.id, job_role, years, industry)
     except AuthError as exc:
-        return _render(request, "onboarding_profile.html", user, error=str(exc))
-    return RedirectResponse("/", status_code=303)
+        return _render(request, "onboarding_profile.html", user, edit=bool(edit), error=str(exc))
+    # 설정에서 수정했으면 내 프로필로, 최초 온보딩이면 피드로.
+    return RedirectResponse(f"/users/{user.id}" if edit else "/", status_code=303)

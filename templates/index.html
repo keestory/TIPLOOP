@@ -1,7 +1,6 @@
 {% extends "mobile.html" %}
+{% from "_tags.html" import cat_tag %}
 {% block title %}홈{% endblock %}
-
-{% macro taglabel(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
 
 {% block app %}
 <div class="body" style="gap:16px">
@@ -61,7 +60,7 @@
     <a class="meta plain" href="/crews" style="text-decoration:underline">전체 →</a>
   </div>
   {% for s in my_crews[:2] %}
-  <a class="tapcard" href="/crews/{{ s.crew.id }}" style="gap:9px{% if not s.me_done %};border-color:#CDFF47{% endif %}">
+  <a class="tapcard" href="/crews/{{ s.crew.id }}" style="gap:9px{% if not s.me_done %};border-color:var(--lime){% endif %}">
     <div style="display:flex;align-items:center;gap:7px">
       <span class="tag lime">크루</span>
       <span class="meta">{{ s.crew.name }} · {{ s.done }}/{{ s.total }} 참여{% if s.streak >= 2 %} · 🔥 {{ s.streak }}주{% endif %}</span>
@@ -86,7 +85,7 @@
   {% if featured %}
   <a class="hero" href="/posts/{{ featured.id }}">
     <div class="hero-top">
-      <span class="tag lime">오늘의 {{ taglabel(featured.category) }}</span>
+      <span class="tag lime">오늘의 {{ cat_tag(featured.category) }}</span>
       <span class="date">{{ featured.created_at[5:7] }} / {{ featured.created_at[8:10] }}</span>
     </div>
     <div class="hero-body">
@@ -121,7 +120,7 @@
   {% for post in rest %}
   <a class="tapcard" href="/posts/{{ post.id }}"{% if loop.first %} data-tour="react"{% endif %}>
     <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag">{{ taglabel(post.category) }}</span>
+      <span class="tag">{{ cat_tag(post.category) }}</span>
       <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
     </div>
     <p class="ttl">{{ post.title }}</p>

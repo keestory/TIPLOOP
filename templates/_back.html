@@ -1,0 +1,9 @@
+{# 공용 뒤로가기(2c) — ‹ = history.back(). 직전 화면이 같은 오리진이 아니거나
+   직접 진입(referrer 없음)이면 fallback 화면으로. 이렇게 하면 홈의 필터·탐색
+   검색 결과 등 직전 목록의 맥락이 유지된다. #}
+{% macro back(fallback="/") -%}
+<a class="back-link" href="{{ fallback }}" aria-label="뒤로"
+   onclick="if(document.referrer&&new URL(document.referrer).origin===location.origin){history.back();return false}">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
+</a>
+{%- endmacro %}

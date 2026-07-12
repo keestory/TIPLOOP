@@ -1,11 +1,12 @@
 {% extends "mobile.html" %}
+{% from "_tags.html" import cat_tag %}
+{% from "_back.html" import back %}
 {% block title %}이번 주 티핑{% endblock %}
 
-{% macro cat_tag(cat) %}{{ {"tip":"팁","reference":"레퍼","question":"질문","retro":"회고"}.get(cat, category_label(cat)) }}{% endmacro %}
 {% macro post_card(post) %}
 <a class="tapcard" href="/posts/{{ post.id }}" style="gap:9px">
   <div style="display:flex;align-items:center;gap:7px">
-    <span class="tag {% if post.category == 'tip' %}lime{% endif %}">{{ cat_tag(post.category) }}</span>
+    <span class="tag">{{ cat_tag(post.category) }}</span>
     <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
   </div>
   <p class="ttl" style="font-weight:600">{{ post.title }}</p>
@@ -16,9 +17,7 @@
 {% block app %}
 <div class="body" style="gap:16px">
   <div class="topbar">
-    <a href="/notifications" aria-label="뒤로">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.9"><path d="M15 5l-7 7 7 7"/></svg>
-    </a>
+    {{ back("/notifications") }}
   </div>
 
   <div>
