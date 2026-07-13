@@ -4,5 +4,5 @@
 fastapi>=0.110
 jinja2>=3.1
 python-multipart>=0.0.9   # HTML 폼(Form) 파싱
-psycopg[binary]>=3.1      # Supabase Postgres 접속
+psycopg[binary,pool]>=3.1 # Supabase Postgres 접속 (pool: 커넥션 재사용으로 지연 감소)
 python-dotenv>=1.0        # 로컬 .env 로딩 (Vercel에선 환경변수 사용)

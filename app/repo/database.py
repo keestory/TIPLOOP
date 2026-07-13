@@ -10,6 +10,11 @@ from psycopg.rows import dict_row
 
 from app.config.settings import DATABASE_URL
 
+try:  # 커넥션 풀(선택 의존성). 없으면 매 호출 새 커넥션으로 폴백.
+    from psycopg_pool import ConnectionPool
+except ImportError:  # pragma: no cover
+    ConnectionPool = None
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS members (
     id         BIGSERIAL PRIMARY KEY,
@@ -139,18 +144,51 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, crea
 """
 
 
-def get_connection() -> psycopg.Connection:
-    """요청마다 새 커넥션. dict_row로 컬럼명 접근.
+# 커넥션 kwargs — 풀/직접 연결 양쪽에서 동일하게 쓴다.
+#   prepare_threshold=None: 준비된 구문(prepared statement)을 끈다. Supabase
+#   트랜잭션 풀러(pgbouncer)에서 커넥션이 재사용될 때 'prepared statement already
+#   exists' 오류가 나지 않도록 하기 위함.
+_CONN_KWARGS = {"row_factory": dict_row, "autocommit": True, "prepare_threshold": None}
 
-    prepare_threshold=None: 준비된 구문(prepared statement)을 끈다.
-    Supabase 트랜잭션 풀러(pgbouncer)·서버리스 환경에서 커넥션이 재사용될 때
-    'prepared statement already exists' 오류가 나지 않도록 하기 위함.
+_pool = None  # 지연 생성되는 프로세스 단위 커넥션 풀
+
+
+def _get_pool():
+    """프로세스마다 하나의 커넥션 풀을 지연 생성한다.
+
+    서버리스(Vercel)에서 함수 인스턴스가 '따뜻하게' 재사용될 때 매 요청·매 쿼리마다
+    새 TCP+TLS+auth 핸드셰이크(≈100~300ms)를 반복하지 않도록, 살아있는 커넥션을
+    재사용한다. 한 페이지가 여러 repo 호출로 커넥션을 여러 번 열어도 핸드셰이크
+    비용이 사라진다.
+
+    check=check_connection: 인스턴스가 얼었다 깨어나면서 죽은 커넥션이 남아 있어도,
+    건네주기 전에 검사·재연결해 간헐적 500(connection closed)을 막는다.
+    """
+    global _pool
+    if _pool is None:
+        _pool = ConnectionPool(
+            DATABASE_URL,
+            min_size=1,
+            max_size=4,
+            max_idle=60,
+            kwargs=_CONN_KWARGS,
+            check=ConnectionPool.check_connection,
+            open=True,
+        )
+    return _pool
+
+
+def get_connection():
+    """커넥션 컨텍스트 매니저. `with get_connection() as conn:` 형태로 쓴다.
+
+    풀이 있으면 살아있는 커넥션을 빌려주고(반납 시 닫지 않음), 없으면 매번 새로
+    연결한다(로컬/테스트 폴백).
     """
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL이 설정되지 않았습니다. Supabase Postgres 연결 문자열을 넣어주세요.")
-    return psycopg.connect(
-        DATABASE_URL, row_factory=dict_row, autocommit=True, prepare_threshold=None
-    )
+    if ConnectionPool is not None:
+        return _get_pool().connection()
+    return psycopg.connect(DATABASE_URL, **_CONN_KWARGS)
 
 
 # 나중에 추가된 nullable 컬럼들 — 옛 DB에도 안전하게 채워 넣는다(멱등).

@@ -1,8 +1,7 @@
 /* 티핑 "Field Notes" 디자인 시스템 — 모바일 우선.
    proto.dc.html 의 토큰/컴포넌트를 실제 앱용으로 옮김.
-   크림 페이퍼 · 잉크 블랙 · 라임 형광펜 / Gothic A1 · IBM Plex Sans KR · IBM Plex Mono */
-
-@import url('https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;800;900&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+   크림 페이퍼 · 잉크 블랙 · 라임 형광펜 / Gothic A1 · IBM Plex Sans KR · IBM Plex Mono
+   폰트는 mobile.html <head>에서 병렬 link로 로드한다(여기서 @import 하지 않음). */
 
 :root {
   --paper: #EDE9E0;      /* 앱 바깥 배경 */
