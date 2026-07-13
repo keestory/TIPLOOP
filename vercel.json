@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pip install -r api/requirements.txt",
+  "regions": ["icn1"],
   "functions": {
     "api/index.py": {
       "includeFiles": "{templates,static}/**"
