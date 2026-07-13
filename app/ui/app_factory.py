@@ -29,11 +29,14 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 
 def create_app() -> FastAPI:
+    import os
+
     from app.config.settings import DATABASE_URL
 
-    if DATABASE_URL:
-        # 스키마 보장(멱등). 서버리스 콜드 스타트에서 DB가 잠깐 안 붙어도
-        # 앱 부팅 자체는 막지 않는다 — 실제 쿼리에서 명확히 실패하도록.
+    # 스키마 보장(멱등). 콜드 스타트마다 실행되므로, 스키마가 안정된 뒤에는
+    # SKIP_DB_INIT=1 로 꺼서 콜드 스타트 지연을 줄일 수 있다(선택).
+    if DATABASE_URL and os.getenv("SKIP_DB_INIT") != "1":
+        # 서버리스 콜드 스타트에서 DB가 잠깐 안 붙어도 앱 부팅 자체는 막지 않는다.
         try:
             init_db()
         except Exception as exc:  # noqa: BLE001 - 부팅을 죽이지 않기 위한 광범위 캐치

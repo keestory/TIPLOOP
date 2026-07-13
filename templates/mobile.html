@@ -38,6 +38,23 @@
         navigator.serviceWorker.register("/sw.js").catch(function () {});
       });
     }
+    // 이동 체감 속도 — 손가락이 닿는 순간(pointerdown, 클릭보다 100~300ms 먼저)
+    // 목적지를 미리 가져와 서버리스 함수를 깨우고 브라우저 캐시를 데운다.
+    // 같은 오리진 링크만, 현재 페이지·중복은 제외.
+    (function () {
+      var seen = {};
+      document.addEventListener("pointerdown", function (e) {
+        var a = e.target.closest && e.target.closest("a[href]");
+        if (!a) return;
+        var u; try { u = new URL(a.href); } catch (err) { return; }
+        if (u.origin !== location.origin) return;
+        if (u.pathname === location.pathname && u.search === location.search) return;
+        if (seen[u.href]) return; seen[u.href] = 1;
+        var l = document.createElement("link");
+        l.rel = "prefetch"; l.href = u.href;
+        document.head.appendChild(l);
+      }, { passive: true });
+    })();
   </script>
 </body>
 </html>

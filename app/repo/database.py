@@ -206,8 +206,12 @@ _MIGRATIONS = [
 
 
 def init_db() -> None:
-    """스키마를 생성하고(없으면), 뒤늦게 추가된 컬럼을 채운다(멱등)."""
+    """스키마를 생성하고(없으면), 뒤늦게 추가된 컬럼을 채운다(멱등).
+
+    콜드 스타트마다 실행되므로 왕복 수를 줄인다: 마이그레이션을 한 문장으로
+    합쳐 1왕복으로 보낸다(파라미터 없는 다중 문장 → 단순 쿼리 프로토콜).
+    """
     with get_connection() as conn:
         conn.execute(_SCHEMA)
-        for stmt in _MIGRATIONS:
-            conn.execute(stmt)
+        if _MIGRATIONS:
+            conn.execute(";\n".join(_MIGRATIONS))
