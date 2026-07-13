@@ -5,6 +5,8 @@ Types, Config, Providers만 import 가능. 연결은 DATABASE_URL(환경 변수)
 
 from __future__ import annotations
 
+import contextvars
+
 import psycopg
 from psycopg.rows import dict_row
 
@@ -178,17 +180,64 @@ def _get_pool():
     return _pool
 
 
-def get_connection():
-    """커넥션 컨텍스트 매니저. `with get_connection() as conn:` 형태로 쓴다.
+# 요청 범위 커넥션 슬롯 — 한 HTTP 요청 동안 커넥션 하나만 빌려 모든 repo 호출이
+# 재사용한다. 로그인 상태 홈처럼 repo를 6~10번 호출해도 체크아웃(+check 왕복)이
+# 1번으로 줄어 왕복 수가 크게 감소한다. begin/end_request는 UI 미들웨어가 부른다.
+_req_slot: contextvars.ContextVar = contextvars.ContextVar("db_req_slot", default=None)
 
-    풀이 있으면 살아있는 커넥션을 빌려주고(반납 시 닫지 않음), 없으면 매번 새로
-    연결한다(로컬/테스트 폴백).
-    """
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL이 설정되지 않았습니다. Supabase Postgres 연결 문자열을 넣어주세요.")
+
+def _open_cm():
+    """실제 커넥션 컨텍스트 매니저 하나를 연다(풀 체크아웃 또는 직접 연결)."""
     if ConnectionPool is not None:
         return _get_pool().connection()
     return psycopg.connect(DATABASE_URL, **_CONN_KWARGS)
+
+
+class _Shared:
+    """이미 열린 요청 커넥션을 `with` 문에서 닫지 않고 그대로 빌려주는 래퍼."""
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def __enter__(self):
+        return self._conn
+
+    def __exit__(self, *exc):
+        return False
+
+
+def begin_request() -> None:
+    """요청 시작 — 커넥션 슬롯을 연다(실제 연결은 첫 쿼리에서 지연 획득)."""
+    _req_slot.set({"conn": None, "cm": None})
+
+
+def end_request() -> None:
+    """요청 끝 — 이 요청이 커넥션을 빌렸다면 풀에 반납한다."""
+    slot = _req_slot.get()
+    _req_slot.set(None)
+    if slot and slot["cm"] is not None:
+        try:
+            slot["cm"].__exit__(None, None, None)
+        except Exception:  # noqa: BLE001 - 반납 실패가 응답을 깨지 않도록
+            pass
+
+
+def get_connection():
+    """커넥션 컨텍스트 매니저. `with get_connection() as conn:` 형태로 쓴다.
+
+    요청 범위가 열려 있으면(begin_request) 그 요청의 단일 커넥션을 재사용하고,
+    아니면(init_db·테스트·크론 등) 매 호출마다 풀에서 하나 빌린다.
+    """
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL이 설정되지 않았습니다. Supabase Postgres 연결 문자열을 넣어주세요.")
+    slot = _req_slot.get()
+    if slot is not None:
+        if slot["conn"] is None:
+            cm = _open_cm()
+            slot["cm"] = cm
+            slot["conn"] = cm.__enter__()
+        return _Shared(slot["conn"])
+    return _open_cm()
 
 
 # 나중에 추가된 nullable 컬럼들 — 옛 DB에도 안전하게 채워 넣는다(멱등).

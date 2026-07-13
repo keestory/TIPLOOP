@@ -44,6 +44,27 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title=f"{BRAND} — 실무자 커뮤니티")
 
+    # 요청 하나당 DB 커넥션 하나만 빌려 모든 repo 호출이 재사용하게 한다.
+    # 순수 ASGI 미들웨어라 다운스트림과 같은 태스크에서 실행돼 contextvar가
+    # 그대로 전파된다(BaseHTTPMiddleware의 전파 문제 회피). DB를 안 쓰는 요청은
+    # 지연 획득이라 커넥션을 열지 않는다(오버헤드 0).
+    from app.repo import database as _db
+
+    class _DBScope:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] != "http":
+                return await self.app(scope, receive, send)
+            _db.begin_request()
+            try:
+                await self.app(scope, receive, send)
+            finally:
+                _db.end_request()
+
+    app.add_middleware(_DBScope)
+
     templates = Jinja2Templates(directory=str(_ROOT / "templates"))
     # 템플릿 전역: 화면 어디서나 라벨/목록을 쓸 수 있게
     templates.env.globals.update(
