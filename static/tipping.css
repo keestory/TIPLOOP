@@ -1,4 +1,4 @@
-/* 티핑 "Field Notes" 디자인 시스템 — 모바일 우선.
+/* TIPLOOP "Field Notes" 디자인 시스템 — 모바일 우선.
    proto.dc.html 의 토큰/컴포넌트를 실제 앱용으로 옮김.
    크림 페이퍼 · 잉크 블랙 · 라임 형광펜 / Gothic A1 · IBM Plex Sans KR · IBM Plex Mono
    폰트는 mobile.html <head>에서 병렬 link로 로드한다(여기서 @import 하지 않음). */
@@ -9,7 +9,7 @@
   --ink: #1A1917;        /* 본문/헤드라인 */
   --muted: #6B6659;      /* 보조 텍스트 */
   --muted-2: #5C5850;
-  --meta: #8A8578;       /* 모노 메타 */
+  --meta: #625D52;       /* 작은 모노 텍스트도 4.5:1 이상 */
   --lime: #CDFF47;       /* 형광펜 */
   --lime-pale: #E6F5A8;
   --card-border: #EBE7DD;
@@ -23,6 +23,10 @@
 }
 
 * { box-sizing: border-box; }
+html { scrollbar-color: var(--chip-border) transparent; scrollbar-width: thin; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--chip-border); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
 
 /* 모바일 기본: 페이지 배경을 앱 배경과 동일하게 —
    노치/홈인디케이터(세이프 에어리어)에서 다른 색 띠가 안 보이도록. */
@@ -94,7 +98,7 @@ body {
   color: var(--ink);
 }
 .brand .d { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); margin-bottom: 5px; }
-.meta { font: 500 11px var(--mono); letter-spacing: .02em; color: var(--meta); }
+.meta { font: 500 12px var(--mono); letter-spacing: .02em; color: var(--meta); }
 .sub { margin: 0; font: 400 14px/1.5 var(--sans); color: var(--muted); }
 
 /* ── 태그 / 칩 ── */
@@ -369,12 +373,17 @@ body {
 }
 .tb {
   font: 700 13px var(--sans);
-  color: #A19B8C;
+  color: var(--muted);
   cursor: pointer;
   background: none;
   border: none;
   padding: 8px 4px;
   text-decoration: none;
+  min-width: 52px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .tb.on { color: var(--ink); }
 .tb.write {
@@ -479,7 +488,7 @@ a.plain { text-decoration: none; color: inherit; }
 .pctab {
   font: 700 13px var(--sans); padding-bottom: 9px;
   border: none; border-bottom: 2.5px solid transparent;
-  color: #A19B8C; cursor: pointer; background: none;
+  color: var(--muted); cursor: pointer; background: none;
 }
 .pctab.on { color: var(--ink); border-bottom-color: var(--ink); }
 .panel { display: flex; flex-direction: column; gap: 11px; }
@@ -503,7 +512,7 @@ a.plain { text-decoration: none; color: inherit; }
 
 /* 입력 */
 .ta {
-  width: 100%; box-sizing: border-box; resize: vertical;
+  width: 100%; box-sizing: border-box; resize: none;
   font: 400 14px/1.5 var(--sans); color: var(--ink);
   padding: 12px 14px; border-radius: 14px;
   border: 1.4px solid var(--chip-border); background: var(--input-bg);
@@ -514,7 +523,10 @@ a.plain { text-decoration: none; color: inherit; }
 .btn.btn-small { padding: 9px 14px; font-size: 13px; border-radius: 12px; width: auto; }
 
 /* ══ 글쓰기 ══ */
-.cancel { font: 500 14px var(--sans); color: var(--ink); cursor: pointer; text-decoration: none; }
+.cancel {
+  min-height: 44px; display: inline-flex; align-items: center;
+  font: 500 14px var(--sans); color: var(--ink); cursor: pointer; text-decoration: none;
+}
 .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .type-card {
   background: #fff; border: 1.4px solid var(--card-border); border-radius: 18px;
@@ -549,6 +561,18 @@ a.plain { text-decoration: none; color: inherit; }
   font: 500 14px var(--sans); color: var(--ink);
 }
 .searchbar input::placeholder { color: #9A9384; }
+
+/* 키보드 사용자는 어디서 포커스가 갔는지 항상 볼 수 있다. */
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid rgba(205, 255, 71, .9);
+  outline-offset: 3px;
+}
+/* 접근성 오류 상태가 레거시 입력 컴포넌트의 border 우선순위보다 앞서야 한다. */
+[aria-invalid="true"] { border-color: #B4231F !important; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 
 /* ══ 프로필 ══ */
 .gear { background: none; border: none; cursor: pointer; padding: 0; color: var(--ink); }
@@ -635,3 +659,237 @@ a.plain { text-decoration: none; color: inherit; }
 .vp-seek { flex: none; background: var(--input-bg); border: 1px solid var(--chip-border); border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--ink); }
 .vp-au { color: var(--muted); font-size: 13px; font-weight: 600; }
 .vp-bd { flex: 1 1 100%; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   TIPLOOP 개인 서비스 연구 워크벤치
+   라임은 상태/다음 행동에만 사용하고, 나머지는 종이와 잉크의 대비로 계층화한다.
+   ══════════════════════════════════════════════════════════════════════ */
+.eyebrow {
+  margin: 0 0 7px;
+  font: 600 11px/1.3 var(--mono);
+  letter-spacing: .11em;
+  color: var(--meta);
+}
+.top-action, .text-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  font: 700 13px var(--sans);
+  text-underline-offset: 4px;
+}
+.research-home, .library-page, .account-page, .study-detail {
+  gap: 22px;
+  padding-bottom: calc(34px + env(safe-area-inset-bottom));
+}
+.research-topbar { margin-bottom: 2px; }
+.research-intro { display: flex; flex-direction: column; gap: 9px; }
+.research-intro h1, .form-intro h1 {
+  margin: 0;
+  font: 900 29px/1.2 var(--head);
+  letter-spacing: -.035em;
+}
+.research-intro > p:last-child, .form-intro > p:last-child {
+  margin: 0;
+  max-width: 36rem;
+  font: 400 14px/1.65 var(--sans);
+  color: var(--muted);
+}
+.quick-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 18px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.quick-copy { display: flex; align-items: flex-start; gap: 11px; }
+.quick-number, .form-group-heading > span {
+  font: 600 11px var(--mono);
+  color: var(--meta);
+  padding-top: 2px;
+}
+.quick-copy label { display: block; font: 700 15px var(--head); }
+.quick-copy p { margin: 3px 0 0; font: 400 12px var(--sans); color: var(--muted); }
+.quick-row { display: flex; gap: 8px; }
+.quick-row input {
+  min-width: 0;
+  flex: 1;
+  border: 1.4px solid var(--chip-border);
+  border-radius: 13px;
+  background: var(--input-bg);
+  padding: 12px 13px;
+  color: var(--ink);
+  font: 500 14px var(--sans);
+}
+.quick-btn { flex: none; width: auto; padding: 12px 15px; border-radius: 13px; }
+.research-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+}
+.research-stats > * {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-right: 1px solid var(--card-border);
+  color: var(--ink);
+  text-decoration: none;
+}
+.research-stats > *:last-child { border-right: 0; }
+.research-stats strong { font: 800 22px var(--head); letter-spacing: -.03em; }
+.research-stats span { font: 500 11px var(--sans); color: var(--muted); }
+.note-section, .study-list { display: flex; flex-direction: column; gap: 11px; }
+.note-section .sec-head { align-items: flex-end; }
+.study-card {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 17px;
+  color: inherit;
+  text-decoration: none;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 17px;
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.study-card-head, .study-card-foot, .detail-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.study-index {
+  font: 600 11px var(--mono);
+  letter-spacing: .08em;
+  color: var(--ink);
+}
+.study-card h3 { margin: 0; font: 800 18px/1.35 var(--head); letter-spacing: -.02em; }
+.study-domain {
+  margin: -5px 0 0;
+  font: 500 12px var(--mono);
+  color: var(--meta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.study-progress { height: 5px; overflow: hidden; border-radius: 99px; background: var(--tag-bg); }
+.study-progress span { display: block; height: 100%; border-radius: inherit; background: var(--ink); }
+.study-card-foot { font: 500 11px var(--mono); color: var(--meta); }
+.study-card-foot span:last-child { color: var(--ink); }
+.research-empty {
+  margin: 0;
+  padding: 28px 20px;
+  border: 1px dashed #CFC8B8;
+  border-radius: 17px;
+}
+.research-empty h3 { margin: 10px 0 5px; font: 800 18px var(--head); color: var(--ink); }
+.research-empty p { margin: 0 auto 17px; max-width: 270px; font: 400 13px/1.6 var(--sans); }
+.research-empty .btn { max-width: 210px; margin: 0 auto; }
+
+/* 보관함 */
+.page-heading { align-items: flex-end; }
+.page-heading h1 { margin: 0; font: 900 28px var(--head); letter-spacing: -.03em; }
+.library-search { position: relative; min-height: 48px; }
+.search-clear {
+  width: 44px; height: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: var(--meta); text-decoration: none; font-size: 20px;
+}
+.search-submit {
+  min-height: 44px; padding: 4px 8px; border: 0; background: transparent;
+  color: var(--ink); font: 700 12px var(--sans); cursor: pointer;
+}
+.library-count { margin-top: 3px; }
+
+/* 연구 작성 */
+.research-form { gap: 21px; }
+.form-topbar { position: relative; }
+.form-intro { display: flex; flex-direction: column; gap: 8px; }
+.form-intro h1 { font-size: 25px; }
+.form-foundation {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 18px; border-radius: 18px; background: #fff; border: 1px solid var(--card-border);
+}
+.field-label { font: 700 14px var(--sans); color: var(--ink); }
+.field-help { font: 400 12px/1.5 var(--sans); color: var(--muted); }
+.optional { margin-left: 4px; font: 500 10px var(--mono); color: var(--meta); }
+.single-line { min-height: 46px; }
+.research-fields { display: flex; flex-direction: column; gap: 14px; }
+.form-group-heading {
+  display: grid; grid-template-columns: 28px 1fr; align-items: baseline;
+  gap: 7px; margin-top: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--ink);
+}
+.form-group-heading:first-child { margin-top: 0; }
+.form-group-heading h2 { margin: 0; font: 800 18px var(--head); letter-spacing: -.02em; }
+.research-field {
+  padding: 16px; background: #fff; border: 1px solid var(--card-border); border-radius: 16px;
+}
+.research-field .ta { min-height: 104px; margin-top: 3px; background: var(--screen); }
+.legacy-field { border-style: dashed; }
+.apply-field { border-color: #B7DC3E; background: #FBFFE9; }
+.apply-field .ta { background: #fff; }
+.apply-badge {
+  display: inline-flex; margin-left: 7px; padding: 3px 7px; border-radius: 5px;
+  background: var(--lime); color: var(--ink); font: 600 9px var(--mono); letter-spacing: .06em;
+  vertical-align: middle;
+}
+.form-status { margin: 0; font: 600 13px var(--sans); color: #B4231F; }
+.form-status[hidden] { display: none; }
+.form-submit { display: flex; flex-direction: column; gap: 9px; margin-top: 5px; }
+.save-note { margin: 0; text-align: center; font: 500 11px var(--mono); color: var(--meta); }
+
+/* 연구 상세 */
+.study-detail-head {
+  display: flex; flex-direction: column; gap: 13px; padding: 19px;
+  background: #fff; border: 1.5px solid var(--ink); border-radius: 18px;
+}
+.study-detail-head h1 { margin: 0; font: 900 28px/1.2 var(--head); letter-spacing: -.035em; }
+.source-link {
+  align-self: flex-start; color: var(--ink); font: 600 13px var(--sans); text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+.detail-progress-copy { font: 500 11px var(--mono); color: var(--meta); margin-top: 2px; }
+.detail-progress-copy strong { color: var(--ink); }
+.detail-sections { display: flex; flex-direction: column; gap: 12px; }
+.detail-group { margin-top: 20px; }
+.detail-group:first-child { margin-top: 0; }
+.detail-field { padding: 17px; background: #fff; border: 1px solid var(--card-border); border-radius: 16px; }
+.detail-field h3 { margin: 0 0 8px; font: 700 14px var(--sans); }
+.detail-field p { margin: 0; white-space: pre-wrap; font: 400 15px/1.72 var(--sans); color: #3C3930; }
+.detail-edit { margin-top: 4px; }
+.legacy-media { display: flex; flex-direction: column; gap: 11px; }
+.legacy-video { display: block; width: 100%; border-radius: 16px; background: #000; }
+
+/* 계정 */
+.account-id { display: flex; align-items: center; gap: 13px; padding: 17px; background: #fff; border: 1px solid var(--card-border); border-radius: 17px; }
+.account-id .av { width: 48px; height: 48px; }
+.account-id h2 { margin: 0 0 3px; font: 800 18px var(--head); }
+.account-id p { margin: 0; font: 400 12px var(--sans); color: var(--muted); }
+.account-settings { display: flex; flex-direction: column; gap: 10px; }
+.logout-form { margin: 0; }
+.privacy-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 14px; background: var(--input-bg); }
+.privacy-note > span { color: #79A500; font-size: 10px; padding-top: 4px; }
+.privacy-note strong { display: block; font: 700 13px var(--sans); }
+.privacy-note p { margin: 3px 0 0; font: 400 12px/1.5 var(--sans); color: var(--muted); }
+
+@media (hover: hover) and (pointer: fine) {
+  .study-card:hover { transform: translateY(-2px); border-color: #CFC8B8; box-shadow: 0 10px 24px -20px rgba(26, 25, 23, .8); }
+  .top-action:hover, .text-link:hover, .source-link:hover { text-decoration-thickness: 2px; }
+}
+@media (max-width: 360px) {
+  .quick-row { flex-direction: column; }
+  .quick-btn { width: 100%; }
+  .research-intro h1 { font-size: 26px; }
+  .tabbar { padding-inline: 9px; }
+  .tb.write { padding-inline: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* 사용자 OS의 모션 감소 설정은 컴포넌트별 전환보다 항상 우선한다. */
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

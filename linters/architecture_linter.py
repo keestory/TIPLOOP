@@ -9,6 +9,7 @@ Usage:
 """
 
 import ast
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +28,16 @@ LAYER_ORDER = {
 
 # 특별 허용: 어떤 레이어든 import 가능한 모듈
 EXEMPT_MODULES = {"typing", "dataclasses", "abc", "enum", "pathlib", "os", "json", "logging"}
+SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"}
+
+
+def iter_python_files(project_root: Path):
+    """생성물·의존성 디렉터리를 순회 전에 제외한다."""
+    for root, directories, files in os.walk(project_root):
+        directories[:] = [name for name in directories if name not in SKIP_DIRS]
+        for name in files:
+            if name.endswith(".py"):
+                yield Path(root) / name
 
 
 @dataclass
@@ -82,9 +93,7 @@ def check_layer_dependencies(project_root: Path) -> list[LintViolation]:
     """레이어 의존성 위반 검사"""
     violations = []
 
-    for py_file in project_root.rglob("*.py"):
-        if "__pycache__" in str(py_file) or "venv" in str(py_file):
-            continue
+    for py_file in iter_python_files(project_root):
 
         rel_path = str(py_file.relative_to(project_root))
         current_layer = detect_layer(rel_path)
@@ -127,9 +136,7 @@ def check_file_sizes(project_root: Path, max_lines: int = 300) -> list[LintViola
     """파일 크기 제한 검사"""
     violations = []
 
-    for py_file in project_root.rglob("*.py"):
-        if "__pycache__" in str(py_file) or "venv" in str(py_file):
-            continue
+    for py_file in iter_python_files(project_root):
 
         try:
             lines = py_file.read_text(encoding="utf-8").splitlines()

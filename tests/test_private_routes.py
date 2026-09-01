@@ -1,0 +1,94 @@
+"""개인 연구 노트의 접근 경계와 핵심 화면 스모크 테스트."""
+
+import pytest
+
+from app.config.settings import WRITE_TEMPLATES
+from app.service import research_service
+from app.types.models import Post
+from app.types.models import User
+from app.ui import routes_community, routes_post
+from app.ui.app_factory import create_app
+
+
+@pytest.mark.no_db
+def test_private_route_functions_redirect_without_session():
+    calls = (
+        lambda: routes_community.feed(None, user=None),
+        lambda: routes_community.explore(None, user=None),
+        lambda: routes_post.new_post_write(None, user=None),
+        lambda: routes_post.post_detail(None, 1, user=None),
+        lambda: routes_post.edit_post(None, 1, user=None),
+    )
+    for call in calls:
+        response = call()
+        assert response.status_code == 303
+        assert response.headers["location"] == "/login"
+
+
+@pytest.mark.no_db
+def test_research_templates_render_for_signed_in_user():
+    user = User(
+        id=7,
+        auth_id="auth-7",
+        name="연구자",
+        created_at="2026-09-01",
+        job_role="PM",
+        years="3~5년",
+    )
+    env = create_app().state.templates.env
+    shared = {"current_user": user, "nav_unread": 0}
+
+    home = env.get_template("index.html").render(
+        **shared,
+        dashboard={"notes": [], "recent": [], "total": 0, "completed": 0, "applied": 0},
+    )
+    library = env.get_template("explore.html").render(**shared, q="", focus="", results=[])
+    form = env.get_template("post_write.html").render(
+        **shared,
+        category="reference",
+        sections=WRITE_TEMPLATES["reference"],
+        form={"link_url": ""},
+        section_values={},
+        editing=False,
+    )
+
+    assert "서비스를 뜯어보고" in home
+    assert "보관함" in library
+    assert "비즈니스 모델" in form
+    assert "연구 노트 저장" in form
+    assert "localStorage" in form
+    assert "tiploop:draft:new:user:7" in form
+    assert '"tiploop:draft:new"' not in form
+    assert 'type="file"' not in form
+
+    post = Post(
+        id=12,
+        author_id=user.id,
+        category="reference",
+        title="Notion",
+        body="분석한 이유\n문서 흐름을 보기 위해",
+        created_at="2026-09-01 10:00",
+    )
+    detail = env.get_template("post_detail.html").render(
+        **shared,
+        post=post,
+        progress=research_service.progress(post),
+        groups=research_service.detail_groups(post.body),
+        saved="",
+    )
+    assert "관찰의 출발점" in detail
+    assert "<h2>제품</h2>" not in detail
+
+
+@pytest.mark.no_db
+def test_retired_social_mutations_return_gone():
+    user = User(
+        id=7,
+        auth_id="auth-7",
+        name="연구자",
+        created_at="2026-09-01",
+        job_role="PM",
+        years="3~5년",
+    )
+    assert routes_post.react_comment(None, 99, user=user).status_code == 410
+    assert routes_community.follow_user(None, 99, user=user).status_code == 410

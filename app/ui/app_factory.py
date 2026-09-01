@@ -21,8 +21,10 @@ from app.config.settings import (
     TOPICS,
     YEARS,
     category_label,
+    validate_runtime_security,
 )
 from app.repo.database import init_db
+from app.repo.privacy import verify_privacy_boundaries
 from app.ui import routes_auth, routes_community, routes_crew, routes_post, routes_pwa
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -33,16 +35,16 @@ def create_app() -> FastAPI:
 
     from app.config.settings import DATABASE_URL
 
-    # 스키마 보장(멱등). 콜드 스타트마다 실행되므로, 스키마가 안정된 뒤에는
-    # SKIP_DB_INIT=1 로 꺼서 콜드 스타트 지연을 줄일 수 있다(선택).
-    if DATABASE_URL and os.getenv("SKIP_DB_INIT") != "1":
-        # 서버리스 콜드 스타트에서 DB가 잠깐 안 붙어도 앱 부팅 자체는 막지 않는다.
-        try:
-            init_db()
-        except Exception as exc:  # noqa: BLE001 - 부팅을 죽이지 않기 위한 광범위 캐치
-            print(f"[warn] init_db 건너뜀: {exc}")
+    validate_runtime_security()
 
-    app = FastAPI(title=f"{BRAND} — 실무자 커뮤니티")
+    # 개인정보 경계인 RLS까지 확인돼야 앱을 부팅한다. 스키마 초기화를 생략해도
+    # 보안 검증은 생략하지 않으며, 실패하면 fail-closed로 시작을 중단한다.
+    if DATABASE_URL:
+        if os.getenv("SKIP_DB_INIT") != "1":
+            init_db()
+        verify_privacy_boundaries()
+
+    app = FastAPI(title=f"{BRAND} — 개인 서비스 연구 노트")
 
     # 요청 하나당 DB 커넥션 하나만 빌려 모든 repo 호출이 재사용하게 한다.
     # 순수 ASGI 미들웨어라 다운스트림과 같은 태스크에서 실행돼 contextvar가

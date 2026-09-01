@@ -1,6 +1,7 @@
-"""커뮤니티 라우트 — 홈 피드·탐색·알림·다이제스트·팔로우·프로필.
+"""개인 연구 노트 라우트 — 홈·보관함·내 계정.
 
-글 작성·상세·댓글·반응은 routes_post.py 참고.
+기존 소셜 라우트는 이전 데이터 호환을 위해 남겨두되, 연구 노트 진입점은
+로그인한 본인의 데이터만 조회한다.
 """
 
 from __future__ import annotations
@@ -8,25 +9,18 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from app.service import (
     auth_service,
-    community_service,
-    crew_service,
-    follow_service,
     notification_service,
-    share_service,
+    research_service,
 )
-from app.service.community_service import CommunityError
 from app.types.models import User
 from app.ui.deps import get_current_user
-from app.ui.render import back, gate, render
+from app.ui.render import gate, render
 
 router = APIRouter()
-
-FEED_SORTS = {"new": "최신", "top": "공감", "buzz": "화제"}
-
 
 def _nav_unread(user: Optional[User]) -> int:
     """탭바의 알림 배지용 안 읽은 알림 수."""
@@ -36,20 +30,15 @@ def _nav_unread(user: Optional[User]) -> int:
 @router.get("/")
 def feed(
     request: Request,
-    sort: str = "new",
-    category: str = "",
     user: Optional[User] = Depends(get_current_user),
 ):
-    sort = sort if sort in FEED_SORTS else "new"
-    posts = community_service.list_feed(category, sort=sort)
-    featured, waiting, rest = community_service.home_feed(posts)
-    show_tour = bool(user and user.is_onboarded and not user.has_seen_tour)
+    if g := gate(user):
+        return g
+    dashboard = research_service.dashboard(user.id)
     return render(
         request, "index.html", user,
-        featured=featured, waiting=waiting, rest=rest,
-        sort=sort, active_category=category, nav_unread=_nav_unread(user),
-        show_tour=show_tour, checklist=community_service.onboarding_checklist(user),
-        my_crews=crew_service.my_crews(user.id) if (user and user.is_onboarded) else [],
+        dashboard=dashboard,
+        nav_unread=0,
     )
 
 
@@ -62,16 +51,26 @@ def dismiss_checklist(request: Request, user: Optional[User] = Depends(get_curre
 
 
 @router.get("/explore")
-def explore(request: Request, q: str = "", user: Optional[User] = Depends(get_current_user)):
+def explore(
+    request: Request,
+    q: str = "",
+    focus: str = "",
+    user: Optional[User] = Depends(get_current_user),
+):
+    if g := gate(user):
+        return g
     query = q.strip()
-    unread = _nav_unread(user)
-    if query:
-        results = community_service.list_feed(search=query, sort="new")
-        return render(request, "explore.html", user, q=query, results=results,
-                      popular=None, nav_unread=unread)
-    popular = community_service.list_feed(sort="top")[:6]
-    return render(request, "explore.html", user, q="", results=None,
-                  popular=popular, nav_unread=unread)
+    active_focus = "applied" if focus == "applied" else ""
+    notes = (
+        research_service.list_actionable_notes(user.id, query)
+        if active_focus
+        else research_service.list_notes(user.id, query)
+    )
+    results = research_service.present_notes(notes)
+    return render(
+        request, "explore.html", user,
+        q=query, focus=active_focus, results=results, nav_unread=0,
+    )
 
 
 @router.get("/notifications")
@@ -85,13 +84,10 @@ def notifications_page(request: Request, user: Optional[User] = Depends(get_curr
 
 @router.get("/digest")
 def weekly_digest(request: Request, user: Optional[User] = Depends(get_current_user)):
-    """이번 주 티핑 (6a) — 가장 도움된 팁·팔로우 새 글·답변 대기·내 글 받은 후기."""
-    if user is None:
-        return RedirectResponse("/login", status_code=303)
-    if not user.is_onboarded:
-        return RedirectResponse("/onboarding", status_code=303)
-    return render(request, "digest.html", user,
-                  digest=community_service.weekly_digest(user), nav_unread=_nav_unread(user))
+    """이전 공개 다이제스트는 개인 노트 전환 후 홈으로 모은다."""
+    if g := gate(user):
+        return g
+    return RedirectResponse("/", status_code=303)
 
 
 @router.post("/notifications/read")
@@ -104,32 +100,37 @@ def notifications_read(request: Request, user: Optional[User] = Depends(get_curr
 
 @router.post("/users/{user_id}/follow")
 def follow_user(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
+    """개인 노트 전환 후 임의 사용자 팔로우 동작은 폐기했다."""
     if g := gate(user):
         return g
-    follow_service.toggle(user.id, user_id)
-    return back(request, f"/users/{user_id}")
+    return Response(status_code=410)
 
 
 @router.get("/users/{user_id}")
 def profile(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
-    try:
-        member, posts, stats = community_service.get_profile(user_id)
-    except CommunityError as exc:
-        return render(request, "not_found.html", user, message=str(exc))
-    heatmap = community_service.contribution_heatmap(posts)
-    follow = follow_service.status(user.id if user else None, user_id)
+    if g := gate(user):
+        return g
+    if user_id != user.id:
+        return render(
+            request, "not_found.html", user,
+            status_code=404, message="계정을 찾을 수 없습니다.",
+        )
+    member = user
+    stats = research_service.dashboard(user.id)
     return render(
-        request, "profile.html", user, teacher=member, posts=posts,
-        stats=stats, heatmap=heatmap, follow=follow, nav_unread=_nav_unread(user),
+        request, "profile.html", user, teacher=member,
+        stats=stats, nav_unread=0,
     )
 
 
 @router.get("/users/{user_id}/share")
 def profile_share(request: Request, user_id: int, user: Optional[User] = Depends(get_current_user)):
-    """인스타 스토리용 공유 카드 — 내가 도움을 준 사람 수를 자랑."""
-    try:
-        member, _, stats = community_service.get_profile(user_id)
-    except CommunityError as exc:
-        return render(request, "not_found.html", user, message=str(exc))
-    spec = share_service.profile_card(member, stats["helpful"])
-    return render(request, "share.html", user, spec=spec)
+    """개인 연구 노트 전환 후 공개 프로필 공유는 제공하지 않는다."""
+    if g := gate(user):
+        return g
+    if user_id != user.id:
+        return render(
+            request, "not_found.html", user,
+            status_code=404, message="계정을 찾을 수 없습니다.",
+        )
+    return RedirectResponse(f"/users/{user.id}", status_code=303)

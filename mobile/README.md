@@ -1,6 +1,6 @@
 # 티핑 iOS 앱 (Capacitor) — App Store 배포
 
-배포된 웹앱(`https://fortomorrow.vercel.app`)을 네이티브 셸로 감싸 App Store에 올린다.
+배포된 웹앱(`https://tiploop.vercel.app`)을 네이티브 셸로 감싸 App Store에 올린다.
 아래는 **당신 Mac에서** 실행하는 순서다. (샌드박스에선 빌드·서명·제출 불가)
 
 ## 0. 준비물
@@ -16,7 +16,7 @@ Xcode 아카이브 전에 미리 해두면 이름 중복 등을 일찍 발견한
    먼저 [Certificates, IDs & Profiles](https://developer.apple.com/account/resources/identifiers/list)
    에서 App ID로 등록), **SKU**: `tipping-001` (아무 고유 문자열)
 3. 준비해둘 정보:
-   - **개인정보처리방침 URL**: `https://fortomorrow.vercel.app/terms/privacy` (이미 구현됨)
+   - **개인정보처리방침 URL**: `https://tiploop.vercel.app/terms/privacy` (이미 구현됨)
    - **지원 URL**: 배포 도메인 그대로 써도 됨
    - **카테고리**: 소셜 네트워킹 또는 생산성
    - **연령 등급**: 설문 진행(특이 콘텐츠 없어 4+ 예상)

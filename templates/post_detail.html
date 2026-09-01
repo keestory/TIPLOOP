@@ -1,223 +1,80 @@
 {% extends "mobile.html" %}
 {% block title %}{{ post.title }}{% endblock %}
 
-{# 글 공유 카드 — 제목·본문 요약·첨부 이미지(없으면 브랜드 이미지) #}
-{% block og %}
-<meta property="og:type" content="article">
-<meta property="og:site_name" content="{{ brand }}">
-<meta property="og:title" content="{{ post.title }}">
-<meta property="og:description" content="{{ post.body | replace('\n', ' ') | truncate(90) }}">
-<meta property="og:url" content="{{ site_url }}/posts/{{ post.id }}">
-<meta property="og:image" content="{{ post.image_url or (site_url ~ '/static/og-default.png') }}">
-<meta name="twitter:card" content="summary_large_image">
-{% endblock %}
-
-{% from "_tags.html" import cat_tag %}
-{% from "_back.html" import back %}
-
-{# 댓글 공감 — 작은 알약 #}
-{% macro comment_react(c, is_on, current_user) %}
-  {% if current_user %}
-    <form method="post" action="/comments/{{ c.id }}/react" style="margin:0;display:inline">
-      <button type="submit" class="linklike" style="color:{{ '#1A1917' if is_on else '#8A8578' }}">{{ "♥" if is_on else "♡" }} {{ c.reaction_count }}</button>
-    </form>
-  {% else %}
-    <a class="linklike" href="/login">♡ {{ c.reaction_count }}</a>
-  {% endif %}
-{% endmacro %}
-
 {% block app %}
-<div class="body" style="gap:13px">
+<main class="body study-detail">
+  <header class="topbar">
+    <a class="cancel" href="/explore">‹ 보관함</a>
+    <a class="top-action" href="/posts/{{ post.id }}/edit">편집</a>
+  </header>
 
-  {# 상단 — 뒤로 (직전 목록의 필터·검색 맥락 유지) #}
-  <div class="topbar">
-    {{ back("/") }}
-  </div>
-
-  {% set is_q = post.category == "question" %}
-  <div style="display:flex;align-items:center;gap:8px">
-    <span class="tag">{{ cat_tag(post.category) }}</span>
-    <span class="meta">{{ post.created_at[0:10] }}</span>
-  </div>
-
-  <h1 class="title-md">{{ post.title }}</h1>
-
-  <a class="byline plain" href="/users/{{ post.author_id }}">
-    <span class="av"></span>
-    <div>
-      <div class="author-name">{{ post.author_name }}</div>
-      <span class="meta">{{ post.author_years }}{% if post.author_job_role %} · {{ post.author_job_role }}{% endif %}</span>
+  <section class="study-detail-head">
+    <div class="study-card-head">
+      <span class="study-index">STUDY #{{ "%03d"|format(post.id) }}</span>
+      <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
     </div>
-  </a>
-
-  <div class="divide"></div>
-
-  {% if post.category == "reference" and post.link_url %}
-  <dl class="linkbox">
-    <dt>참고 링크</dt>
-    <dd><a href="{{ post.link_url }}" rel="noopener" target="_blank">{{ post.link_url }}</a></dd>
-  </dl>
-  {% endif %}
-
-  <p class="post-body">{{ post.body }}</p>
-
-  {% if post.image_url %}
-  <img class="post-image" src="{{ post.image_url }}" alt="첨부 이미지" loading="lazy">
-  {% endif %}
-
-  {# 반응 — 같은 알약 패밀리 1열 (💡 도움됐어요 · ♡ 공감) #}
-  {% set helped_on = post.id in helped %}
-  {% set react_on = post.id in reacted %}
-  <div class="react-row">
-    {% if current_user %}
-      <span class="react-pill help {% if helped_on %}on{% endif %}">
-        <form method="post" action="/posts/{{ post.id }}/helpful">
-          <button type="submit">💡 도움됐어요 {{ post.helpful_count }}</button>
-        </form>
-      </span>
-      <span class="react-pill {% if react_on %}on{% endif %}">
-        <form method="post" action="/posts/{{ post.id }}/react">
-          <button type="submit">{{ "♥" if react_on else "♡" }} 공감 {{ post.reaction_count }}</button>
-        </form>
-      </span>
-    {% else %}
-      <a class="react-pill help" href="/login">💡 도움됐어요 {{ post.helpful_count }}</a>
-      <a class="react-pill" href="/login">♡ 공감 {{ post.reaction_count }}</a>
+    <h1>{{ post.title }}</h1>
+    {% if post.link_url %}
+    <a class="source-link" href="{{ post.link_url }}" rel="noopener noreferrer" target="_blank">
+      원본 서비스 열기 <span aria-hidden="true">↗</span>
+    </a>
     {% endif %}
-  </div>
-  <span class="meta">💡 = 실제로 적용해봤어요 · ♡ = 좋았어요</span>
-
-  {% if post.helpful_count >= 1 %}
-  <a class="tapcard" href="/posts/{{ post.id }}/share" style="gap:2px;padding:12px 14px">
-    <p class="ttl" style="font-weight:700;margin:0">🎉 이 팁, 스토리에 자랑하기 →</p>
-  </a>
-  {% endif %}
-
-  {# 탭 — 질문은 답변(댓글)이 기본, 그 외는 후기가 기본 #}
-  <div class="pctabs">
-    {% if is_q %}
-    <button type="button" class="pctab on" data-tab="comments">답변 {{ post.comment_count }}</button>
-    <button type="button" class="pctab" data-tab="reviews">후기 {{ reviews|length }}</button>
-    {% else %}
-    <button type="button" class="pctab on" data-tab="reviews">후기 {{ reviews|length }}</button>
-    <button type="button" class="pctab" data-tab="comments">댓글 {{ post.comment_count }}</button>
-    {% endif %}
-    {% if post.video_url %}<button type="button" class="pctab" data-tab="videos">영상</button>{% endif %}
-  </div>
-
-  {# 후기 패널 #}
-  <div class="panel" data-panel="reviews"{% if is_q %} hidden{% endif %}>
-    <p class="sub" style="font-size:13px">이 글을 실제로 써보셨나요? 결과·후기를 남기면 작성자에게 큰 힘이 돼요.</p>
-    {% if current_user %}
-    <form class="cmt-form" method="post" action="/posts/{{ post.id }}/reviews">
-      <textarea class="ta" name="body" rows="3" placeholder="예: 이 방법으로 이탈률이 12% 줄었어요" required></textarea>
-      <button type="submit" class="btn btn-small" style="align-self:flex-start">후기 남기기</button>
-    </form>
-    {% else %}
-    <p class="hint"><a href="/login">로그인</a>하면 적용 후기를 남길 수 있어요.</p>
-    {% endif %}
-    {% for rv in reviews %}
-    <div class="rev-card">
-      <div class="rev-head">
-        <span class="av sm"></span>
-        <a class="meta plain" href="/users/{{ rv.author_id }}">{{ rv.author_name }}{% if rv.author_job_role %} · {{ rv.author_job_role }}{% endif %}</a>
-        <span class="tag lime" style="margin-left:auto">효과 봄</span>
-      </div>
-      <p class="rev-body">{{ rv.body }}</p>
+    <div class="detail-progress-copy">
+      <span>{{ progress.done }}/{{ progress.total }} 항목 기록</span>
+      <strong>{{ progress.percent }}%</strong>
     </div>
-    {% else %}
-    <p class="empty" style="margin:6px 0">아직 후기가 없어요.<br>처음으로 적용해보고 결과를 공유해보세요.</p>
+    <div class="study-progress" role="progressbar" aria-label="채운 항목 비율"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.percent }}">
+      <span style="width:{{ progress.percent }}%"></span>
+    </div>
+  </section>
+
+  <section class="detail-sections" aria-label="서비스 분석 내용">
+    {% for group in groups %}
+    <div class="form-group-heading detail-group">
+      <span>{{ group["no"] }}</span>
+      <h2>{{ group["name"] }}</h2>
+    </div>
+    {% for item in group["items"] %}
+    <article class="detail-field {% if item["highlight"] %}apply-field{% endif %}">
+      <h3>{{ item["label"] }}{% if item["highlight"] %}<span class="apply-badge">NEXT ACTION</span>{% endif %}</h3>
+      <p>{{ item["value"] }}</p>
+    </article>
     {% endfor %}
-  </div>
-
-  {# 댓글/답변 패널 #}
-  <div class="panel" data-panel="comments"{% if not is_q %} hidden{% endif %}>
-    {% if current_user %}
-    <form class="cmt-form" method="post" action="/posts/{{ post.id }}/comments">
-      <textarea class="ta" name="body" rows="3" placeholder="{{ '내 경험으로 답하기…' if is_q else '동료에게 한마디 남기기' }}" required></textarea>
-      <button type="submit" class="btn btn-small {% if is_q %}lime{% endif %}" style="align-self:flex-start">{{ '답변 남기기 →' if is_q else '댓글 남기기' }}</button>
-    </form>
-    {% else %}
-    <p class="hint"><a href="/login">로그인</a>하면 {{ '답변을' if is_q else '댓글을' }} 남길 수 있어요.</p>
-    {% endif %}
-
-    {% for t in threads %}
-    <div class="cmt" id="c{{ t.comment.id }}">
-      <div class="cmt-head">
-        <span class="av sm"></span>
-        <a class="meta plain" href="/users/{{ t.comment.author_id }}">{{ t.comment.author_name }}{% if t.comment.author_job_role %} · {{ t.comment.author_job_role }}{% endif %}</a>
-      </div>
-      <p class="cmt-body" style="margin-left:31px">{{ t.comment.body }}</p>
-      <div style="margin-left:31px;display:flex;gap:14px;align-items:center">
-        {{ comment_react(t.comment, t.comment.id in reacted_comments, current_user) }}
-        {% if current_user %}<button type="button" class="linklike" onclick="toggleReply({{ t.comment.id }})">답글</button>{% endif %}
-      </div>
-
-      {% if current_user %}
-      <form class="reply-form" id="reply{{ t.comment.id }}" method="post" action="/posts/{{ post.id }}/comments" style="margin-left:31px">
-        <input type="hidden" name="parent_id" value="{{ t.comment.id }}">
-        <textarea class="ta" name="body" rows="2" placeholder="{{ t.comment.author_name }}님에게 답글" required></textarea>
-        <button type="submit" class="btn btn-small" style="align-self:flex-start">답글 남기기</button>
-      </form>
-      {% endif %}
-
-      {% for r in t.replies %}
-      <div class="cmt-reply" id="c{{ r.id }}">
-        <div class="cmt-head">
-          <a class="meta plain" href="/users/{{ r.author_id }}">{{ r.author_name }} ↳{% if r.author_job_role %} · {{ r.author_job_role }}{% endif %}</a>
-        </div>
-        <p class="cmt-body">{{ r.body }}</p>
-        <div>{{ comment_react(r, r.id in reacted_comments, current_user) }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="empty" style="margin:6px 0">{{ '첫 답변을 남겨보세요.' if is_q else '첫 댓글을 남겨보세요.' }}</p>
     {% endfor %}
-  </div>
+  </section>
 
-  {# 영상 패널 #}
-  {% if post.video_url %}
-  <div class="panel" data-panel="videos" hidden>
-    <section class="vp" id="vp" data-post="{{ post.id }}" data-can-comment="{{ '1' if current_user else '0' }}">
-      <div class="vp-bar">
-        {% if current_user %}
-          <button type="button" class="anno-op" id="vp-toggle">➕ 지점 코멘트 달기</button>
-          <span class="hint">버튼을 켜고 영상 위를 클릭하세요</span>
-        {% else %}
-          <span class="hint"><a href="/login">로그인</a>하면 영상 지점에 코멘트를 남길 수 있어요.</span>
-        {% endif %}
-      </div>
-      <div class="vp-stage">
-        <video id="vp-video" src="{{ post.video_url }}" controls playsinline preload="metadata"></video>
-        <div class="vp-overlay" id="vp-overlay"></div>
-      </div>
-      <ul class="vp-list" id="vp-list"></ul>
-    </section>
-    <script id="vp-data" type="application/json">{{ media_comments|tojson }}</script>
-  </div>
+  {% if post.image_url or post.video_url %}
+  <section class="legacy-media" aria-labelledby="legacy-media-heading">
+    <div class="form-group-heading detail-group">
+      <span>OLD</span><h2 id="legacy-media-heading">이전 첨부</h2>
+    </div>
+    <p class="field-help">커뮤니티 버전에서 저장한 파일입니다. 새 연구 노트에서는 첨부를 받지 않습니다.</p>
+    {% if post.image_url %}<img class="post-image" src="{{ post.image_url }}" alt="이전 연구 노트 첨부 이미지" loading="lazy">{% endif %}
+    {% if post.video_url %}<video class="legacy-video" src="{{ post.video_url }}" controls preload="metadata">첨부 영상을 재생할 수 없습니다.</video>{% endif %}
+  </section>
   {% endif %}
 
-  <div style="min-height:8px"></div>
-</div>
+  <a class="btn detail-edit" href="/posts/{{ post.id }}/edit">이 연구 이어서 쓰기 <span aria-hidden="true">→</span></a>
+</main>
+{% set tab = "library" %}
+{% include "_tabbar.html" %}
 {% endblock %}
 
 {% block script %}
+{% if saved %}
 <script>
-  // 탭 전환
-  document.querySelectorAll('.pctab').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var name = btn.dataset.tab;
-      document.querySelectorAll('.pctab').forEach(function (b) { b.classList.toggle('on', b === btn); });
-      document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== name; });
-    });
-  });
-  // 답글 폼 토글
-  function toggleReply(id) {
-    var f = document.getElementById('reply' + id);
-    f.style.display = f.style.display === 'flex' ? 'none' : 'flex';
-    if (f.style.display === 'flex') f.querySelector('textarea').focus();
-  }
+  (function () {
+    try {
+      var key = {{ (
+        'tiploop:draft:new:user:' ~ current_user.id
+        if saved == 'new' else 'tiploop:draft:edit:' ~ post.id ~ ':user:' ~ current_user.id
+      )|tojson }};
+      localStorage.removeItem(key);
+    } catch (error) {
+      // 저장 완료 후 초안 정리에 실패해도 서버에 저장한 노트는 유지된다.
+    }
+  })();
 </script>
-{% if post.video_url %}<script src="/static/videopin.js"></script>{% endif %}
+{% endif %}
 {% endblock %}

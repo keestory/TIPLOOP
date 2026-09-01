@@ -6,3 +6,8 @@ venv/
 *.egg-info/
 *.db
 .venv/
+.vercel
+.env*
+!.env.example
+/api/pyproject.toml
+/api/uv.lock

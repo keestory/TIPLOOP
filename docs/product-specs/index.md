@@ -4,7 +4,8 @@
 
 | 사양 | 상태 | PM | 최종 업데이트 |
 |------|------|-----|--------------|
-| (PM 에이전트가 사양을 작성하면 여기에 추가됩니다) | - | - | - |
+| [TIPLOOP 개인 서비스 연구 노트](./tiploop-service-research.md) | in-progress | PlannerAgent | 2026-09-01 |
+| [티핑 커뮤니티 MVP](./tipping-community.md) | archived | - | 2026-09-01 |
 
 ## 사양 작성 가이드
 

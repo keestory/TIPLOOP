@@ -3,7 +3,7 @@
   "appName": "티핑",
   "webDir": "www",
   "server": {
-    "url": "https://fortomorrow.vercel.app",
+    "url": "https://tiploop.vercel.app",
     "cleartext": false
   },
   "ios": {

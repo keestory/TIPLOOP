@@ -7,11 +7,12 @@
 from __future__ import annotations
 
 from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from app.config.settings import SESSION_COOKIE, SESSION_TTL_DAYS
+from app.config.settings import SESSION_COOKIE, SESSION_COOKIE_SECURE, SESSION_TTL_DAYS
 from app.service import auth_service
 from app.service.auth_service import AuthError
 from app.types.models import User
@@ -44,9 +45,28 @@ def auth_callback(request: Request):
     return _render(request, "auth_callback.html", None)
 
 
+def _is_same_origin(request: Request) -> bool:
+    """브라우저가 보낸 세션 교환 요청이 현재 앱 출처에서 왔는지 확인한다."""
+    source = request.headers.get("origin")
+    if not source:
+        referer = request.headers.get("referer", "")
+        parsed_referer = urlparse(referer)
+        if parsed_referer.scheme and parsed_referer.netloc:
+            source = f"{parsed_referer.scheme}://{parsed_referer.netloc}"
+    if not source:
+        return False
+    parsed = urlparse(source)
+    return (
+        parsed.scheme in {"http", "https"}
+        and parsed.netloc == request.headers.get("host")
+    )
+
+
 @router.post("/auth/session")
-def auth_session(access_token: str = Form(...)):
+def auth_session(request: Request, access_token: str = Form(...)):
     """프론트가 받은 Supabase 액세스 토큰을 검증하고 세션 쿠키를 심는다."""
+    if not _is_same_origin(request):
+        return JSONResponse({"error": "허용되지 않은 로그인 요청입니다."}, status_code=403)
     try:
         teacher, cookie = auth_service.establish_session(access_token)
     except AuthError as exc:
@@ -59,14 +79,28 @@ def auth_session(access_token: str = Form(...)):
     else:
         next_url = "/onboarding"
     resp = JSONResponse({"next": next_url})
-    resp.set_cookie(SESSION_COOKIE, cookie, httponly=True, samesite="lax", max_age=_MAX_AGE)
+    resp.set_cookie(
+        SESSION_COOKIE,
+        cookie,
+        httponly=True,
+        secure=SESSION_COOKIE_SECURE,
+        samesite="lax",
+        max_age=_MAX_AGE,
+    )
     return resp
 
 
 @router.post("/logout")
-def logout():
-    resp = RedirectResponse("/", status_code=303)
-    resp.delete_cookie(SESSION_COOKIE)
+def logout(request: Request):
+    # 자체 쿠키를 먼저 지운 뒤, 화면에서 Supabase 브라우저 세션도 signOut한다.
+    resp = _render(request, "logout.html", None)
+    resp.delete_cookie(
+        SESSION_COOKIE,
+        httponly=True,
+        secure=SESSION_COOKIE_SECURE,
+        samesite="lax",
+    )
+    resp.headers["Cache-Control"] = "no-store"
     return resp
 
 

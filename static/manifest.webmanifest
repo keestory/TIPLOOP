@@ -1,7 +1,7 @@
 {
-  "name": "티핑 — 실무 팁·레퍼런스 커뮤니티",
-  "short_name": "티핑",
-  "description": "커머스·IT 실무자들이 팁·레퍼런스·질문·회고를 쌓고 나누는 커뮤니티",
+  "name": "TIPLOOP — 개인 서비스 연구 노트",
+  "short_name": "TIPLOOP",
+  "description": "다른 서비스의 기능, UX, 마케팅과 비즈니스 모델을 분석하고 적용하는 개인 연구 노트",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",

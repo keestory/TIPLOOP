@@ -1,111 +1,53 @@
 {% extends "mobile.html" %}
-{% from "_tags.html" import cat_tag %}
-{% from "_back.html" import back %}
-{% block title %}{{ teacher.name }}{% endblock %}
+{% block title %}내 계정{% endblock %}
 
 {% block app %}
-<div class="body" style="gap:14px">
-  {% set is_me = current_user and current_user.id == teacher.id %}
+<main class="body account-page">
+  <header class="topbar page-heading">
+    <div>
+      <p class="eyebrow">MY TIPLOOP</p>
+      <h1>내 계정</h1>
+    </div>
+  </header>
 
-  <div class="topbar">
-    {{ back("/") }}
-    {% if is_me %}
-    <a class="gear" href="#settings" aria-label="설정" title="설정">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    </a>
-    {% elif current_user %}
-    <form action="/users/{{ teacher.id }}/follow" method="post" style="margin:0">
-      <button type="submit" class="btn pill {% if not follow.is_following %}{% else %}gh{% endif %}">
-        {% if follow.is_following %}팔로잉{% else %}팔로우{% endif %}
-      </button>
-    </form>
-    {% endif %}
-  </div>
-
-  {# 정체성 #}
-  <div class="pf-id">
+  <section class="account-id">
     <span class="av" {% if teacher.avatar_url %}style="background-image:url('{{ teacher.avatar_url }}')"{% endif %}></span>
     <div>
-      <div class="pf-name">{{ teacher.name }}</div>
-      <div class="pf-tags">
-        {% if teacher.job_role %}<span class="tag">{{ teacher.job_role }}</span>{% endif %}
-        {% if teacher.years %}<span class="tag">{{ teacher.years }}</span>{% endif %}
-        {% if teacher.industry %}<span class="tag lime">{{ teacher.industry }}</span>{% endif %}
-      </div>
-      <div class="meta" style="margin-top:7px">팔로워 {{ follow.followers }} · 팔로잉 {{ follow.following }}</div>
+      <h2>{{ teacher.name }}</h2>
+      <p>{{ teacher.email or "TIPLOOP 연구자" }}</p>
     </div>
-  </div>
+  </section>
 
-  {# 임팩트 — 도움을 준 사람 수 #}
-  <div class="card impact-card">
-    <div class="impact-row">
-      <span class="impact-num">{{ stats.helpful }}</span>
-      <span class="impact-txt">명에게<br><span class="hl">도움을 줬어요</span></span>
+  <section class="research-stats" aria-label="내 연구 현황">
+    <div><strong>{{ stats.total }}</strong><span>전체 노트</span></div>
+    <div><strong>{{ stats.completed }}</strong><span>12항목 채움</span></div>
+    <a href="/explore?focus=applied"><strong>{{ stats.applied }}</strong><span>적용할 것</span></a>
+  </section>
+
+  <section class="account-settings" aria-labelledby="settings-heading">
+    <h2 id="settings-heading" class="h2">설정</h2>
+    <div class="card set-card">
+      <a class="set-row" href="/onboarding/profile?edit=1">
+        <span class="set-label">기본 정보</span>
+        <span class="meta">{{ teacher.name }} →</span>
+      </a>
+      <a class="set-row" href="/terms/service">
+        <span class="set-label">이용약관</span><span class="meta">→</span>
+      </a>
+      <a class="set-row" href="/terms/privacy">
+        <span class="set-label">개인정보 처리방침</span><span class="meta">→</span>
+      </a>
+      <form action="/logout" method="post" class="logout-form" novalidate>
+        <button type="submit" class="set-row danger">로그아웃</button>
+      </form>
     </div>
-  </div>
-  <div class="pf-substats">
-    <span class="meta">글 {{ stats.posts }}</span>
-    <span class="meta">받은 후기 {{ stats.reviews }}</span>
-    <span class="meta">받은 공감 {{ stats.reactions }}</span>
-  </div>
+  </section>
 
-  {% if is_me and stats.helpful >= 1 %}
-  <a class="tapcard" href="/users/{{ teacher.id }}/share" style="gap:2px;padding:12px 14px">
-    <p class="ttl" style="font-weight:700;margin:0">🎉 임팩트 카드 스토리에 자랑하기 →</p>
-  </a>
-  {% endif %}
-
-  {# 설정 (본인만) — 관심 주제 · 프로필 정보 · 로그아웃 (2a) #}
-  {% if is_me %}
-  <div class="card set-card" id="settings">
-    <a class="set-row" href="/topics">
-      <div class="set-main">
-        <span class="set-label">관심 주제</span>
-        <div class="pf-tags" style="margin-top:6px">
-          {% for t in current_user.topics %}<span class="tag">{{ t }}</span>{% endfor %}
-          {% if not current_user.topics %}<span class="meta">아직 고른 주제가 없어요</span>{% endif %}
-        </div>
-      </div>
-      <span class="set-go">수정 →</span>
-    </a>
-    <a class="set-row" href="/onboarding/profile?edit=1">
-      <span class="set-label">프로필 정보</span>
-      <span class="meta">{{ teacher.job_role }}{% if teacher.years %} · {{ teacher.years }}{% endif %}{% if teacher.industry %} · {{ teacher.industry }}{% endif %} →</span>
-    </a>
-    <form action="/logout" method="post" style="margin:0" onsubmit="return confirm('로그아웃할까요?')">
-      <button type="submit" class="set-row danger">로그아웃</button>
-    </form>
-  </div>
-  {% endif %}
-
-  {# 기여 히트맵 (최근 12주) #}
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <span class="meta">최근 기여 · 12주</span>
-    <div class="heatrow">
-      {% set colors = {0: "#EDE9DF", 1: "#E6F5A8", 2: "#CDFF47"} %}
-      {% for level in heatmap %}
-      <span class="heat" style="background:{{ colors[level] }}"></span>
-      {% endfor %}
-    </div>
-  </div>
-
-  {# 남긴 글 #}
-  <span class="h2" style="margin-top:2px">남긴 글</span>
-  {% for post in posts %}
-  <a class="tapcard" href="/posts/{{ post.id }}" style="gap:7px;padding:14px">
-    <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag">{{ cat_tag(post.category) }}</span>
-      <span class="meta">💡 {{ post.helpful_count }} · 💬 {{ post.comment_count }}</span>
-    </div>
-    <p class="ttl" style="font-weight:600">{{ post.title }}</p>
-  </a>
-  {% else %}
-  <p class="empty" style="margin:6px 0">아직 남긴 글이 없어요.</p>
-  {% endfor %}
-
-  <div style="min-height:8px"></div>
-</div>
-
+  <section class="privacy-note">
+    <span aria-hidden="true">●</span>
+    <div><strong>연구 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있어요. 이전 커뮤니티 첨부는 상세에서 별도로 표시됩니다.</p></div>
+  </section>
+</main>
 {% set tab = "profile" %}
 {% include "_tabbar.html" %}
 {% endblock %}

@@ -93,8 +93,8 @@
     c.globalAlpha = clamp01(t / 250);
     c.fillStyle = "#FCFBF8";
     c.font = "800 34px 'Gothic A1', sans-serif";
-    c.fillText("티핑", 56, 96);
-    var bw = c.measureText("티핑").width;
+    c.fillText("TIPLOOP", 56, 96);
+    var bw = c.measureText("TIPLOOP").width;
     c.fillStyle = "#CDFF47";
     c.beginPath(); c.arc(56 + bw + 14, 87, 6, 0, Math.PI * 2); c.fill();
     c.restore();
@@ -160,7 +160,7 @@
     c.globalAlpha = footT;
     c.fillStyle = "#8A8578";
     c.font = "600 26px 'IBM Plex Mono', monospace";
-    c.fillText("fortomorrow.vercel.app", 58, H - 66);
+    c.fillText("tiploop.vercel.app", 58, H - 66);
     c.restore();
   }
 
@@ -251,7 +251,7 @@
     hint.textContent = "";
     buildFile(preferVideo).then(function (file) {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        return navigator.share({ files: [file], title: "티핑", text: spec.headline || "티핑" });
+        return navigator.share({ files: [file], title: "TIPLOOP", text: spec.headline || "TIPLOOP" });
       }
       downloadFile(file);
       hint.textContent = "파일을 저장했어요. 인스타그램 스토리에서 직접 올려주세요.";

@@ -48,7 +48,7 @@ mkdir www && echo "<!doctype html>" > www/index.html   # 원격 URL을 쓸 거�
   "appId": "im.tipping.app",
   "appName": "티핑",
   "webDir": "www",
-  "server": { "url": "https://fortomorrow.vercel.app", "cleartext": false }
+  "server": { "url": "https://tiploop.vercel.app", "cleartext": false }
 }
 ```
 
@@ -81,7 +81,7 @@ npx capacitor-assets generate --iconBackgroundColor '#CDFF47' --splashBackground
 PWA를 그대로 Play Store 앱(AAB)으로 만드는 경량 방법(네이티브 코드 0):
 ```bash
 npm i -g @bubblewrap/cli
-bubblewrap init --manifest https://fortomorrow.vercel.app/static/manifest.webmanifest
+bubblewrap init --manifest https://tiploop.vercel.app/static/manifest.webmanifest
 bubblewrap build      # AAB 생성 → Play Console 업로드
 ```
 (iOS는 TWA가 없어 Capacitor를 써야 한다.)

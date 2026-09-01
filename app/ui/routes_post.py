@@ -1,15 +1,16 @@
-"""글 라우트 — 글쓰기(유형·템플릿)·상세·댓글·공감·후기·영상 코멘트."""
+"""연구 노트 라우트 — 작성·편집·상세와 이전 글 호환 액션."""
 
 from __future__ import annotations
 
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from app.config.settings import CATEGORIES, WRITE_TEMPLATES
-from app.service import community_service, crew_service, reaction_service, share_service
+from app.config.settings import WRITE_TEMPLATES
+from app.service import community_service, reaction_service, research_service
 from app.service.community_service import CommunityError
+from app.service.research_service import ResearchError
 from app.types.models import User
 from app.ui.deps import get_current_user
 from app.ui.render import back, gate, render
@@ -19,96 +20,131 @@ router = APIRouter()
 
 @router.get("/posts/new")
 def new_post_type(
-    request: Request, category: str = "", user: Optional[User] = Depends(get_current_user)
+    request: Request, user: Optional[User] = Depends(get_current_user)
 ):
-    """글쓰기 1단계 — 유형 선택."""
+    """유형 선택을 건너뛰고 서비스 분석 폼으로 간다."""
     if g := gate(user):
         return g
-    return render(request, "post_type.html", user, prefill_category=category)
+    return RedirectResponse("/posts/new/write", status_code=303)
 
 
 @router.get("/posts/new/write")
 def new_post_write(
     request: Request,
-    category: str = "",
-    from_entry: int = 0,
+    link_url: str = "",
     user: Optional[User] = Depends(get_current_user),
 ):
-    """글쓰기 2단계 — 유형별 템플릿 작성. from_entry면 내 크루 조각을 채워서 시작."""
+    """서비스 분석 템플릿 작성. 홈에서 넘긴 링크를 미리 채운다."""
     if g := gate(user):
         return g
-    if category not in CATEGORIES:
-        return RedirectResponse("/posts/new", status_code=303)
-    prefill = ""
-    if from_entry:
-        entry = crew_service.my_entry(from_entry, user.id)
-        prefill = entry.body if entry else ""
     return render(
         request, "post_write.html", user,
-        category=category, sections=WRITE_TEMPLATES.get(category, []), prefill=prefill,
+        category="reference", sections=WRITE_TEMPLATES["reference"],
+        form={"link_url": link_url.strip()}, section_values={}, editing=False,
     )
 
 
 @router.post("/posts")
 def create_post(
     request: Request,
-    category: str = Form(...),
     title: str = Form(...),
     body: str = Form(...),
     link_url: str = Form(""),
-    image_url: str = Form(""),
-    video_url: str = Form(""),
     user: Optional[User] = Depends(get_current_user),
 ):
     if g := gate(user):
         return g
     try:
-        post_id = community_service.create_post(
-            user.id, category, title, body, link_url, image_url, video_url
-        )
-    except CommunityError as exc:
-        cat = category if category in CATEGORIES else "tip"
+        post_id = research_service.create_note(user.id, title, body, link_url)
+    except ResearchError as exc:
         return render(
             request, "post_write.html", user, error=str(exc),
-            category=cat, sections=WRITE_TEMPLATES.get(cat, []),
+            category="reference", sections=WRITE_TEMPLATES["reference"],
             form={"title": title, "body": body, "link_url": link_url},
+            section_values=research_service.section_values(body), editing=False,
+            legacy_body=research_service.legacy_preamble(body),
         )
-    return RedirectResponse(f"/posts/{post_id}", status_code=303)
+    return RedirectResponse(f"/posts/{post_id}?saved=new", status_code=303)
+
+
+@router.get("/posts/{post_id}/edit")
+def edit_post(
+    request: Request,
+    post_id: int,
+    user: Optional[User] = Depends(get_current_user),
+):
+    if g := gate(user):
+        return g
+    try:
+        post = research_service.get_note(post_id, user.id)
+    except ResearchError as exc:
+        return render(request, "not_found.html", user, status_code=404, message=str(exc))
+    return render(
+        request, "post_write.html", user,
+        category="reference", sections=WRITE_TEMPLATES["reference"],
+        form={"title": post.title, "body": post.body, "link_url": post.link_url or ""},
+        section_values=research_service.section_values(post.body),
+        legacy_body=research_service.legacy_preamble(post.body),
+        editing=True, post_id=post.id,
+    )
+
+
+@router.post("/posts/{post_id}/edit")
+def update_post(
+    request: Request,
+    post_id: int,
+    title: str = Form(...),
+    body: str = Form(...),
+    link_url: str = Form(""),
+    user: Optional[User] = Depends(get_current_user),
+):
+    if g := gate(user):
+        return g
+    try:
+        research_service.update_note(post_id, user.id, title, body, link_url)
+    except ResearchError as exc:
+        return render(
+            request, "post_write.html", user, error=str(exc),
+            category="reference", sections=WRITE_TEMPLATES["reference"],
+            form={"title": title, "body": body, "link_url": link_url},
+            section_values=research_service.section_values(body),
+            legacy_body=research_service.legacy_preamble(body),
+            editing=True, post_id=post_id,
+        )
+    return RedirectResponse(f"/posts/{post_id}?saved=edit", status_code=303)
 
 
 @router.get("/posts/{post_id}")
-def post_detail(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
+def post_detail(
+    request: Request,
+    post_id: int,
+    saved: str = "",
+    user: Optional[User] = Depends(get_current_user),
+):
+    if g := gate(user):
+        return g
     try:
-        post, threads = community_service.get_post_with_threads(post_id)
-    except CommunityError as exc:
-        return render(request, "not_found.html", user, message=str(exc))
-    reacted = reaction_service.viewer_post_reactions(user.id if user else None)
-    helped = reaction_service.viewer_helpful(user.id if user else None)
-    reacted_comments = reaction_service.viewer_comment_reactions(
-        user.id if user else None, post_id
-    )
-    reviews = community_service.list_reviews(post_id)
-    mcs = community_service.list_media_comments(post_id) if post.video_url else []
-    media = [
-        {"id": m.id, "t": m.t_seconds, "x": m.x, "y": m.y,
-         "body": m.body, "author_name": m.author_name}
-        for m in mcs
-    ]
+        post = research_service.get_note(post_id, user.id)
+    except ResearchError as exc:
+        return render(request, "not_found.html", user, status_code=404, message=str(exc))
     return render(
-        request, "post_detail.html", user, post=post, threads=threads,
-        reacted=reacted, helped=helped, reacted_comments=reacted_comments,
-        reviews=reviews, media_comments=media,
+        request, "post_detail.html", user,
+        post=post, progress=research_service.progress(post),
+        groups=research_service.detail_groups(post.body),
+        saved=saved if saved in {"new", "edit"} else "",
     )
 
 
 @router.get("/posts/{post_id}/share")
 def post_share(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
-    """인스타 스토리용 공유 카드 — 이 팁이 도움된 사람 수를 자랑."""
+    """개인 노트의 공개 공유는 제공하지 않고 상세로 되돌린다."""
+    if g := gate(user):
+        return g
     try:
-        post, _ = community_service.get_post_with_threads(post_id)
-    except CommunityError as exc:
-        return render(request, "not_found.html", user, message=str(exc))
-    return render(request, "share.html", user, spec=share_service.post_card(post))
+        research_service.get_note(post_id, user.id)
+    except ResearchError as exc:
+        return render(request, "not_found.html", user, status_code=404, message=str(exc))
+    return RedirectResponse(f"/posts/{post_id}", status_code=303)
 
 
 @router.post("/posts/{post_id}/media-comments")
@@ -126,6 +162,12 @@ def add_media_comment(
         return JSONResponse({"error": "로그인이 필요합니다."}, status_code=401)
     if not user.is_onboarded:
         return JSONResponse({"error": "온보딩이 필요합니다."}, status_code=403)
+    try:
+        post = research_service.get_owned_record(post_id, user.id)
+    except ResearchError:
+        return JSONResponse({"error": "글을 찾을 수 없습니다."}, status_code=404)
+    if post.category == "reference":
+        return JSONResponse({"error": "연구 노트에는 댓글을 지원하지 않습니다."}, status_code=400)
     try:
         mc = community_service.add_media_comment(post_id, user.id, t, x, y, body)
     except CommunityError as exc:
@@ -146,6 +188,12 @@ def add_comment(
 ):
     if g := gate(user):
         return g
+    try:
+        post = research_service.get_owned_record(post_id, user.id)
+    except ResearchError:
+        return RedirectResponse("/", status_code=303)
+    if post.category == "reference":
+        return RedirectResponse(f"/posts/{post_id}", status_code=303)
     parent = int(parent_id) if parent_id.isdigit() else None
     try:
         community_service.add_comment(post_id, user.id, body, parent)
@@ -158,22 +206,34 @@ def add_comment(
 def react_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
     if g := gate(user):
         return g
+    try:
+        post = research_service.get_owned_record(post_id, user.id)
+    except ResearchError:
+        return RedirectResponse("/", status_code=303)
+    if post.category == "reference":
+        return RedirectResponse(f"/posts/{post_id}", status_code=303)
     reaction_service.toggle_post(post_id, user.id)
     return back(request, f"/posts/{post_id}")
 
 
 @router.post("/comments/{comment_id}/react")
 def react_comment(request: Request, comment_id: int, user: Optional[User] = Depends(get_current_user)):
+    """개인 노트 전환 후 레거시 댓글 반응 엔드포인트는 폐기했다."""
     if g := gate(user):
         return g
-    post_id = reaction_service.toggle_comment(comment_id, user.id)
-    return back(request, f"/posts/{post_id}" if post_id else "/")
+    return Response(status_code=410)
 
 
 @router.post("/posts/{post_id}/helpful")
 def helpful_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
     if g := gate(user):
         return g
+    try:
+        post = research_service.get_owned_record(post_id, user.id)
+    except ResearchError:
+        return RedirectResponse("/", status_code=303)
+    if post.category == "reference":
+        return RedirectResponse(f"/posts/{post_id}", status_code=303)
     reaction_service.toggle_helpful(post_id, user.id)
     return back(request, f"/posts/{post_id}")
 
@@ -187,6 +247,12 @@ def add_review(
 ):
     if g := gate(user):
         return g
+    try:
+        post = research_service.get_owned_record(post_id, user.id)
+    except ResearchError:
+        return RedirectResponse("/", status_code=303)
+    if post.category == "reference":
+        return RedirectResponse(f"/posts/{post_id}", status_code=303)
     try:
         community_service.add_review(post_id, user.id, body)
     except CommunityError:

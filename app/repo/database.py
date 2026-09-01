@@ -10,6 +10,7 @@ import contextvars
 import psycopg
 from psycopg.rows import dict_row
 
+from app.config.database_security import REVOKE_BROWSER_PRIVILEGES_SQL, RLS_TABLES
 from app.config.settings import DATABASE_URL
 
 try:  # 커넥션 풀(선택 의존성). 없으면 매 호출 새 커넥션으로 폴백.
@@ -253,7 +254,6 @@ _MIGRATIONS = [
     "ALTER TABLE IF EXISTS notifications ADD COLUMN IF NOT EXISTS crew_id BIGINT",
 ]
 
-
 def init_db() -> None:
     """스키마를 생성하고(없으면), 뒤늦게 추가된 컬럼을 채운다(멱등).
 
@@ -264,3 +264,10 @@ def init_db() -> None:
         conn.execute(_SCHEMA)
         if _MIGRATIONS:
             conn.execute(";\n".join(_MIGRATIONS))
+        conn.execute(
+            ";\n".join(
+                f"ALTER TABLE IF EXISTS {table} ENABLE ROW LEVEL SECURITY"
+                for table in RLS_TABLES
+            )
+        )
+        conn.execute(REVOKE_BROWSER_PRIVILEGES_SQL)

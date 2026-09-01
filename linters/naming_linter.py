@@ -11,7 +11,11 @@ import ast
 import re
 import sys
 from pathlib import Path
-from linters.architecture_linter import LintViolation
+
+try:
+    from linters.architecture_linter import LintViolation
+except ModuleNotFoundError:  # 직접 ``python linters/naming_linter.py`` 실행
+    from architecture_linter import LintViolation
 
 
 # 네이밍 규칙

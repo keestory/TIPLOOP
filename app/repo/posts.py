@@ -75,6 +75,41 @@ def get_post(post_id: int) -> Post | None:
         return _to_post(row) if row else None
 
 
+def get_owned_post(post_id: int, author_id: int) -> Post | None:
+    """작성자 본인의 글만 가져온다.
+
+    개인 연구 노트의 조회 경계는 서비스 레이어의 사후 검사에 기대지 않고
+    SQL 조건에도 함께 둔다.
+    """
+    with get_connection() as conn:
+        row = conn.execute(
+            _SELECT + " WHERE p.id = %s AND p.author_id = %s",
+            (post_id, author_id),
+        ).fetchone()
+        return _to_post(row) if row else None
+
+
+def update_owned_post(
+    post_id: int,
+    author_id: int,
+    title: str,
+    body: str,
+    link_url: str | None = None,
+) -> bool:
+    """작성자 본인의 연구 노트만 수정한다. 실제 수정 여부를 돌려준다."""
+    sql = """
+        UPDATE posts
+           SET title = %s, body = %s, link_url = %s
+         WHERE id = %s AND author_id = %s AND category = 'reference'
+        RETURNING id
+    """
+    with get_connection() as conn:
+        row = conn.execute(
+            sql, (title, body, link_url, post_id, author_id)
+        ).fetchone()
+        return row is not None
+
+
 def list_posts(
     category: str | None = None,
     job_role: str | None = None,

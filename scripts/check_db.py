@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
@@ -16,13 +15,23 @@ from app.config.settings import DATABASE_URL
 _PLACEHOLDERS = ("여기", "실제DB비번", "YOUR-PASSWORD", "새비번", "비번", "PASSWORD")
 
 
+def mask_database_url(url: str) -> str:
+    """비밀번호 안에 ``@``가 있어도 마지막 호스트 구분자까지 안전하게 가린다."""
+    scheme_end = url.find("://")
+    authority_end = url.rfind("@")
+    if scheme_end < 0 or authority_end < scheme_end:
+        return "[invalid database URL]"
+    userinfo = url[scheme_end + 3:authority_end]
+    username = userinfo.split(":", 1)[0]
+    return f"{url[:scheme_end + 3]}{username}:***@{url[authority_end + 1:]}"
+
+
 def main() -> int:
     if not DATABASE_URL:
         print("❌ DATABASE_URL이 비어 있어요. .env를 만들었는지 확인하세요 (.env.example 참고).")
         return 1
 
-    masked = re.sub(r"://([^:]+):([^@]+)@", r"://\1:***@", DATABASE_URL)
-    print("DATABASE_URL:", masked)
+    print("DATABASE_URL:", mask_database_url(DATABASE_URL))
 
     for ph in _PLACEHOLDERS:
         if ph in DATABASE_URL:

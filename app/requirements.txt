@@ -1,4 +1,4 @@
-# 티핑(Tipping) 웹앱 런타임 의존성
+# TIPLOOP 웹앱 런타임 의존성
 # (오케스트레이터/하네스의 requirements.txt와 별개)
 
 fastapi>=0.110

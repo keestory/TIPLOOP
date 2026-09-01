@@ -1,4 +1,4 @@
--- 티핑(Tipping) Supabase 스키마
+-- TIPLOOP Supabase 스키마
 -- Supabase 대시보드 → SQL Editor에 붙여넣고 실행하세요.
 -- (앱을 DATABASE_URL로 처음 켜면 자동 생성되기도 합니다)
 
@@ -128,3 +128,50 @@ CREATE TABLE IF NOT EXISTS notifications (
     read_at    TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+
+-- 앱 데이터는 FastAPI 서버의 DATABASE_URL 연결로만 접근한다.
+-- Data API에 public 스키마가 노출되더라도 anon/authenticated 직접 조회는 기본 거부한다.
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comment_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_helpful ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crew_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE crew_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- 앱 데이터는 서버의 Postgres 연결로만 읽고 쓴다. RLS와 별개로 브라우저
+-- Data API 역할의 테이블·시퀀스 권한을 회수해 방어 계층을 하나 더 둔다.
+DO $$
+DECLARE
+    browser_role TEXT;
+BEGIN
+    FOREACH browser_role IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = browser_role) THEN
+            EXECUTE format(
+                'REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM %I',
+                browser_role
+            );
+            EXECUTE format(
+                'REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM %I',
+                browser_role
+            );
+            EXECUTE format(
+                'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public '
+                'REVOKE ALL PRIVILEGES ON TABLES FROM %I',
+                browser_role
+            );
+            EXECUTE format(
+                'ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public '
+                'REVOKE ALL PRIVILEGES ON SEQUENCES FROM %I',
+                browser_role
+            );
+        END IF;
+    END LOOP;
+END
+$$;

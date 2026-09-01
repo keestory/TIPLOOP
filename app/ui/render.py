@@ -13,9 +13,18 @@ from fastapi.responses import RedirectResponse
 from app.types.models import User
 
 
-def render(request: Request, name: str, current_user: Optional[User], **ctx):
+def render(
+    request: Request,
+    name: str,
+    current_user: Optional[User],
+    status_code: int = 200,
+    **ctx,
+):
     return request.app.state.templates.TemplateResponse(
-        request, name, {"current_user": current_user, **ctx}
+        request,
+        name,
+        {"current_user": current_user, **ctx},
+        status_code=status_code,
     )
 
 

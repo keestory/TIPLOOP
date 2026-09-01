@@ -14,3 +14,6 @@ run.py
 .venv/
 *.db
 .pytest_cache/
+templates/* 2.html
+/api/pyproject.toml
+/api/uv.lock

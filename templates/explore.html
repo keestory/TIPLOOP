@@ -1,58 +1,60 @@
 {% extends "mobile.html" %}
-{% from "_tags.html" import cat_tag %}
-{% block title %}탐색{% endblock %}
-
-{% macro post_card(post) %}
-<a class="tapcard" href="/posts/{{ post.id }}" style="gap:9px">
-  <div style="display:flex;align-items:center;gap:7px">
-    <span class="tag">{{ cat_tag(post.category) }}</span>
-    <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
-  </div>
-  <p class="ttl" style="font-weight:600">{{ post.title }}</p>
-  <div class="metas"><span class="meta">💡 {{ post.helpful_count }}</span><span class="meta">💬 {{ post.comment_count }}</span></div>
-</a>
-{% endmacro %}
+{% block title %}보관함{% endblock %}
 
 {% block app %}
-<div class="body" style="gap:16px">
-  <div class="topbar"><h1 style="margin:0;font:800 22px var(--head);letter-spacing:-.02em">탐색</h1></div>
+<main class="body library-page">
+  <header class="topbar page-heading">
+    <div>
+      <p class="eyebrow">MY LIBRARY</p>
+      <h1>{{ "적용 큐" if focus == "applied" else "보관함" }}</h1>
+    </div>
+    <a class="top-action" href="/posts/new/write">+ 새 분석</a>
+  </header>
 
-  <form class="searchbar" method="get" action="/explore">
-    <svg viewBox="0 0 24 24" fill="none" stroke="#8A8578" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-    <input name="q" value="{{ q }}" placeholder="무엇이 궁금하세요?" autocomplete="off">
+  <form class="searchbar library-search" method="get" action="/explore" role="search" novalidate>
+    {% if focus %}<input type="hidden" name="focus" value="{{ focus }}">{% endif %}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+    <label class="sr-only" for="library-q">내 연구 노트 검색</label>
+    <input id="library-q" name="q" value="{{ q }}" placeholder="서비스명이나 관찰 내용 검색" autocomplete="off">
+    <button class="search-submit" type="submit">검색</button>
+    {% if q %}<a class="search-clear" href="{{ '/explore?focus=applied' if focus else '/explore' }}" aria-label="검색어 지우기">×</a>{% endif %}
   </form>
 
-  {% if results is not none %}
-    {# 검색 결과 #}
-    <div class="sec-head">
-      <span class="h2">'{{ q }}' 검색 결과</span>
-      <span class="meta">{{ results | length }}건</span>
-    </div>
-    {% for post in results %}
-      {{ post_card(post) }}
+  <div class="sec-head library-count">
+    <h2 class="h2">{{ "검색 결과" if q else ("실제로 적용할 것이 있는 연구" if focus else "모든 연구") }}</h2>
+    <span class="meta">{{ results|length }}개</span>
+  </div>
+
+  <div class="study-list">
+    {% for item in results %}
+    {% set post = item.post %}
+    <a class="study-card" href="/posts/{{ post.id }}">
+      <div class="study-card-head">
+        <span class="study-index">STUDY #{{ "%03d"|format(post.id) }}</span>
+        <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
+      </div>
+      <h3>{{ post.title }}</h3>
+      {% if post.link_url %}<p class="study-domain">{{ post.link_url|replace("https://", "")|replace("http://", "")|truncate(38, True, "…") }}</p>{% endif %}
+      <div class="study-progress" role="progressbar" aria-label="채운 항목 비율"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.progress.percent }}">
+        <span style="width:{{ item.progress.percent }}%"></span>
+      </div>
+      <div class="study-card-foot">
+        <span>{{ item.progress.done }}/{{ item.progress.total }} 항목 기록</span>
+        <span>{{ item.progress.percent }}%</span>
+      </div>
+    </a>
     {% else %}
-    <p class="empty" style="margin:8px 0">'{{ q }}'에 대한 글이 아직 없어요.<br><a href="/posts/new">이 주제로 첫 글을 남겨보세요 →</a></p>
-    {% endfor %}
-  {% else %}
-    {# 기본 — 주제 칩 + 인기 글 #}
-    <span class="h2">지금 많이 찾는</span>
-    <div style="display:flex;flex-wrap:wrap;gap:9px">
-      {% for t in topics_list %}
-      <a class="chip" href="/explore?q={{ t | urlencode }}" style="padding:8px 14px">#{{ t }}</a>
-      {% endfor %}
+    <div class="empty research-empty">
+      <span class="study-index">NO STUDY FOUND</span>
+      <h3>{{ "다른 검색어를 써보세요." if q else ("아직 적용할 것을 적은 연구가 없어요." if focus else "아직 보관한 연구가 없어요.") }}</h3>
+      <p>{{ "서비스명과 본문을 함께 검색하고 있어요." if q else ("연구 노트의 ‘실제로 적용할 것’을 채우면 이곳에 모입니다." if focus else "첫 서비스를 분석하면 이곳에 차곡차곡 쌓입니다.") }}</p>
+      <a class="btn" href="{{ ('/explore?focus=applied' if focus else '/explore') if q else ('/posts/new/write' if not focus else '/explore') }}">{{ "검색 초기화" if q else ("전체 연구 보기" if focus else "첫 분석 시작") }} <span aria-hidden="true">→</span></a>
     </div>
-
-    <span class="h2" style="margin-top:2px">인기 글</span>
-    {% for post in popular %}
-      {{ post_card(post) }}
-    {% else %}
-    <p class="empty" style="margin:8px 0">아직 글이 없어요.</p>
     {% endfor %}
-  {% endif %}
+  </div>
+</main>
 
-  <div style="min-height:6px"></div>
-</div>
-
-{% set tab = "explore" %}
+{% set tab = "library" %}
 {% include "_tabbar.html" %}
 {% endblock %}

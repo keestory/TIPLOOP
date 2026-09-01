@@ -11,7 +11,11 @@ Usage:
 import re
 import sys
 from pathlib import Path
-from linters.architecture_linter import LintViolation
+
+try:
+    from linters.architecture_linter import LintViolation
+except ModuleNotFoundError:  # 직접 ``python linters/structure_validator.py`` 실행
+    from architecture_linter import LintViolation
 
 
 # 필수 파일 정의

@@ -1,0 +1,24 @@
+{% extends "mobile.html" %}
+{% block title %}로그아웃{% endblock %}
+{% block app %}
+<main class="body auth" aria-live="polite">
+  <p class="auth-sub" id="logout-msg">안전하게 로그아웃하고 있어요…</p>
+</main>
+{% endblock %}
+{% block script %}
+<script type="module">
+  async function finishLogout() {
+    {% if supabase_url and supabase_anon_key %}
+    try {
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2')
+      const sb = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}")
+      await sb.auth.signOut({ scope: 'local' })
+    } catch (error) {
+      // 앱 쿠키는 서버에서 이미 삭제했다. 외부 라이브러리 실패가 이동을 막지 않는다.
+    }
+    {% endif %}
+    location.replace('/login')
+  }
+  finishLogout()
+</script>
+{% endblock %}

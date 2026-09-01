@@ -1,150 +1,79 @@
 {% extends "mobile.html" %}
-{% from "_tags.html" import cat_tag %}
-{% block title %}홈{% endblock %}
+{% block title %}내 연구 노트{% endblock %}
 
 {% block app %}
-<div class="body" style="gap:16px">
+<main class="body research-home">
+  <header class="topbar research-topbar">
+    <a class="brand plain" href="/" aria-label="TIPLOOP 홈">TIPLOOP<span class="d"></span></a>
+    <a class="top-action" href="/explore">보관함 보기</a>
+  </header>
 
-  {# 헤더 — 브랜드 · 탐색 · 내 프로필 #}
-  <div class="topbar">
-    <a class="brand" href="/">티핑<span class="d"></span></a>
-    <div class="topbar-r">
-      <a href="/explore" aria-label="탐색" data-tour="search">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#1A1917" stroke-width="1.8">
-          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/>
-        </svg>
-      </a>
-      {% if current_user %}
-        <a href="/users/{{ current_user.id }}" class="av header"
-           {% if current_user.avatar_url %}style="background-image:url('{{ current_user.avatar_url }}')"{% endif %}
-           aria-label="내 프로필"></a>
-      {% else %}
-        <a href="/login" class="tb" style="padding:6px 4px">로그인</a>
-      {% endif %}
-    </div>
-  </div>
+  <section class="research-intro" aria-labelledby="home-heading">
+    <p class="eyebrow">PERSONAL SERVICE STUDY</p>
+    <h1 id="home-heading">서비스를 뜯어보고,<br><span class="hl">내 일에 남기는 노트</span></h1>
+    <p>기능부터 UX, 마케팅, 비즈니스 모델까지 관찰하고 다음 행동으로 연결하세요.</p>
+  </section>
 
-  {# 카테고리 필터 #}
-  <div data-tour="category" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin:-2px 0">
-    <a href="/" class="chip {% if not active_category %}on{% endif %}" style="padding:8px 14px">전체</a>
-    {% for code, label in categories.items() %}
-      <a href="/?category={{ code }}"
-         class="chip {% if active_category == code %}on{% endif %}" style="padding:8px 14px">{{ label }}</a>
-    {% endfor %}
-  </div>
-
-  {# 시작 체크리스트 — 신규 회원 안내 (닫으면 다시 안 뜸) #}
-  {% if checklist %}
-  <div class="card check-card">
-    <div class="sec-head">
-      <span class="h2">시작하기 · {{ checklist.done }}/{{ checklist.total }} 완료</span>
-      <form method="post" action="/checklist/dismiss" style="margin:0">
-        <button type="submit" class="check-close">닫기 ✕</button>
-      </form>
-    </div>
-    <div class="check-bar"><span style="width:{{ (checklist.done * 100 // checklist.total) }}%"></span></div>
-    {% for it in checklist["items"] %}
-    <div class="check-item">
-      <span class="check-dot {% if it.done %}on{% endif %}">✓</span>
-      <span class="lbl {% if it.done %}done{% endif %}">{{ it.label }}</span>
-      {% if not it.done and it.href %}<a class="chip go" href="{{ it.href }}" style="padding:7px 13px">하기</a>{% endif %}
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  {# 내 크루 — 이번 주 참여 넛지 (미참여면 라임 강조) #}
-  {% if my_crews %}
-  <div class="sec-head">
-    <span class="h2">내 크루</span>
-    <a class="meta plain" href="/crews" style="text-decoration:underline">전체 →</a>
-  </div>
-  {% for s in my_crews[:2] %}
-  <a class="tapcard" href="/crews/{{ s.crew.id }}" style="gap:9px{% if not s.me_done %};border-color:var(--lime){% endif %}">
-    <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag lime">크루</span>
-      <span class="meta">{{ s.crew.name }} · {{ s.done }}/{{ s.total }} 참여{% if s.streak >= 2 %} · 🔥 {{ s.streak }}주{% endif %}</span>
-    </div>
-    <p class="ttl" style="font-weight:700">“{{ s.prompt }}”</p>
-    <div class="pdots">
-      {% for i in range(s.total) %}<span class="pdot {% if i < s.done %}on{% endif %}"></span>{% endfor %}
-      {% if not s.me_done %}<span class="meta" style="margin-left:6px;color:#B39400">내 기록 남기기 →</span>{% endif %}
-    </div>
-  </a>
-  {% endfor %}
-  {% elif current_user and current_user.is_onboarded %}
-  <a class="tapcard" href="/crews/new" style="gap:7px">
-    <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag">크루</span><span class="meta">NEW</span>
-    </div>
-    <p class="ttl" style="font-weight:600">동료와 함께 매주 한 줄씩 — 크루 만들기 →</p>
-  </a>
-  {% endif %}
-
-  {# 오늘의 글 (히어로) #}
-  {% if featured %}
-  <a class="hero" href="/posts/{{ featured.id }}">
-    <div class="hero-top">
-      <span class="tag lime">오늘의 {{ cat_tag(featured.category) }}</span>
-      <span class="date">{{ featured.created_at[5:7] }} / {{ featured.created_at[8:10] }}</span>
-    </div>
-    <div class="hero-body">
-      <h2>{{ featured.title }}</h2>
-      <div class="byline">
-        <span class="av sm"></span>
-        <span class="meta">{{ featured.author_name }}{% if featured.author_years %} · {{ featured.author_years }}{% endif %}{% if featured.author_job_role %} · {{ featured.author_job_role }}{% endif %}</span>
+  <form class="quick-capture" method="get" action="/posts/new/write" novalidate>
+    <div class="quick-copy">
+      <span class="quick-number">01</span>
+      <div>
+        <label for="quick-link">분석할 서비스 링크</label>
+        <p>링크가 없어도 바로 시작할 수 있어요.</p>
       </div>
     </div>
-  </a>
-  {% endif %}
-
-  {# 답변을 기다려요 #}
-  {% if waiting %}
-  <div class="sec-head">
-    <span class="h2">답변을 기다려요</span>
-    <span class="meta hot">답변 대기 · {{ waiting | length }}</span>
-  </div>
-  {% for q in waiting %}
-  <div class="tapcard ask">
-    <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag">질문</span>
-      <span class="meta">{{ q.author_name }}{% if q.author_job_role %} · {{ q.author_job_role }}{% endif %} · 답변 0</span>
+    <div class="quick-row">
+      <input id="quick-link" name="link_url" type="url" inputmode="url"
+             autocomplete="url" placeholder="https://service.com">
+      <button class="btn quick-btn" type="submit">분석 시작 <span aria-hidden="true">→</span></button>
     </div>
-    <p class="ttl" style="font-weight:600">{{ q.title }}</p>
-    <a class="btn lime sm" href="/posts/{{ q.id }}">내 경험으로 답하기 →</a>
-  </div>
-  {% endfor %}
-  {% endif %}
+  </form>
 
-  {# 나머지 피드 #}
-  {% for post in rest %}
-  <a class="tapcard" href="/posts/{{ post.id }}"{% if loop.first %} data-tour="react"{% endif %}>
-    <div style="display:flex;align-items:center;gap:7px">
-      <span class="tag">{{ cat_tag(post.category) }}</span>
-      <span class="meta">{{ post.author_name }}{% if post.author_years %} · {{ post.author_years }}{% endif %}</span>
+  <section class="research-stats" aria-label="연구 노트 현황">
+    <a href="/explore"><strong>{{ dashboard.total }}</strong><span>전체 노트</span></a>
+    <a href="/explore"><strong>{{ dashboard.completed }}</strong><span>12항목 채움</span></a>
+    <a href="/explore?focus=applied"><strong>{{ dashboard.applied }}</strong><span>적용할 것</span></a>
+  </section>
+
+  <section class="note-section" aria-labelledby="recent-heading">
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow">RECENT STUDIES</p>
+        <h2 id="recent-heading" class="h2">최근 연구</h2>
+      </div>
+      {% if dashboard.total %}<a class="text-link" href="/explore">전체 {{ dashboard.total }}개</a>{% endif %}
     </div>
-    <p class="ttl">{{ post.title }}</p>
-    <div class="metas">
-      <span class="meta">💡 {{ post.helpful_count }}</span>
-      <span class="meta">💬 {{ post.comment_count }}</span>
-      {% if post.review_count %}<span class="meta">📝 {{ post.review_count }}</span>{% endif %}
+
+    <div class="study-list">
+      {% for item in dashboard.recent %}
+      {% set post = item.post %}
+      <a class="study-card" href="/posts/{{ post.id }}">
+        <div class="study-card-head">
+          <span class="study-index">STUDY #{{ "%03d"|format(post.id) }}</span>
+          <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
+        </div>
+        <h3>{{ post.title }}</h3>
+        <div class="study-progress" role="progressbar" aria-label="채운 항목 비율"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.progress.percent }}">
+          <span style="width:{{ item.progress.percent }}%"></span>
+        </div>
+        <div class="study-card-foot">
+          <span>{{ item.progress.done }}/{{ item.progress.total }} 항목 기록</span>
+          <span>열기 <span aria-hidden="true">↗</span></span>
+        </div>
+      </a>
+      {% else %}
+      <div class="empty research-empty">
+        <span class="study-index">STUDY #001</span>
+        <h3>첫 서비스를 분석해보세요.</h3>
+        <p>잘 쓰려 하지 않아도 괜찮아요. 한 칸만 채워도 연구가 시작됩니다.</p>
+        <a class="btn" href="/posts/new/write">첫 분석 시작 <span aria-hidden="true">→</span></a>
+      </div>
+      {% endfor %}
     </div>
-  </a>
-  {% endfor %}
-
-  {% if not featured and not waiting and not rest %}
-  <div class="grow"></div>
-  <p class="empty">아직 글이 없어요.<br><a href="/posts/new">첫 글을 남겨보세요 →</a></p>
-  <div class="grow"></div>
-  {% endif %}
-
-  <div style="min-height:6px"></div>
-</div>
+  </section>
+</main>
 
 {% set tab = "home" %}
 {% include "_tabbar.html" %}
-{% endblock %}
-
-{% block script %}
-{% if show_tour %}<script src="/static/tour.js"></script>{% endif %}
 {% endblock %}
