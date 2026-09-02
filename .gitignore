@@ -11,3 +11,4 @@ venv/
 !.env.example
 /api/pyproject.toml
 /api/uv.lock
+/supabase/.temp/
