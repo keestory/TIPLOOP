@@ -28,7 +28,9 @@ LAYER_ORDER = {
 
 # 특별 허용: 어떤 레이어든 import 가능한 모듈
 EXEMPT_MODULES = {"typing", "dataclasses", "abc", "enum", "pathlib", "os", "json", "logging"}
-SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"}
+SKIP_DIRS = {
+    ".git", ".venv", ".vercel", "venv", "node_modules", "__pycache__", ".pytest_cache"
+}
 
 
 def iter_python_files(project_root: Path):

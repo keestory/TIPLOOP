@@ -5,17 +5,58 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse
 
-from app.config.settings import WRITE_TEMPLATES
-from app.service import community_service, reaction_service, research_service
-from app.service.community_service import CommunityError
+from app.config.settings import (
+    REFERENCE_IMAGE_MAX_BYTES,
+    REFERENCE_MEDIA_BUCKETS,
+    REFERENCE_MEDIA_MAX_FILES,
+    REFERENCE_MEDIA_MAX_TOTAL_BYTES,
+    REFERENCE_MEDIA_MAX_VIDEOS,
+    REFERENCE_MEDIA_TYPES,
+    REFERENCE_QUESTION_IDS,
+    REFERENCE_QUICK_QUESTION_IDS,
+    REFERENCE_REQUIRED_FINAL_ID,
+    REFERENCE_TEMPLATE_VERSION,
+    WRITE_TEMPLATES,
+)
+from app.service import research_service
 from app.service.research_service import ResearchError
 from app.types.models import User
 from app.ui.deps import get_current_user
-from app.ui.render import back, gate, render
+from app.ui.render import gate, render
 
 router = APIRouter()
+
+
+def _form_attachments(payload: str, auth_id: str) -> list[dict]:
+    """오류 재렌더링에서도 정상 첨부만 안전하게 되살린다."""
+    try:
+        return research_service.attachment_dicts(
+            research_service.parse_attachments(payload, auth_id)
+        )
+    except ResearchError:
+        return []
+
+
+def _media_context() -> dict:
+    return {
+        "media_types": REFERENCE_MEDIA_TYPES,
+        "media_buckets": REFERENCE_MEDIA_BUCKETS,
+        "media_accept": ",".join(REFERENCE_MEDIA_TYPES),
+        "media_max_files": REFERENCE_MEDIA_MAX_FILES,
+        "media_max_videos": REFERENCE_MEDIA_MAX_VIDEOS,
+        "media_max_total_bytes": REFERENCE_MEDIA_MAX_TOTAL_BYTES,
+        "image_max_bytes": REFERENCE_IMAGE_MAX_BYTES,
+        "video_max_bytes": REFERENCE_VIDEO_MAX_BYTES,
+    }
+
+
+def _analysis_context() -> dict:
+    return {
+        "quick_question_ids": REFERENCE_QUICK_QUESTION_IDS,
+        "required_final_id": REFERENCE_REQUIRED_FINAL_ID,
+    }
 
 
 @router.get("/posts/new")
@@ -41,6 +82,10 @@ def new_post_write(
         request, "post_write.html", user,
         category="reference", sections=WRITE_TEMPLATES["reference"],
         form={"link_url": link_url.strip()}, section_values={}, editing=False,
+        analysis_mode="quick", selected_question_ids=REFERENCE_QUICK_QUESTION_IDS,
+        analysis_template_version=REFERENCE_TEMPLATE_VERSION, attachments=[],
+        **_media_context(),
+        **_analysis_context(),
     )
 
 
@@ -50,12 +95,18 @@ def create_post(
     title: str = Form(...),
     body: str = Form(...),
     link_url: str = Form(""),
+    analysis_mode: str = Form("quick"),
+    selected_question_ids: list[str] = Form([]),
+    attachments_json: str = Form("[]"),
     user: Optional[User] = Depends(get_current_user),
 ):
     if g := gate(user):
         return g
     try:
-        post_id = research_service.create_note(user.id, title, body, link_url)
+        post_id = research_service.create_note(
+            user.id, title, body, link_url, analysis_mode,
+            tuple(selected_question_ids), attachments_json, user.auth_id,
+        )
     except ResearchError as exc:
         return render(
             request, "post_write.html", user, error=str(exc),
@@ -63,6 +114,12 @@ def create_post(
             form={"title": title, "body": body, "link_url": link_url},
             section_values=research_service.section_values(body), editing=False,
             legacy_body=research_service.legacy_preamble(body),
+            analysis_mode=analysis_mode,
+            selected_question_ids=tuple(selected_question_ids),
+            analysis_template_version=REFERENCE_TEMPLATE_VERSION,
+            attachments=_form_attachments(attachments_json, user.auth_id),
+            **_media_context(),
+            **_analysis_context(),
         )
     return RedirectResponse(f"/posts/{post_id}?saved=new", status_code=303)
 
@@ -86,6 +143,12 @@ def edit_post(
         section_values=research_service.section_values(post.body),
         legacy_body=research_service.legacy_preamble(post.body),
         editing=True, post_id=post.id,
+        analysis_mode=post.analysis_mode or "full",
+        selected_question_ids=post.selected_question_ids or REFERENCE_QUESTION_IDS,
+        analysis_template_version=post.analysis_template_version or REFERENCE_TEMPLATE_VERSION,
+        attachments=research_service.attachment_dicts(post.attachments),
+        **_media_context(),
+        **_analysis_context(),
     )
 
 
@@ -96,12 +159,18 @@ def update_post(
     title: str = Form(...),
     body: str = Form(...),
     link_url: str = Form(""),
+    analysis_mode: str = Form("full"),
+    selected_question_ids: list[str] = Form([]),
+    attachments_json: str = Form("[]"),
     user: Optional[User] = Depends(get_current_user),
 ):
     if g := gate(user):
         return g
     try:
-        research_service.update_note(post_id, user.id, title, body, link_url)
+        research_service.update_note(
+            post_id, user.id, title, body, link_url, analysis_mode,
+            tuple(selected_question_ids), attachments_json, user.auth_id,
+        )
     except ResearchError as exc:
         return render(
             request, "post_write.html", user, error=str(exc),
@@ -110,6 +179,12 @@ def update_post(
             section_values=research_service.section_values(body),
             legacy_body=research_service.legacy_preamble(body),
             editing=True, post_id=post_id,
+            analysis_mode=analysis_mode,
+            selected_question_ids=tuple(selected_question_ids),
+            analysis_template_version=REFERENCE_TEMPLATE_VERSION,
+            attachments=_form_attachments(attachments_json, user.auth_id),
+            **_media_context(),
+            **_analysis_context(),
         )
     return RedirectResponse(f"/posts/{post_id}?saved=edit", status_code=303)
 
@@ -131,6 +206,12 @@ def post_detail(
         request, "post_detail.html", user,
         post=post, progress=research_service.progress(post),
         groups=research_service.detail_groups(post.body),
+        attachments=research_service.attachment_dicts(post.attachments),
+        analysis_mode_label={
+            "quick": "5분 빠른 분석",
+            "focus": "질문 골라 분석",
+            "full": "전체 분석",
+        }.get(post.analysis_mode, "기존 분석"),
         saved=saved if saved in {"new", "edit"} else "",
     )
 
@@ -144,117 +225,4 @@ def post_share(request: Request, post_id: int, user: Optional[User] = Depends(ge
         research_service.get_note(post_id, user.id)
     except ResearchError as exc:
         return render(request, "not_found.html", user, status_code=404, message=str(exc))
-    return RedirectResponse(f"/posts/{post_id}", status_code=303)
-
-
-@router.post("/posts/{post_id}/media-comments")
-def add_media_comment(
-    request: Request,
-    post_id: int,
-    t: float = Form(...),
-    x: float = Form(...),
-    y: float = Form(...),
-    body: str = Form(...),
-    user: Optional[User] = Depends(get_current_user),
-):
-    """영상 지점 코멘트 — 비동기(fetch)로 추가하고 만든 코멘트를 JSON으로 돌려준다."""
-    if user is None:
-        return JSONResponse({"error": "로그인이 필요합니다."}, status_code=401)
-    if not user.is_onboarded:
-        return JSONResponse({"error": "온보딩이 필요합니다."}, status_code=403)
-    try:
-        post = research_service.get_owned_record(post_id, user.id)
-    except ResearchError:
-        return JSONResponse({"error": "글을 찾을 수 없습니다."}, status_code=404)
-    if post.category == "reference":
-        return JSONResponse({"error": "연구 노트에는 댓글을 지원하지 않습니다."}, status_code=400)
-    try:
-        mc = community_service.add_media_comment(post_id, user.id, t, x, y, body)
-    except CommunityError as exc:
-        return JSONResponse({"error": str(exc)}, status_code=400)
-    return JSONResponse({
-        "id": mc.id, "t": mc.t_seconds, "x": mc.x, "y": mc.y,
-        "body": mc.body, "author_name": mc.author_name,
-    })
-
-
-@router.post("/posts/{post_id}/comments")
-def add_comment(
-    request: Request,
-    post_id: int,
-    body: str = Form(...),
-    parent_id: str = Form(""),
-    user: Optional[User] = Depends(get_current_user),
-):
-    if g := gate(user):
-        return g
-    try:
-        post = research_service.get_owned_record(post_id, user.id)
-    except ResearchError:
-        return RedirectResponse("/", status_code=303)
-    if post.category == "reference":
-        return RedirectResponse(f"/posts/{post_id}", status_code=303)
-    parent = int(parent_id) if parent_id.isdigit() else None
-    try:
-        community_service.add_comment(post_id, user.id, body, parent)
-    except CommunityError:
-        pass  # 빈 댓글 등은 조용히 무시
-    return RedirectResponse(f"/posts/{post_id}", status_code=303)
-
-
-@router.post("/posts/{post_id}/react")
-def react_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
-    if g := gate(user):
-        return g
-    try:
-        post = research_service.get_owned_record(post_id, user.id)
-    except ResearchError:
-        return RedirectResponse("/", status_code=303)
-    if post.category == "reference":
-        return RedirectResponse(f"/posts/{post_id}", status_code=303)
-    reaction_service.toggle_post(post_id, user.id)
-    return back(request, f"/posts/{post_id}")
-
-
-@router.post("/comments/{comment_id}/react")
-def react_comment(request: Request, comment_id: int, user: Optional[User] = Depends(get_current_user)):
-    """개인 노트 전환 후 레거시 댓글 반응 엔드포인트는 폐기했다."""
-    if g := gate(user):
-        return g
-    return Response(status_code=410)
-
-
-@router.post("/posts/{post_id}/helpful")
-def helpful_post(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
-    if g := gate(user):
-        return g
-    try:
-        post = research_service.get_owned_record(post_id, user.id)
-    except ResearchError:
-        return RedirectResponse("/", status_code=303)
-    if post.category == "reference":
-        return RedirectResponse(f"/posts/{post_id}", status_code=303)
-    reaction_service.toggle_helpful(post_id, user.id)
-    return back(request, f"/posts/{post_id}")
-
-
-@router.post("/posts/{post_id}/reviews")
-def add_review(
-    request: Request,
-    post_id: int,
-    body: str = Form(...),
-    user: Optional[User] = Depends(get_current_user),
-):
-    if g := gate(user):
-        return g
-    try:
-        post = research_service.get_owned_record(post_id, user.id)
-    except ResearchError:
-        return RedirectResponse("/", status_code=303)
-    if post.category == "reference":
-        return RedirectResponse(f"/posts/{post_id}", status_code=303)
-    try:
-        community_service.add_review(post_id, user.id, body)
-    except CommunityError:
-        pass  # 빈 후기 등은 조용히 무시
     return RedirectResponse(f"/posts/{post_id}", status_code=303)

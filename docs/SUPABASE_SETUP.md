@@ -36,16 +36,17 @@ TIPLOOP은 **인증=Supabase Auth(구글·카카오), 데이터=Supabase Postgre
 
 > 전화번호는 현재 받지 않습니다(추후 필요 시 문자 인증 또는 카카오 동의항목으로 추가 가능).
 
-## 3-2. 이전 커뮤니티 첨부 정리
+## 3-2. 연구 노트 비공개 첨부
 
-개인 연구 노트 버전은 새 이미지·영상 업로드를 제공하지 않습니다. 기존 `attachments`
-버킷을 Public으로 만들거나 공개 읽기 정책을 추가하지 마세요. 과거 버킷이 이미 Public이면
-출시 전에 객체를 내보내 보관한 뒤 비공개 전환 또는 삭제하고, 기존 `posts.image_url`과
-`posts.video_url`의 처리 결과를 별도 점검해야 합니다. 현재 앱은 이전 URL을 소유자 상세
-화면에 읽기 전용으로 표시하므로, 공개 URL 자체는 Storage 정리 전까지 외부에서 열릴 수 있습니다.
+`supabase/schema.sql` 또는 최신 migration은 `tiploop-research-images`와
+`tiploop-research-videos`를 private bucket으로 만들고, 로그인 사용자 UUID로 시작하는
+경로의 INSERT·SELECT·DELETE만 허용합니다. 앱은 signed URL을 10분 동안만 발급하며
+DB에는 URL이 아닌 bucket과 path를 저장합니다.
 
-비공개 첨부를 다시 제공할 때는 사용자별 객체 경로 정책과 만료되는 signed URL을 먼저
-구현하고 보안 리뷰를 거친 뒤 업로드 UI를 여세요.
+이미지는 파일당 10MiB, 영상은 파일당 50MiB이고 노트 하나에는 합계 6개·영상 1개·전체
+100MiB 제한을 둡니다. 기존 `attachments` 버킷을 Public으로 만들거나 공개 읽기 정책을
+추가하지 마세요. 과거 `posts.image_url`과 `posts.video_url`은 소유자 상세에서 호환 표시만
+하므로 공개 URL 자체는 별도로 정리해야 합니다.
 
 ## 4. 리디렉션 허용 URL
 Supabase → Authentication → URL Configuration → **Redirect URLs**에 앱 주소의 콜백을 추가:
@@ -73,4 +74,5 @@ python -m scripts.verify_supabase_privacy
 ```
 
 이 검사는 API/DB 프로젝트 ref 일치, public 앱 테이블 13개의 RLS, 브라우저 역할
-정책·직접 권한 부재, publishable key의 `posts` Data API 차단을 확인합니다.
+정책·직접 권한 부재, publishable key의 `posts` Data API 차단을 확인합니다. Storage는
+두 연구 버킷이 private인지와 객체 정책이 사용자 UUID 경로로 제한되는지도 별도 확인합니다.

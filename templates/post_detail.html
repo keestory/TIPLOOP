@@ -14,6 +14,7 @@
       <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
     </div>
     <h1>{{ post.title }}</h1>
+    <span class="detail-mode">{{ analysis_mode_label }}</span>
     {% if post.link_url %}
     <a class="source-link" href="{{ post.link_url }}" rel="noopener noreferrer" target="_blank">
       원본 서비스 열기 <span aria-hidden="true">↗</span>
@@ -44,12 +45,34 @@
     {% endfor %}
   </section>
 
+  {% if attachments %}
+  <section class="private-media" aria-labelledby="private-media-heading">
+    <div class="form-group-heading detail-group">
+      <span>MEDIA</span><h2 id="private-media-heading">관찰한 장면</h2>
+    </div>
+    <div class="private-media-grid">
+      {% for attachment in attachments %}
+      <figure class="private-media-card" data-private-media
+              data-bucket="{{ attachment.bucket }}" data-path="{{ attachment.path }}">
+        {% if attachment.kind == 'image' %}
+        <img alt="{{ attachment.file_name }} 첨부 이미지" loading="lazy" hidden>
+        {% else %}
+        <video controls playsinline preload="metadata" hidden>첨부 영상을 재생할 수 없습니다.</video>
+        {% endif %}
+        <p class="media-loading" role="status">비공개 첨부를 불러오는 중…</p>
+        <figcaption>{{ attachment.file_name }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   {% if post.image_url or post.video_url %}
   <section class="legacy-media" aria-labelledby="legacy-media-heading">
     <div class="form-group-heading detail-group">
       <span>OLD</span><h2 id="legacy-media-heading">이전 첨부</h2>
     </div>
-    <p class="field-help">커뮤니티 버전에서 저장한 파일입니다. 새 연구 노트에서는 첨부를 받지 않습니다.</p>
+    <p class="field-help">이전 버전에서 저장한 첨부입니다. 새 비공개 첨부와 구분해 보존합니다.</p>
     {% if post.image_url %}<img class="post-image" src="{{ post.image_url }}" alt="이전 연구 노트 첨부 이미지" loading="lazy">{% endif %}
     {% if post.video_url %}<video class="legacy-video" src="{{ post.video_url }}" controls preload="metadata">첨부 영상을 재생할 수 없습니다.</video>{% endif %}
   </section>
@@ -75,6 +98,70 @@
       // 저장 완료 후 초안 정리에 실패해도 서버에 저장한 노트는 유지된다.
     }
   })();
+</script>
+{% endif %}
+{% if supabase_url %}
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const sb = createClient({{ supabase_url|tojson }}, {{ supabase_anon_key|tojson }})
+  const currentAuthId = {{ current_user.auth_id|tojson }}
+  const cleanupKey = {{ ('tiploop:media:cleanup:post:' ~ post.id ~ ':user:' ~ current_user.id)|tojson }}
+  const shouldCleanup = {{ (saved == 'edit')|tojson }}
+
+  async function sessionForMedia() {
+    const { data: { session } } = await sb.auth.getSession()
+    return session && session.user.id === currentAuthId ? session : null
+  }
+
+  async function cleanupRemovedMedia(session) {
+    let queued = []
+    try { queued = JSON.parse(sessionStorage.getItem(cleanupKey) || '[]') } catch (error) {}
+    if (!queued.length || !session) return
+    const failed = []
+    for (const attachment of queued) {
+      const { error } = await sb.storage.from(attachment.bucket).remove([attachment.path])
+      if (error) failed.push(attachment)
+    }
+    try {
+      if (failed.length) sessionStorage.setItem(cleanupKey, JSON.stringify(failed))
+      else sessionStorage.removeItem(cleanupKey)
+    } catch (error) {}
+  }
+
+  async function loadPrivateMedia(session) {
+    const cards = document.querySelectorAll('[data-private-media]')
+    if (!cards.length) return
+    if (!session) {
+      cards.forEach((card) => {
+        card.querySelector('.media-loading').textContent = '첨부를 보려면 다시 로그인해 주세요.'
+      })
+      return
+    }
+    for (const card of cards) {
+      const { data, error } = await sb.storage.from(card.dataset.bucket)
+        .createSignedUrl(card.dataset.path, 600)
+      const loading = card.querySelector('.media-loading')
+      if (error || !data?.signedUrl) {
+        loading.textContent = '첨부를 불러오지 못했어요. 잠시 후 다시 열어주세요.'
+        continue
+      }
+      const media = card.querySelector('img, video')
+      const loadedEvent = media.tagName === 'IMG' ? 'load' : 'loadeddata'
+      media.addEventListener(loadedEvent, () => {
+        media.hidden = false
+        loading.remove()
+      }, { once: true })
+      media.addEventListener('error', () => {
+        media.hidden = true
+        loading.textContent = '첨부를 표시하지 못했어요. 잠시 후 다시 열어주세요.'
+      }, { once: true })
+      media.src = data.signedUrl
+    }
+  }
+
+  const session = await sessionForMedia()
+  if (shouldCleanup) await cleanupRemovedMedia(session)
+  await loadPrivateMedia(session)
 </script>
 {% endif %}
 {% endblock %}

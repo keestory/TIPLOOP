@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
+
+from psycopg.types.json import Jsonb
+
 from app.repo.database import get_connection
-from app.types.models import Post
+from app.types.models import MediaAttachment, Post
 
 # 작성자 표시 정보 + 인게이지먼트 집계를 함께 가져오는 공통 SELECT
 _SELECT = """
 SELECT p.id, p.author_id, p.category, p.title, p.body,
        to_char(p.created_at, 'YYYY-MM-DD HH24:MI') AS created_at,
        p.link_url, p.image_url, p.video_url,
+       p.analysis_mode, p.analysis_template_version, p.selected_question_ids,
+       p.attachments,
        u.name AS author_name, u.job_role AS author_job_role, u.years AS author_years,
        (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS reaction_count,
        (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comment_count,
@@ -28,6 +34,17 @@ _ORDER = {
 
 
 def _to_post(row: dict) -> Post:
+    attachments = tuple(
+        MediaAttachment(
+            bucket=item["bucket"],
+            path=item["path"],
+            kind=item["kind"],
+            mime_type=item["mime_type"],
+            file_name=item["file_name"],
+            size_bytes=int(item["size_bytes"]),
+        )
+        for item in (row["attachments"] or [])
+    )
     return Post(
         id=row["id"],
         author_id=row["author_id"],
@@ -45,6 +62,14 @@ def _to_post(row: dict) -> Post:
         comment_count=row["comment_count"],
         helpful_count=row["helpful_count"],
         review_count=row["review_count"],
+        analysis_mode=row["analysis_mode"],
+        analysis_template_version=row["analysis_template_version"],
+        selected_question_ids=(
+            tuple(row["selected_question_ids"])
+            if row["selected_question_ids"] is not None
+            else None
+        ),
+        attachments=attachments,
     )
 
 
@@ -56,15 +81,33 @@ def create_post(
     link_url: str | None = None,
     image_url: str | None = None,
     video_url: str | None = None,
+    analysis_mode: str | None = None,
+    analysis_template_version: str | None = None,
+    selected_question_ids: tuple[str, ...] | None = None,
+    attachments: tuple[MediaAttachment, ...] = (),
 ) -> int:
     """글을 만들고 id를 돌려준다."""
     sql = (
-        "INSERT INTO posts (author_id, category, title, body, link_url, image_url, video_url) "
-        "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id"
+        "INSERT INTO posts (author_id, category, title, body, link_url, image_url, video_url, "
+        "analysis_mode, analysis_template_version, selected_question_ids, attachments) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
     )
     with get_connection() as conn:
         row = conn.execute(
-            sql, (author_id, category, title, body, link_url, image_url, video_url)
+            sql,
+            (
+                author_id,
+                category,
+                title,
+                body,
+                link_url,
+                image_url,
+                video_url,
+                analysis_mode,
+                analysis_template_version,
+                list(selected_question_ids) if selected_question_ids is not None else None,
+                Jsonb([asdict(item) for item in attachments]) if attachments else None,
+            ),
         ).fetchone()
         return row["id"]
 
@@ -95,17 +138,34 @@ def update_owned_post(
     title: str,
     body: str,
     link_url: str | None = None,
+    analysis_mode: str | None = None,
+    analysis_template_version: str | None = None,
+    selected_question_ids: tuple[str, ...] | None = None,
+    attachments: tuple[MediaAttachment, ...] = (),
 ) -> bool:
     """작성자 본인의 연구 노트만 수정한다. 실제 수정 여부를 돌려준다."""
     sql = """
         UPDATE posts
-           SET title = %s, body = %s, link_url = %s
+           SET title = %s, body = %s, link_url = %s,
+               analysis_mode = %s, analysis_template_version = %s,
+               selected_question_ids = %s, attachments = %s
          WHERE id = %s AND author_id = %s AND category = 'reference'
         RETURNING id
     """
     with get_connection() as conn:
         row = conn.execute(
-            sql, (title, body, link_url, post_id, author_id)
+            sql,
+            (
+                title,
+                body,
+                link_url,
+                analysis_mode,
+                analysis_template_version,
+                list(selected_question_ids) if selected_question_ids is not None else None,
+                Jsonb([asdict(item) for item in attachments]) if attachments else None,
+                post_id,
+                author_id,
+            ),
         ).fetchone()
         return row is not None
 

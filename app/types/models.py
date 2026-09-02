@@ -9,6 +9,18 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
+class MediaAttachment:
+    """비공개 Supabase Storage에 둔 연구 노트 첨부 메타데이터."""
+
+    bucket: str
+    path: str
+    kind: str  # image | video
+    mime_type: str
+    file_name: str
+    size_bytes: int
+
+
+@dataclass(frozen=True)
 class User:
     """가입한 실무자 회원. 인증은 Supabase(구글/카카오), 프로필은 우리가 보관."""
 
@@ -56,6 +68,10 @@ class Post:
     comment_count: int = 0
     helpful_count: int = 0    # 도움됐어요(💡)
     review_count: int = 0     # 적용 후기
+    analysis_mode: str | None = None
+    analysis_template_version: str | None = None
+    selected_question_ids: tuple[str, ...] | None = None
+    attachments: tuple[MediaAttachment, ...] = ()
 
 
 @dataclass(frozen=True)

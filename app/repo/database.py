@@ -45,7 +45,15 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     link_url   TEXT,                          -- 레퍼런스 참고 링크 (선택)
     image_url  TEXT,                          -- 주석 이미지 (Supabase Storage URL, 선택)
-    video_url  TEXT                           -- 첨부 영상 (Supabase Storage URL, 선택)
+    video_url  TEXT,                          -- 첨부 영상 (Supabase Storage URL, 선택)
+    analysis_mode TEXT CHECK (analysis_mode IS NULL OR analysis_mode IN ('quick', 'focus', 'full')),
+    analysis_template_version TEXT,
+    selected_question_ids TEXT[],
+    attachments JSONB CHECK (
+        attachments IS NULL OR (
+            jsonb_typeof(attachments) = 'array' AND jsonb_array_length(attachments) <= 6
+        )
+    )                                         -- 비공개 Storage path와 표시 메타데이터
 );
 
 -- 영상 위 특정 시각+위치에 달리는 코멘트 (Frame.io식)
@@ -246,6 +254,10 @@ _MIGRATIONS = [
     "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS link_url TEXT",
     "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS image_url TEXT",
     "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS video_url TEXT",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS analysis_mode TEXT",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS analysis_template_version TEXT",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS selected_question_ids TEXT[]",
+    "ALTER TABLE IF EXISTS posts ADD COLUMN IF NOT EXISTS attachments JSONB",
     "ALTER TABLE IF EXISTS comments ADD COLUMN IF NOT EXISTS parent_id BIGINT",
     "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS topics TEXT[] NOT NULL DEFAULT '{}'",
     "ALTER TABLE IF EXISTS members ADD COLUMN IF NOT EXISTS has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE",

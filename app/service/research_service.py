@@ -9,13 +9,37 @@ from __future__ import annotations
 
 from urllib.parse import urlsplit
 
-from app.config.settings import WRITE_TEMPLATES
+from app.config.settings import (
+    REFERENCE_ANALYSIS_MODES,
+    REFERENCE_QUESTION_IDS,
+    REFERENCE_QUICK_QUESTION_IDS,
+    REFERENCE_REQUIRED_FINAL_ID,
+    REFERENCE_TEMPLATE_VERSION,
+    WRITE_TEMPLATES,
+)
 from app.repo import posts
-from app.types.models import Post
+from app.service import research_media_service, research_presenter
+from app.types.models import MediaAttachment, Post
 
 
 class ResearchError(ValueError):
     """연구 노트 동작 실패. 메시지는 사용자에게 보여줄 수 있다."""
+
+
+attachment_dicts = research_media_service.attachment_dicts
+section_values = research_presenter.section_values
+legacy_preamble = research_presenter.legacy_preamble
+detail_groups = research_presenter.detail_groups
+progress = research_presenter.progress
+present_notes = research_presenter.present_notes
+
+
+def parse_attachments(payload: str, user_auth_id: str) -> tuple[MediaAttachment, ...]:
+    """첨부 검증 오류를 연구 노트의 공개 오류 타입으로 통일한다."""
+    try:
+        return research_media_service.parse_attachments(payload, user_auth_id)
+    except research_media_service.ResearchMediaError as exc:
+        raise ResearchError(str(exc)) from exc
 
 
 def list_notes(user_id: int, search: str = "") -> list[Post]:
@@ -53,15 +77,33 @@ def get_owned_record(post_id: int, user_id: int) -> Post:
     return post
 
 
-def create_note(user_id: int, title: str, body: str, link_url: str = "") -> int:
+def create_note(
+    user_id: int,
+    title: str,
+    body: str,
+    link_url: str = "",
+    analysis_mode: str = "quick",
+    selected_question_ids: tuple[str, ...] = REFERENCE_QUICK_QUESTION_IDS,
+    attachments_json: str = "[]",
+    user_auth_id: str = "",
+) -> int:
     """검증 후 개인 서비스 분석 노트를 만든다."""
     title, body, link_url = _clean(title, body, link_url)
+    analysis_mode, selected_question_ids = normalize_analysis_selection(
+        analysis_mode, selected_question_ids, body
+    )
+    attachments = parse_attachments(attachments_json, user_auth_id)
+    _verify_attachments(attachments, user_auth_id)
     return posts.create_post(
         author_id=user_id,
         category="reference",
         title=title,
         body=body,
         link_url=link_url or None,
+        analysis_mode=analysis_mode,
+        analysis_template_version=REFERENCE_TEMPLATE_VERSION,
+        selected_question_ids=selected_question_ids,
+        attachments=attachments,
     )
 
 
@@ -71,15 +113,32 @@ def update_note(
     title: str,
     body: str,
     link_url: str = "",
+    analysis_mode: str = "full",
+    selected_question_ids: tuple[str, ...] = REFERENCE_QUESTION_IDS,
+    attachments_json: str | None = None,
+    user_auth_id: str = "",
 ) -> None:
     """소유권을 SQL 조건으로 재검사해 노트를 수정한다."""
     title, body, link_url = _clean(title, body, link_url)
+    analysis_mode, selected_question_ids = normalize_analysis_selection(
+        analysis_mode, selected_question_ids, body
+    )
+    if attachments_json is None:
+        existing = get_note(post_id, user_id)
+        attachments = existing.attachments
+    else:
+        attachments = parse_attachments(attachments_json, user_auth_id)
+        _verify_attachments(attachments, user_auth_id)
     if not posts.update_owned_post(
         post_id=post_id,
         author_id=user_id,
         title=title,
         body=body,
         link_url=link_url or None,
+        analysis_mode=analysis_mode,
+        analysis_template_version=REFERENCE_TEMPLATE_VERSION,
+        selected_question_ids=selected_question_ids,
+        attachments=attachments,
     ):
         raise ResearchError("연구 노트를 찾을 수 없습니다.")
 
@@ -99,90 +158,66 @@ def _clean(title: str, body: str, link_url: str) -> tuple[str, str, str]:
     return title, body, link_url
 
 
-def section_values(body: str) -> dict[str, str]:
-    """``라벨\n내용`` 블록으로 저장한 본문을 편집 폼 값으로 되돌린다.
-
-    내용 안의 빈 줄은 유지한다. 알 수 없는 예전 라벨은 무시해 과거 데이터가
-    새 템플릿 때문에 폼을 깨뜨리지 않게 한다.
-    """
-    labels = [section["label"] for section in WRITE_TEMPLATES["reference"]]
-    values: dict[str, list[str]] = {label: [] for label in labels}
-    label_targets = {label: label for label in labels}
-    # 공개 커뮤니티 시절 reference 템플릿으로 쓴 데이터도 편집 화면에서 보존한다.
-    label_targets.update({
-        "무엇을 봤나요": "분석한 이유",
-        "핵심 인사이트": "가져올 아이디어",
-    })
-    current: str | None = None
-    for line in (body or "").splitlines():
-        if line in label_targets:
-            current = label_targets[line]
-        elif current is not None:
-            values[current].append(line)
-    parsed = {label: "\n".join(lines).strip() for label, lines in values.items()}
-    if body.strip() and not any(parsed.values()):
-        parsed["분석한 이유"] = body.strip()
-    return parsed
+def normalize_question_ids(question_ids: tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    """제출된 질문 id를 검증하고 템플릿의 고정 순서로 정렬한다."""
+    submitted = [str(question_id).strip() for question_id in (question_ids or ())]
+    unknown = set(submitted) - set(REFERENCE_QUESTION_IDS)
+    if unknown:
+        raise ResearchError("알 수 없는 분석 질문이 포함되어 있어요. 다시 선택해 주세요.")
+    selected = set(submitted)
+    return tuple(question_id for question_id in REFERENCE_QUESTION_IDS if question_id in selected)
 
 
-def legacy_preamble(body: str) -> str:
-    """첫 정식 라벨 앞의 이전 자유 형식 메모를 손실 없이 분리한다.
-
-    정식 라벨이 전혀 없는 과거 본문은 ``분석한 이유``로 편집하므로 여기서는
-    빈 값을 돌려 중복 저장을 피한다.
-    """
-    labels = {section["label"] for section in WRITE_TEMPLATES["reference"]}
-    labels.update({"무엇을 봤나요", "핵심 인사이트"})
-    lines = (body or "").splitlines()
-    first_label = next((index for index, line in enumerate(lines) if line in labels), None)
-    if first_label in {None, 0}:
-        return ""
-    return "\n".join(lines[:first_label]).strip()
-
-
-def detail_groups(body: str) -> list[dict]:
-    """값이 있는 그룹만 상세 화면용 구조로 만든다."""
+def _answered_question_ids(body: str) -> tuple[str, ...]:
     values = section_values(body)
-    groups: list[dict] = []
-    legacy = legacy_preamble(body)
-    if legacy:
-        groups.append({
-            "no": "00",
-            "name": "이전 메모",
-            "items": [{"label": "이전 형식에서 가져온 내용", "value": legacy, "highlight": False}],
-        })
-
-    current: dict | None = None
-    for section in WRITE_TEMPLATES["reference"]:
-        if section.get("group"):
-            current = {
-                "no": section["group_no"],
-                "name": section["group"],
-                "items": [],
-            }
-            groups.append(current)
-        value = values.get(section["label"], "")
-        if value and current is not None:
-            current["items"].append({
-                "label": section["label"],
-                "value": value,
-                "highlight": section.get("hl", False),
-            })
-    return [group for group in groups if group["items"]]
+    by_label = {
+        section["label"]: section["id"] for section in WRITE_TEMPLATES["reference"]
+    }
+    return tuple(
+        by_label[label] for label, value in values.items() if value and label in by_label
+    )
 
 
-def progress(post: Post) -> dict[str, int]:
-    """노트가 채운 섹션 수와 백분율을 계산한다."""
-    values = section_values(post.body)
-    total = len(values)
-    done = sum(1 for value in values.values() if value)
-    percent = round(done / total * 100) if total else 0
-    return {"done": done, "total": total, "percent": percent}
+def normalize_analysis_selection(
+    analysis_mode: str,
+    question_ids: tuple[str, ...] | list[str],
+    body: str,
+) -> tuple[str, tuple[str, ...]]:
+    """프리셋 의미를 지키면서 이미 작성한 답변을 선택 밖으로 버리지 않는다."""
+    mode = (analysis_mode or "").strip()
+    if mode not in REFERENCE_ANALYSIS_MODES:
+        raise ResearchError("분석 방식을 다시 선택해 주세요.")
+    submitted = normalize_question_ids(question_ids)
+    if mode == "quick":
+        selected = set(REFERENCE_QUICK_QUESTION_IDS)
+    elif mode == "full":
+        selected = set(REFERENCE_QUESTION_IDS)
+    else:
+        selected = set(submitted)
+        if not selected:
+            raise ResearchError("답하고 싶은 질문을 한 개 이상 선택해 주세요.")
+        selected.add(REFERENCE_REQUIRED_FINAL_ID)
+
+    selected.update(_answered_question_ids(body))
+    normalized = tuple(
+        question_id for question_id in REFERENCE_QUESTION_IDS if question_id in selected
+    )
+    if normalized == REFERENCE_QUICK_QUESTION_IDS:
+        mode = "quick"
+    elif normalized == REFERENCE_QUESTION_IDS:
+        mode = "full"
+    else:
+        mode = "focus"
+    return mode, normalized
 
 
-def present_notes(items: list[Post]) -> list[dict]:
-    """템플릿에서 쓰기 쉬운 노트+진행도 묶음."""
-    return [{"post": post, "progress": progress(post)} for post in items]
+def _verify_attachments(
+    attachments: tuple[MediaAttachment, ...], user_auth_id: str
+) -> None:
+    try:
+        research_media_service.verify_attachments(attachments, user_auth_id)
+    except research_media_service.ResearchMediaError as exc:
+        raise ResearchError(str(exc)) from exc
 
 
 def dashboard(user_id: int) -> dict:

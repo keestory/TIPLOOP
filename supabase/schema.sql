@@ -28,8 +28,22 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     link_url   TEXT,                          -- 레퍼런스 참고 링크 (선택)
     image_url  TEXT,                          -- 주석 이미지 (Supabase Storage URL, 선택)
-    video_url  TEXT                           -- 첨부 영상 (Supabase Storage URL, 선택)
+    video_url  TEXT,                          -- 첨부 영상 (Supabase Storage URL, 선택)
+    analysis_mode TEXT CHECK (analysis_mode IS NULL OR analysis_mode IN ('quick', 'focus', 'full')),
+    analysis_template_version TEXT,
+    selected_question_ids TEXT[],
+    attachments JSONB CHECK (
+        attachments IS NULL OR (
+            jsonb_typeof(attachments) = 'array' AND jsonb_array_length(attachments) <= 6
+        )
+    )                                         -- 비공개 Storage path와 표시 메타데이터
 );
+
+-- 기존 설치에도 질문 선택·private 첨부 컬럼을 추가한다.
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS analysis_mode TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS analysis_template_version TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS selected_question_ids TEXT[];
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS attachments JSONB;
 
 -- 영상 위 특정 시각+위치에 달리는 코멘트 (Frame.io식)
 CREATE TABLE IF NOT EXISTS media_comments (
@@ -175,3 +189,62 @@ BEGIN
     END LOOP;
 END
 $$;
+
+-- 연구 노트의 스크린샷·영상은 공개 URL이 아닌 사용자별 private bucket에 둔다.
+-- 두 버킷으로 나눠 이미지가 영상의 50 MiB 상한을 악용하지 못하게 한다.
+INSERT INTO storage.buckets (
+    id, name, public, file_size_limit, allowed_mime_types
+)
+VALUES (
+    'tiploop-research-images', 'tiploop-research-images', FALSE, 10485760,
+    ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+INSERT INTO storage.buckets (
+    id, name, public, file_size_limit, allowed_mime_types
+)
+VALUES (
+    'tiploop-research-videos', 'tiploop-research-videos', FALSE, 52428800,
+    ARRAY['video/mp4', 'video/webm', 'video/quicktime']
+)
+ON CONFLICT (id) DO UPDATE SET
+    public = EXCLUDED.public,
+    file_size_limit = EXCLUDED.file_size_limit,
+    allowed_mime_types = EXCLUDED.allowed_mime_types;
+
+DROP POLICY IF EXISTS "research_media_insert_own" ON storage.objects;
+CREATE POLICY "research_media_insert_own"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+    bucket_id IN ('tiploop-research-images', 'tiploop-research-videos')
+    AND (storage.foldername(name))[1] = (SELECT auth.uid()::text)
+    AND (storage.foldername(name))[2] = 'drafts'
+    AND cardinality(storage.foldername(name)) = 3
+    AND (
+        (bucket_id = 'tiploop-research-images' AND storage.extension(name) IN ('jpg', 'png', 'webp', 'gif'))
+        OR
+        (bucket_id = 'tiploop-research-videos' AND storage.extension(name) IN ('mp4', 'webm', 'mov'))
+    )
+);
+
+DROP POLICY IF EXISTS "research_media_select_own" ON storage.objects;
+CREATE POLICY "research_media_select_own"
+ON storage.objects FOR SELECT TO authenticated
+USING (
+    bucket_id IN ('tiploop-research-images', 'tiploop-research-videos')
+    AND (storage.foldername(name))[1] = (SELECT auth.uid()::text)
+    AND owner_id = (SELECT auth.uid()::text)
+);
+
+DROP POLICY IF EXISTS "research_media_delete_own" ON storage.objects;
+CREATE POLICY "research_media_delete_own"
+ON storage.objects FOR DELETE TO authenticated
+USING (
+    bucket_id IN ('tiploop-research-images', 'tiploop-research-videos')
+    AND (storage.foldername(name))[1] = (SELECT auth.uid()::text)
+    AND owner_id = (SELECT auth.uid()::text)
+);

@@ -33,7 +33,7 @@ def check_file_names(project_root: Path) -> list[LintViolation]:
     violations = []
 
     for py_file in project_root.rglob("*.py"):
-        if "__pycache__" in str(py_file) or "venv" in str(py_file):
+        if "__pycache__" in str(py_file) or "venv" in str(py_file) or ".vercel" in str(py_file):
             continue
 
         if not RULES["file"].match(py_file.name) and py_file.name != "__init__.py":
@@ -55,7 +55,7 @@ def check_definitions(project_root: Path) -> list[LintViolation]:
     violations = []
 
     for py_file in project_root.rglob("*.py"):
-        if "__pycache__" in str(py_file) or "venv" in str(py_file):
+        if "__pycache__" in str(py_file) or "venv" in str(py_file) or ".vercel" in str(py_file):
             continue
 
         try:

@@ -2,11 +2,23 @@
 
 import pytest
 
-from app.config.settings import WRITE_TEMPLATES
+from app.config.settings import (
+    REFERENCE_IMAGE_MAX_BYTES,
+    REFERENCE_MEDIA_BUCKETS,
+    REFERENCE_MEDIA_MAX_FILES,
+    REFERENCE_MEDIA_MAX_TOTAL_BYTES,
+    REFERENCE_MEDIA_MAX_VIDEOS,
+    REFERENCE_MEDIA_TYPES,
+    REFERENCE_QUICK_QUESTION_IDS,
+    REFERENCE_REQUIRED_FINAL_ID,
+    REFERENCE_TEMPLATE_VERSION,
+    REFERENCE_VIDEO_MAX_BYTES,
+    WRITE_TEMPLATES,
+)
 from app.service import research_service
 from app.types.models import Post
 from app.types.models import User
-from app.ui import routes_community, routes_post
+from app.ui import routes_community, routes_legacy, routes_post
 from app.ui.app_factory import create_app
 
 
@@ -50,16 +62,33 @@ def test_research_templates_render_for_signed_in_user():
         form={"link_url": ""},
         section_values={},
         editing=False,
+        analysis_mode="quick",
+        selected_question_ids=REFERENCE_QUICK_QUESTION_IDS,
+        analysis_template_version=REFERENCE_TEMPLATE_VERSION,
+        attachments=[],
+        quick_question_ids=REFERENCE_QUICK_QUESTION_IDS,
+        required_final_id=REFERENCE_REQUIRED_FINAL_ID,
+        media_types=REFERENCE_MEDIA_TYPES,
+        media_buckets=REFERENCE_MEDIA_BUCKETS,
+        media_accept=",".join(REFERENCE_MEDIA_TYPES),
+        media_max_files=REFERENCE_MEDIA_MAX_FILES,
+        media_max_videos=REFERENCE_MEDIA_MAX_VIDEOS,
+        media_max_total_bytes=REFERENCE_MEDIA_MAX_TOTAL_BYTES,
+        image_max_bytes=REFERENCE_IMAGE_MAX_BYTES,
+        video_max_bytes=REFERENCE_VIDEO_MAX_BYTES,
     )
 
     assert "서비스를 뜯어보고" in home
     assert "보관함" in library
-    assert "비즈니스 모델" in form
+    assert "5분 빠른 분석" in form
+    assert "질문 골라 분석" in form
+    assert 'name="selected_question_ids"' in form
     assert "연구 노트 저장" in form
-    assert "localStorage" in form
+    assert '/static/research-form.js' in form
     assert "tiploop:draft:new:user:7" in form
     assert '"tiploop:draft:new"' not in form
-    assert 'type="file"' not in form
+    assert 'type="file"' in form
+    assert 'accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"' in form
 
     post = Post(
         id=12,
@@ -74,6 +103,8 @@ def test_research_templates_render_for_signed_in_user():
         post=post,
         progress=research_service.progress(post),
         groups=research_service.detail_groups(post.body),
+        attachments=[],
+        analysis_mode_label="기존 분석",
         saved="",
     )
     assert "관찰의 출발점" in detail
@@ -90,5 +121,5 @@ def test_retired_social_mutations_return_gone():
         job_role="PM",
         years="3~5년",
     )
-    assert routes_post.react_comment(None, 99, user=user).status_code == 410
+    assert routes_legacy.react_comment(None, 99, user=user).status_code == 410
     assert routes_community.follow_user(None, 99, user=user).status_code == 410

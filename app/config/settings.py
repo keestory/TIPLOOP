@@ -128,18 +128,18 @@ WRITE_TEMPLATES = {
         {"label": "결과", "hint": "숫자로 남기면 후기가 붙어요", "ph": "예: 이탈률 12% ↓", "hl": True},
     ],
     "reference": [
-        {"group": "관찰의 출발점", "group_no": "01", "label": "분석한 이유", "hint": "왜 지금 이 서비스를 보나요?", "ph": "예: 첫 방문자를 가입까지 이끄는 방식을 배우고 싶었어요"},
-        {"group": "제품", "group_no": "02", "label": "타깃과 문제", "hint": "누구의 어떤 문제를 푸나요?", "ph": "핵심 사용자를 한 문장으로 적어보세요"},
-        {"label": "핵심 기능과 흐름", "hint": "발견부터 가치 경험까지", "ph": "사용자가 처음 들어와 핵심 가치를 얻기까지의 흐름"},
-        {"group": "경험", "group_no": "03", "label": "기획과 UX", "hint": "매력적이거나 불편한 장면", "ph": "정보 구조, 상호작용, 전환 장치에서 눈에 띈 점"},
-        {"label": "콘텐츠", "hint": "무엇을 어떤 방식으로 보여주나요?", "ph": "카피, 이미지, 추천, 큐레이션 방식"},
-        {"group": "성장과 사업", "group_no": "04", "label": "마케팅과 유입", "hint": "사람들은 어떻게 이 서비스를 알게 되나요?", "ph": "검색, 광고, SNS, 입소문, 제휴 등"},
-        {"label": "리텐션과 초대", "hint": "왜 다시 오고, 왜 남에게 말하나요?", "ph": "반복 사용과 공유를 만드는 장치"},
-        {"label": "비즈니스 모델", "hint": "누가 무엇에 돈을 내나요?", "ph": "수익원, 가격, 비용 구조에 대한 관찰"},
-        {"label": "서비스 운영", "hint": "이 경험을 뒤에서 어떻게 굴릴까요?", "ph": "정책, 공급, CS, 품질 관리, 파트너 운영"},
-        {"group": "결론", "group_no": "05", "label": "잘한 점과 아쉬운 점", "hint": "근거가 드러나게", "ph": "좋았던 점과 개선할 점을 함께 적어보세요"},
-        {"label": "가져올 아이디어", "hint": "내 제품에 옮길 수 있는 것", "ph": "그대로 복사하지 않고 원리를 추출해보세요"},
-        {"label": "실제로 적용할 것", "hint": "다음 행동 하나", "ph": "예: 다음 랜딩 개편에서 첫 화면 가치 제안을 한 문장으로 줄인다", "hl": True},
+        {"id": "ref.why_now", "lens": "맥락", "group": "관찰의 출발점", "group_no": "01", "label": "분석한 이유", "hint": "왜 지금 이 서비스를 보나요?", "ph": "예: 첫 방문자를 가입까지 이끄는 방식을 배우고 싶었어요"},
+        {"id": "ref.audience_problem", "lens": "기능", "group": "제품", "group_no": "02", "label": "타깃과 문제", "hint": "누구의 어떤 문제를 푸나요?", "ph": "핵심 사용자를 한 문장으로 적어보세요"},
+        {"id": "ref.core_journey", "lens": "기능", "label": "핵심 기능과 흐름", "hint": "발견부터 가치 경험까지", "ph": "사용자가 처음 들어와 핵심 가치를 얻기까지의 흐름"},
+        {"id": "ref.planning_ux", "lens": "기획·UX", "group": "경험", "group_no": "03", "label": "기획과 UX", "hint": "매력적이거나 불편한 장면", "ph": "정보 구조, 상호작용, 전환 장치에서 눈에 띈 점"},
+        {"id": "ref.content_strategy", "lens": "콘텐츠", "label": "콘텐츠", "hint": "무엇을 어떤 방식으로 보여주나요?", "ph": "카피, 이미지, 추천, 큐레이션 방식"},
+        {"id": "ref.acquisition", "lens": "마케팅", "group": "성장과 사업", "group_no": "04", "label": "마케팅과 유입", "hint": "사람들은 어떻게 이 서비스를 알게 되나요?", "ph": "검색, 광고, SNS, 입소문, 제휴 등"},
+        {"id": "ref.retention_referral", "lens": "리텐션", "label": "리텐션과 초대", "hint": "왜 다시 오고, 왜 남에게 말하나요?", "ph": "반복 사용과 공유를 만드는 장치"},
+        {"id": "ref.business_model", "lens": "비즈니스", "label": "비즈니스 모델", "hint": "누가 무엇에 돈을 내나요?", "ph": "수익원, 가격, 비용 구조에 대한 관찰"},
+        {"id": "ref.service_operations", "lens": "운영", "label": "서비스 운영", "hint": "이 경험을 뒤에서 어떻게 굴릴까요?", "ph": "정책, 공급, CS, 품질 관리, 파트너 운영"},
+        {"id": "ref.strengths_gaps", "lens": "판단", "group": "결론", "group_no": "05", "label": "잘한 점과 아쉬운 점", "hint": "근거가 드러나게", "ph": "좋았던 점과 개선할 점을 함께 적어보세요"},
+        {"id": "ref.transferable_principle", "lens": "적용", "label": "가져올 아이디어", "hint": "내 제품에 옮길 수 있는 것", "ph": "그대로 복사하지 않고 원리를 추출해보세요"},
+        {"id": "ref.next_action", "lens": "적용", "label": "실제로 적용할 것", "hint": "다음 행동 하나", "ph": "예: 다음 랜딩 개편에서 첫 화면 가치 제안을 한 문장으로 줄인다", "hl": True},
     ],
     "question": [
         {"label": "상황", "hint": "어떤 걸 겪고 있나요?", "ph": "배경을 적어주세요"},
@@ -150,6 +150,42 @@ WRITE_TEMPLATES = {
         {"label": "잘한 것", "hint": "효과가 있었던 것", "ph": ""},
         {"label": "아쉬운 것 · 배운 것", "hint": "다음엔 이렇게", "ph": "", "hl": True},
     ],
+}
+
+# 서비스 분석 질문 체계. 본문은 과거 호환을 위해 한글 라벨 블록으로 유지하고,
+# 선택 상태만 안정적인 id로 별도 저장한다.
+REFERENCE_TEMPLATE_VERSION = "reference_v1"
+REFERENCE_ANALYSIS_MODES = ("quick", "focus", "full")
+REFERENCE_QUESTION_IDS = tuple(
+    section["id"] for section in WRITE_TEMPLATES["reference"]
+)
+REFERENCE_QUICK_QUESTION_IDS = (
+    "ref.audience_problem",
+    "ref.core_journey",
+    "ref.next_action",
+)
+REFERENCE_REQUIRED_FINAL_ID = "ref.next_action"
+
+# 비공개 연구 미디어. Storage 버킷의 50 MiB 상한과 별개로 이미지는 더 작게 제한한다.
+REFERENCE_IMAGE_BUCKET = "tiploop-research-images"
+REFERENCE_VIDEO_BUCKET = "tiploop-research-videos"
+REFERENCE_MEDIA_BUCKETS = {
+    "image": REFERENCE_IMAGE_BUCKET,
+    "video": REFERENCE_VIDEO_BUCKET,
+}
+REFERENCE_MEDIA_MAX_FILES = 6
+REFERENCE_MEDIA_MAX_VIDEOS = 1
+REFERENCE_MEDIA_MAX_TOTAL_BYTES = 100 * 1024 * 1024
+REFERENCE_IMAGE_MAX_BYTES = 10 * 1024 * 1024
+REFERENCE_VIDEO_MAX_BYTES = 50 * 1024 * 1024
+REFERENCE_MEDIA_TYPES = {
+    "image/jpeg": ("image", "jpg"),
+    "image/png": ("image", "png"),
+    "image/webp": ("image", "webp"),
+    "image/gif": ("image", "gif"),
+    "video/mp4": ("video", "mp4"),
+    "video/webm": ("video", "webm"),
+    "video/quicktime": ("video", "mov"),
 }
 
 

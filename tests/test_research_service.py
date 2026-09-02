@@ -1,7 +1,10 @@
 """TIPLOOP 개인 연구 노트 서비스 테스트."""
 
+import json
+
 import pytest
 
+from app.config.settings import REFERENCE_QUESTION_IDS, REFERENCE_QUICK_QUESTION_IDS
 from app.service import research_service
 from app.service.research_service import ResearchError
 from app.types.models import Post
@@ -62,6 +65,94 @@ def test_note_link_allows_only_http_urls():
     assert (title, body, link) == (
         "서비스", "분석한 이유\n관찰", "https://example.com/path"
     )
+
+
+@pytest.mark.no_db
+def test_question_selection_presets_and_focus_order():
+    mode, selected = research_service.normalize_analysis_selection(
+        "quick", (), "타깃과 문제\n사용자"
+    )
+    assert mode == "quick"
+    assert selected == REFERENCE_QUICK_QUESTION_IDS
+
+    mode, selected = research_service.normalize_analysis_selection(
+        "focus", ("ref.business_model", "ref.planning_ux"),
+        "비즈니스 모델\n구독",
+    )
+    assert mode == "focus"
+    assert selected == (
+        "ref.planning_ux", "ref.business_model", "ref.next_action"
+    )
+
+    mode, selected = research_service.normalize_analysis_selection("full", (), "분석한 이유\n관찰")
+    assert mode == "full"
+    assert selected == REFERENCE_QUESTION_IDS
+
+
+@pytest.mark.no_db
+def test_unknown_or_empty_focus_questions_are_rejected():
+    with pytest.raises(ResearchError):
+        research_service.normalize_analysis_selection("focus", (), "분석한 이유\n관찰")
+    with pytest.raises(ResearchError):
+        research_service.normalize_analysis_selection(
+            "focus", ("ref.not_real",), "분석한 이유\n관찰"
+        )
+
+
+@pytest.mark.no_db
+def test_quick_progress_uses_selected_question_count():
+    post = Post(
+        id=2,
+        author_id=1,
+        category="reference",
+        title="서비스",
+        body="타깃과 문제\n문제\n\n핵심 기능과 흐름\n흐름",
+        created_at="2026-09-02",
+        analysis_mode="quick",
+        selected_question_ids=REFERENCE_QUICK_QUESTION_IDS,
+    )
+    assert research_service.progress(post) == {"done": 2, "total": 3, "percent": 67}
+
+
+@pytest.mark.no_db
+def test_attachment_metadata_requires_owned_private_path():
+    payload = json.dumps([
+        {
+            "bucket": "tiploop-research-images",
+            "path": "auth-user/drafts/12345678/abcdefgh.jpg",
+            "kind": "image",
+            "mime_type": "image/jpeg",
+            "file_name": "화면 <1>.jpg",
+            "size_bytes": 1024,
+        }
+    ])
+    parsed = research_service.parse_attachments(payload, "auth-user")
+    assert parsed[0].path.endswith("abcdefgh.jpg")
+    assert parsed[0].bucket == "tiploop-research-images"
+
+    with pytest.raises(ResearchError):
+        research_service.parse_attachments(payload, "other-user")
+
+
+@pytest.mark.no_db
+@pytest.mark.parametrize("mutation", [
+    {"bucket": "tiploop-research-videos"},
+    {"mime_type": "image/svg+xml"},
+    {"path": "auth-user/../12345678/abcdefgh.jpg"},
+    {"size_bytes": 11 * 1024 * 1024},
+])
+def test_attachment_metadata_rejects_tampering(mutation):
+    item = {
+        "bucket": "tiploop-research-images",
+        "path": "auth-user/drafts/12345678/abcdefgh.jpg",
+        "kind": "image",
+        "mime_type": "image/jpeg",
+        "file_name": "화면.jpg",
+        "size_bytes": 1024,
+    }
+    item.update(mutation)
+    with pytest.raises(ResearchError):
+        research_service.parse_attachments(json.dumps([item]), "auth-user")
 
 
 def test_notes_are_scoped_to_owner_and_editable(make_member):

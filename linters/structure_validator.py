@@ -88,7 +88,11 @@ def check_doc_links(project_root: Path) -> list[LintViolation]:
     violations = []
 
     for md_file in project_root.rglob("*.md"):
-        if "venv" in str(md_file) or "node_modules" in str(md_file):
+        if (
+            "venv" in str(md_file)
+            or "node_modules" in str(md_file)
+            or ".vercel" in str(md_file)
+        ):
             continue
 
         try:
