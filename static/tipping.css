@@ -357,7 +357,7 @@ body {
   font: 500 14px var(--sans);
   color: var(--muted);
 }
-.empty a { color: var(--ink); font-weight: 700; }
+.empty a:not(.btn) { color: var(--ink); font-weight: 700; }
 
 /* ── 하단 탭바 ── */
 .tabbar {

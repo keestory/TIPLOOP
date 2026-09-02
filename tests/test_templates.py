@@ -25,3 +25,12 @@ def test_logout_template_clears_supabase_browser_session():
     )
     assert "auth.signOut" in rendered
     assert "location.replace('/login')" in rendered
+
+
+@pytest.mark.no_db
+def test_empty_state_link_color_does_not_override_primary_button():
+    root = Path(__file__).resolve().parents[1]
+    css = (root / "static" / "tipping.css").read_text(encoding="utf-8")
+
+    assert ".empty a:not(.btn)" in css
+    assert ".empty a {" not in css

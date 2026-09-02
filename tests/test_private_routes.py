@@ -38,6 +38,14 @@ def test_private_route_functions_redirect_without_session():
 
 
 @pytest.mark.no_db
+def test_new_research_route_exposes_complete_media_limits():
+    media = routes_post._media_context()
+
+    assert media["image_max_bytes"] == REFERENCE_IMAGE_MAX_BYTES
+    assert media["video_max_bytes"] == REFERENCE_VIDEO_MAX_BYTES
+
+
+@pytest.mark.no_db
 def test_research_templates_render_for_signed_in_user():
     user = User(
         id=7,
