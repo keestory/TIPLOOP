@@ -99,6 +99,7 @@ def test_research_templates_render_for_signed_in_user():
     assert '"tiploop:draft:new"' not in form
     assert 'type="file"' in form
     assert 'accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"' in form
+    assert "기본으로 나만 볼 수 있고, 원할 때 공유 링크에 포함" in form
 
     post = Post(
         id=12,
