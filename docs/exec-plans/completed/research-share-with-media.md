@@ -41,5 +41,12 @@
 - [x] 현재 구조와 공식 Supabase Storage/Edge Function 계약 확인
 - [x] 스키마·서비스·화면 구현
 - [x] 자동 테스트
-- [ ] 원격 migration·함수 배포
-- [ ] Vercel 운영 배포·검증
+- [x] 원격 migration·함수 배포
+- [x] Vercel 운영 배포·기본 거부 경로 검증
+
+## 배포 검증
+
+- Supabase `post_shares`, `post_share_media_grants`: RLS 활성, browser 역할 권한 없음
+- `shared-media` v1: ACTIVE, custom grant 인증, 잘못된 grant 404, 다중 Range 416, 모두 `no-store`
+- Vercel production: commit `5ecc93e`, `tiploop.vercel.app` alias READY, 배포 후 오류 로그 없음
+- 운영 계정의 저장된 노트·첨부가 0개라 유효 이미지·영상 200/206와 공유 중지 후 404는 첫 실제 첨부 공유 때 사용자 스모크로 확인한다.
