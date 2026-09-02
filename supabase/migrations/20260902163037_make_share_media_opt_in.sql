@@ -1,0 +1,1 @@
+ALTER TABLE post_shares ALTER COLUMN include_media SET DEFAULT FALSE;

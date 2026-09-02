@@ -5,7 +5,8 @@ from __future__ import annotations
 RLS_TABLES = (
     "members", "posts", "media_comments", "comments", "post_reactions",
     "comment_reactions", "post_helpful", "reviews", "follows", "crews",
-    "crew_members", "crew_entries", "notifications",
+    "crew_members", "crew_entries", "notifications", "post_shares",
+    "post_share_media_grants",
 )
 
 REVOKE_BROWSER_PRIVILEGES_SQL = """

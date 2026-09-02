@@ -32,6 +32,7 @@ from app.ui import (
     routes_legacy,
     routes_post,
     routes_pwa,
+    routes_research_share,
 )
 
 _ROOT = Path(__file__).resolve().parents[2]
@@ -97,6 +98,7 @@ def create_app() -> FastAPI:
     app.include_router(routes_auth.router)
     app.include_router(routes_crew.router)
     app.include_router(routes_post.router)
+    app.include_router(routes_research_share.router)
     app.include_router(routes_legacy.router)
     app.include_router(routes_community.router)
     return app

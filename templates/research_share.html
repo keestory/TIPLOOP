@@ -1,0 +1,98 @@
+{% extends "mobile.html" %}
+{% block title %}{{ post.title }} 공유{% endblock %}
+
+{% block head %}<meta name="robots" content="noindex,nofollow">{% endblock %}
+
+{% block app %}
+<main class="body share-settings">
+  <header class="topbar">
+    <a class="cancel" href="/posts/{{ post.id }}">‹ 연구 노트</a>
+    <span class="study-index">SHARE STUDY</span>
+  </header>
+
+  <section class="share-intro" aria-labelledby="share-heading">
+    <p class="eyebrow">LINK SHARING</p>
+    <h1 id="share-heading">이 연구 노트를<br><span class="hl">함께 볼까요?</span></h1>
+    <p>링크를 받은 사람은 로그인 없이 답변{% if post.attachments %}과 선택한 첨부{% endif %}를 볼 수 있어요.</p>
+    {% if post.link_url %}<p>노트에 저장한 원본 서비스 링크도 함께 보여요. 주소에 비밀 값이 없는지 확인해 주세요.</p>{% endif %}
+    <p class="share-expiry">공유 링크는 만든 시점부터 7일 동안 열립니다.</p>
+  </section>
+
+  {% if share_url %}
+  <section class="share-result" aria-labelledby="share-result-heading">
+    <span class="share-status">링크 공유 중</span>
+    <h2 id="share-result-heading">공유 링크를 만들었어요.</h2>
+    <label for="share-url">공유 주소</label>
+    <input id="share-url" class="field share-url" value="{{ share_url }}" readonly>
+    <div class="share-button-stack">
+      <button class="btn lime" id="native-share" type="button">링크 공유하기 <span aria-hidden="true">→</span></button>
+      <button class="btn gh" id="copy-share" type="button">링크 복사</button>
+      <a class="text-link share-preview" href="{{ share_url }}" target="_blank" rel="noopener noreferrer">공유 화면 미리보기 ↗</a>
+    </div>
+    <p class="share-feedback" id="share-feedback" role="status" aria-live="polite"></p>
+  </section>
+  {% else %}
+  <section class="share-control" aria-labelledby="share-control-heading">
+    {% if active_share %}<span class="share-status">링크 공유 중</span>{% endif %}
+    <h2 id="share-control-heading">{{ "새 공유 링크 만들기" if active_share else "공유 범위 확인" }}</h2>
+    {% if active_share %}
+    <p>새 링크를 만들면 이전 링크는 즉시 중지돼요.</p>
+    {% endif %}
+    <p>링크를 만드는 순간의 답변과 첨부만 공유돼요. 이후 수정은 새 링크를 만들 때 반영됩니다.</p>
+    <form method="post" action="/posts/{{ post.id }}/share">
+      <label class="share-media-choice {% if not post.attachments %}is-disabled{% endif %}">
+        <input type="checkbox" name="include_media" value="true"
+               {% if post.attachments %}checked{% else %}disabled{% endif %}>
+        <span>
+          <strong>스크린샷·영상도 함께 공유</strong>
+          <small>{{ post.attachments|length }}개 첨부{% if not post.attachments %} · 첨부 없음{% endif %}</small>
+        </span>
+      </label>
+      <p class="share-warning">첨부를 포함하면 현재 {{ post.attachments|length }}개가 링크에 고정됩니다. 개인정보나 내부 정보가 보이는 장면은 가리고 공유해 주세요. 받은 사람이 저장한 파일은 공유 중지 후에도 회수할 수 없습니다.</p>
+      <button class="btn lime" type="submit">{{ "이전 링크 끄고 새로 만들기" if active_share else "공유 링크 만들기" }} <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if active_share %}
+  <form class="share-revoke" method="post" action="/posts/{{ post.id }}/share/revoke"
+        onsubmit="return confirm('공유를 중지할까요? 이 링크에서 노트와 첨부를 더 이상 열 수 없어요.')">
+    <button type="submit">공유 중지</button>
+  </form>
+  {% endif %}
+</main>
+{% set tab = "library" %}
+{% include "_tabbar.html" %}
+{% endblock %}
+
+{% block script %}
+{% if share_url %}
+<script>
+  (function () {
+    var url = {{ share_url|tojson }};
+    var title = {{ (post.title ~ ' · TIPLOOP 서비스 연구')|tojson }};
+    var feedback = document.getElementById('share-feedback');
+
+    async function copyLink() {
+      try {
+        await navigator.clipboard.writeText(url);
+        feedback.textContent = '링크를 복사했어요.';
+      } catch (error) {
+        document.getElementById('share-url').select();
+        feedback.textContent = '주소를 선택했어요. 복사해 주세요.';
+      }
+    }
+
+    document.getElementById('copy-share').addEventListener('click', copyLink);
+    document.getElementById('native-share').addEventListener('click', async function () {
+      if (!navigator.share) return copyLink();
+      try {
+        await navigator.share({ title: title, text: '함께 보고 싶은 서비스 분석이에요.', url: url });
+      } catch (error) {
+        if (error.name !== 'AbortError') await copyLink();
+      }
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

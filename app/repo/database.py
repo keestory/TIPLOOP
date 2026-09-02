@@ -12,13 +12,14 @@ from psycopg.rows import dict_row
 
 from app.config.database_security import REVOKE_BROWSER_PRIVILEGES_SQL, RLS_TABLES
 from app.config.settings import DATABASE_URL
+from app.repo.research_share_schema import RESEARCH_SHARE_SCHEMA
 
 try:  # 커넥션 풀(선택 의존성). 없으면 매 호출 새 커넥션으로 폴백.
     from psycopg_pool import ConnectionPool
 except ImportError:  # pragma: no cover
     ConnectionPool = None
 
-_SCHEMA = """
+_BASE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS members (
     id         BIGSERIAL PRIMARY KEY,
     auth_id    TEXT UNIQUE NOT NULL,          -- Supabase auth 사용자 id(uuid)
@@ -153,6 +154,8 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
 """
+
+_SCHEMA = _BASE_SCHEMA + RESEARCH_SHARE_SCHEMA
 
 
 # 커넥션 kwargs — 풀/직접 연결 양쪽에서 동일하게 쓴다.

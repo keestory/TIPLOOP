@@ -1,7 +1,7 @@
 /* TIPLOOP 서비스 워커 — 설치 가능(PWA) + 정적 자산 캐시.
    서버 렌더링 앱이라 HTML/데이터는 항상 네트워크 우선(최신 유지),
    /static/* 는 네트워크를 우선해 새 배포를 즉시 반영하고, 오프라인일 때만 캐시를 사용한다. */
-const CACHE = "tiploop-v3";
+const CACHE = "tiploop-v4";
 const PRECACHE = [
   "/static/tipping.css",
   "/static/icons/icon-192.png",

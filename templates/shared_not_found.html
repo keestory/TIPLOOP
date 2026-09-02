@@ -1,0 +1,14 @@
+{% extends "mobile.html" %}
+{% block title %}공유 종료{% endblock %}
+{% block head %}<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">{% endblock %}
+{% block app %}
+<main class="body shared-missing">
+  <a class="brand plain" href="/login">TIPLOOP<span class="d"></span></a>
+  <section>
+    <p class="eyebrow">SHARE CLOSED</p>
+    <h1>공유가 끝났거나<br>올바르지 않은 링크예요.</h1>
+    <p>{{ message }}</p>
+    <a class="btn lime" href="/login">TIPLOOP 시작하기 <span aria-hidden="true">→</span></a>
+  </section>
+</main>
+{% endblock %}

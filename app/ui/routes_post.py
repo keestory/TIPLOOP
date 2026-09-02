@@ -215,15 +215,3 @@ def post_detail(
         }.get(post.analysis_mode, "기존 분석"),
         saved=saved if saved in {"new", "edit"} else "",
     )
-
-
-@router.get("/posts/{post_id}/share")
-def post_share(request: Request, post_id: int, user: Optional[User] = Depends(get_current_user)):
-    """개인 노트의 공개 공유는 제공하지 않고 상세로 되돌린다."""
-    if g := gate(user):
-        return g
-    try:
-        research_service.get_note(post_id, user.id)
-    except ResearchError as exc:
-        return render(request, "not_found.html", user, status_code=404, message=str(exc))
-    return RedirectResponse(f"/posts/{post_id}", status_code=303)

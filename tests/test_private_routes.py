@@ -17,8 +17,9 @@ from app.config.settings import (
 )
 from app.service import research_service
 from app.types.models import Post
+from app.types.models import MediaAttachment
 from app.types.models import User
-from app.ui import routes_community, routes_legacy, routes_post
+from app.ui import routes_community, routes_legacy, routes_post, routes_research_share
 from app.ui.app_factory import create_app
 
 
@@ -30,6 +31,7 @@ def test_private_route_functions_redirect_without_session():
         lambda: routes_post.new_post_write(None, user=None),
         lambda: routes_post.post_detail(None, 1, user=None),
         lambda: routes_post.edit_post(None, 1, user=None),
+        lambda: routes_research_share.post_share(None, 1, user=None),
     )
     for call in calls:
         response = call()
@@ -117,6 +119,50 @@ def test_research_templates_render_for_signed_in_user():
     )
     assert "관찰의 출발점" in detail
     assert "<h2>제품</h2>" not in detail
+
+
+@pytest.mark.no_db
+def test_shared_research_renders_generic_image_and_video_without_private_paths():
+    env = create_app().state.templates.env
+    post = Post(
+        id=12,
+        author_id=0,
+        category="reference",
+        title="서비스 연구",
+        body="기획과 UX\n좋은 흐름",
+        created_at="2026-09-03 10:00",
+        attachments=(
+            MediaAttachment(
+                "tiploop-research-images", "private/drafts/draft/image.jpg",
+                "image", "image/jpeg", "사내화면.jpg", 1024,
+            ),
+            MediaAttachment(
+                "tiploop-research-videos", "private/drafts/draft/video.mp4",
+                "video", "video/mp4", "회의영상.mp4", 2048,
+            ),
+        ),
+    )
+    attachments = research_service.attachment_dicts(post.attachments)
+    html = env.get_template("shared_research.html").render(
+        current_user=None,
+        site_url="https://tiploop.vercel.app",
+        brand="TIPLOOP",
+        tagline="서비스 연구",
+        post=post,
+        progress=research_service.progress(post),
+        groups=research_service.detail_groups(post.body),
+        attachments=attachments,
+        media_tokens=("D" * 43, "E" * 43),
+        media_endpoint="https://project.supabase.co/functions/v1/shared-media",
+    )
+
+    assert "?grant=" + "D" * 43 in html
+    assert "스크린샷 1" in html
+    assert "영상 2" in html
+    assert "controls playsinline" in html
+    assert "사내화면.jpg" not in html
+    assert "회의영상.mp4" not in html
+    assert "private/drafts" not in html
 
 
 @pytest.mark.no_db

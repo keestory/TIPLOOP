@@ -94,8 +94,10 @@ vercel --prod          # 프로덕션 배포
 - `IEUM_SECRET` 32자 이상, `SESSION_COOKIE_SECURE=1` 확인
 - **Supabase Auth → URL Configuration** 의 Redirect URL에 배포 도메인
   (`https://<배포도메인>/auth/callback`)을 추가해야 소셜 로그인 콜백이 동작합니다.
-- 새 이미지/영상 업로드는 비활성화 상태입니다. 이전 Public `attachments` 버킷이 있다면
-  공개 URL을 출시 전에 별도로 정리합니다(`docs/SUPABASE_SETUP.md` 참고).
+- 새 이미지/영상 업로드와 선택적인 7일 공유 링크를 점검합니다. 공유 중지 뒤 텍스트와
+  새 Range 미디어 요청이 모두 404인지 확인합니다.
+- 이전 Public `attachments` 버킷이 있다면 공개 URL을 출시 전에 별도로 정리합니다
+  (`docs/SUPABASE_SETUP.md` 참고).
 
 ## 참고: 정적 파일
 `vercel.json` 의 `includeFiles` 로 `templates/`·`static/` 가 함수 번들에 포함되고,

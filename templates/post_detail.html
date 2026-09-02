@@ -5,7 +5,10 @@
 <main class="body study-detail">
   <header class="topbar">
     <a class="cancel" href="/explore">‹ 보관함</a>
-    <a class="top-action" href="/posts/{{ post.id }}/edit">편집</a>
+    <div class="top-actions">
+      <a class="top-action" href="/posts/{{ post.id }}/share">공유</a>
+      <a class="top-action" href="/posts/{{ post.id }}/edit">편집</a>
+    </div>
   </header>
 
   <section class="study-detail-head">

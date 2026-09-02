@@ -48,6 +48,11 @@ DB에는 URL이 아닌 bucket과 path를 저장합니다.
 추가하지 마세요. 과거 `posts.image_url`과 `posts.video_url`은 소유자 상세에서 호환 표시만
 하므로 공개 URL 자체는 별도로 정리해야 합니다.
 
+작성자가 첨부 포함 링크를 만들면 `post_shares`에는 7일 만료 스냅샷과 원문 토큰 해시,
+`post_share_media_grants`에는 첨부별 grant 해시만 저장합니다. `shared-media` Edge Function은
+`verify_jwt=false`로 배포하지만 자체 256-bit secret grant를 검증하고 service key로 private
+객체를 스트리밍합니다. 두 테이블에도 browser 역할 정책이나 직접 권한을 만들지 마세요.
+
 ## 4. 리디렉션 허용 URL
 Supabase → Authentication → URL Configuration → **Redirect URLs**에 앱 주소의 콜백을 추가:
 ```
@@ -73,6 +78,6 @@ https://tiploop.vercel.app/auth/callback (배포)
 python -m scripts.verify_supabase_privacy
 ```
 
-이 검사는 API/DB 프로젝트 ref 일치, public 앱 테이블 13개의 RLS, 브라우저 역할
-정책·직접 권한 부재, publishable key의 `posts` Data API 차단을 확인합니다. Storage는
-두 연구 버킷이 private인지와 객체 정책이 사용자 UUID 경로로 제한되는지도 별도 확인합니다.
+이 검사는 API/DB 프로젝트 ref 일치, public 앱 테이블 15개의 RLS, 브라우저 역할
+정책·직접 권한 부재, publishable key의 `posts` Data API 차단을 확인합니다. 또한 두 연구
+버킷의 private·파일 제한과 Storage objects의 anon/public 정책 부재를 확인합니다.

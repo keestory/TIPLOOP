@@ -81,7 +81,8 @@ if _DB:
 os.environ["DATABASE_URL"] = _DB
 _TABLES = (
     "notifications, crew_entries, crew_members, crews, follows, media_comments, "
-    "reviews, post_helpful, comment_reactions, post_reactions, comments, posts, members"
+    "reviews, post_helpful, comment_reactions, post_reactions, comments, "
+    "post_share_media_grants, post_shares, posts, members"
 )
 
 

@@ -7,6 +7,7 @@ from app.config import settings
 from app.repo import privacy
 from app.ui import app_factory
 from app.ui import routes_auth
+from app.ui import routes_research_share
 from app.types.models import User
 
 
@@ -186,3 +187,19 @@ def test_auth_session_rejects_cross_origin(monkeypatch):
     })
     response = routes_auth.auth_session(request, "attacker-token")
     assert response.status_code == 403
+
+
+@pytest.mark.no_db
+def test_share_mutation_rejects_cross_origin():
+    request = Request({
+        "type": "http",
+        "method": "POST",
+        "scheme": "https",
+        "path": "/posts/12/share",
+        "headers": [
+            (b"host", b"tiploop.vercel.app"),
+            (b"origin", b"https://attacker.example"),
+        ],
+        "server": ("tiploop.vercel.app", 443),
+    })
+    assert routes_research_share._is_same_origin(request) is False

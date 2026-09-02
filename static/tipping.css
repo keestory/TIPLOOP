@@ -952,6 +952,62 @@ a.plain { text-decoration: none; color: inherit; }
 .private-media-card figcaption { padding: 10px 12px; font: 500 11px var(--sans); color: var(--muted-2); }
 .media-loading { min-height: 160px; margin: 0; display: grid; place-items: center; padding: 20px; text-align: center; font: 500 12px/1.5 var(--sans); color: var(--muted); }
 
+/* 연구 링크 공유 */
+.top-actions { display: flex; align-items: center; gap: 14px; }
+.share-settings, .shared-study { gap: 18px; }
+.share-intro { padding: 10px 2px 3px; }
+.share-intro h1 {
+  margin: 8px 0 12px; font: 900 29px/1.2 var(--head); letter-spacing: -.035em;
+}
+.share-intro > p:not(.eyebrow) { margin: 0; font: 400 14px/1.65 var(--sans); color: var(--muted); }
+.share-intro .share-expiry { margin-top: 5px; font-size: 12px; }
+.share-control, .share-result {
+  display: flex; flex-direction: column; gap: 13px; padding: 18px;
+  background: #fff; border: 1px solid var(--card-border); border-radius: 18px;
+}
+.share-control h2, .share-result h2 { margin: 0; font: 800 19px/1.3 var(--head); }
+.share-control > p, .share-result > p { margin: 0; font: 400 13px/1.55 var(--sans); color: var(--muted); }
+.share-control form { display: flex; flex-direction: column; gap: 12px; }
+.share-status {
+  align-self: flex-start; display: inline-flex; padding: 5px 8px; border-radius: 7px;
+  background: var(--lime-pale); color: #354300; font: 600 10px var(--mono); letter-spacing: .03em;
+}
+.share-media-choice {
+  min-height: 64px; display: flex; align-items: center; gap: 12px; padding: 12px;
+  border: 1.5px solid var(--ink); border-radius: 14px; background: var(--input-bg); cursor: pointer;
+}
+.share-media-choice.is-disabled { opacity: .5; border-color: var(--chip-border); cursor: default; }
+.share-media-choice input { width: 21px; height: 21px; flex: none; accent-color: var(--ink); }
+.share-media-choice span { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.share-media-choice strong { font: 700 14px var(--sans); }
+.share-media-choice small { font: 500 11px var(--mono); color: var(--meta); }
+.share-warning {
+  padding: 11px 12px; border-radius: 12px; background: #F5F0E5;
+  color: var(--muted-2) !important; font-size: 12px !important;
+}
+.share-button-stack { display: flex; flex-direction: column; gap: 9px; }
+.share-result label { font: 600 12px var(--sans); color: var(--muted-2); }
+.share-url {
+  width: 100%; min-height: 46px; padding: 11px 12px; border: 1px solid var(--chip-border);
+  border-radius: 12px; background: var(--input-bg); color: var(--ink); font: 500 11px/1.4 var(--mono);
+}
+.share-preview { align-self: center; min-height: 44px; display: inline-flex; align-items: center; }
+.share-feedback { min-height: 18px; color: #4E6900 !important; text-align: center; font-weight: 600 !important; }
+.share-revoke { margin: 0; text-align: center; }
+.share-revoke button {
+  min-height: 44px; padding: 0 14px; border: 0; background: transparent; color: #A12C27;
+  font: 600 13px var(--sans); text-decoration: underline; cursor: pointer;
+}
+.shared-topbar { margin-bottom: 2px; }
+.shared-media { margin-top: 3px; }
+.shared-footer-cta {
+  display: flex; flex-direction: column; gap: 12px; margin-top: 5px; padding: 18px;
+  background: var(--ink); color: #fff; border-radius: 18px;
+}
+.shared-footer-cta > p { margin: 0; font: 400 13px/1.6 var(--sans); color: #DDD8CC; }
+.shared-footer-cta .text-link { align-self: center; min-height: 44px; border: 0; background: transparent; color: #fff; cursor: pointer; }
+.shared-footer-cta .share-feedback { color: var(--lime) !important; }
+
 /* 계정 */
 .account-id { display: flex; align-items: center; gap: 13px; padding: 17px; background: #fff; border: 1px solid var(--card-border); border-radius: 17px; }
 .account-id .av { width: 48px; height: 48px; }

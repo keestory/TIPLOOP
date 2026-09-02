@@ -39,6 +39,31 @@ CREATE TABLE IF NOT EXISTS posts (
     )                                         -- 비공개 Storage path와 표시 메타데이터
 );
 
+-- 작성자가 명시적으로 켠 링크 공유. 원문 토큰은 저장하지 않고 해시만 둔다.
+CREATE TABLE IF NOT EXISTS post_shares (
+    id            BIGSERIAL PRIMARY KEY,
+    post_id       BIGINT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    token_hash    TEXT NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'),
+    include_media BOOLEAN NOT NULL DEFAULT FALSE,
+    snapshot      JSONB NOT NULL CHECK (jsonb_typeof(snapshot) = 'object'),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at    TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '7 days'),
+    revoked_at    TIMESTAMPTZ,
+    CHECK (expires_at > created_at AND expires_at <= created_at + interval '30 days')
+);
+CREATE TABLE IF NOT EXISTS post_share_media_grants (
+    id               BIGSERIAL PRIMARY KEY,
+    share_id         BIGINT NOT NULL REFERENCES post_shares(id) ON DELETE CASCADE,
+    attachment_index SMALLINT NOT NULL CHECK (attachment_index BETWEEN 0 AND 5),
+    token_hash       TEXT NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'),
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (share_id, attachment_index)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_post_shares_one_active
+    ON post_shares(post_id) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_post_shares_active_token
+    ON post_shares(token_hash) WHERE revoked_at IS NULL;
+
 -- 기존 설치에도 질문 선택·private 첨부 컬럼을 추가한다.
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS analysis_mode TEXT;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS analysis_template_version TEXT;
@@ -158,6 +183,8 @@ ALTER TABLE crews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crew_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE crew_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_shares ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_share_media_grants ENABLE ROW LEVEL SECURITY;
 
 -- 앱 데이터는 서버의 Postgres 연결로만 읽고 쓴다. RLS와 별개로 브라우저
 -- Data API 역할의 테이블·시퀀스 권한을 회수해 방어 계층을 하나 더 둔다.
