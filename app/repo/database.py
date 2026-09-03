@@ -34,8 +34,11 @@ CREATE TABLE IF NOT EXISTS members (
     agreed_terms  BOOLEAN NOT NULL DEFAULT FALSE,  -- 약관·개인정보 동의 (신규 첫 단계)
     has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE,  -- 첫 로그인 코치마크 투어 시청 여부
     checklist_dismissed BOOLEAN NOT NULL DEFAULT FALSE,  -- 홈 시작 체크리스트 닫음
+    deletion_started_at TIMESTAMPTZ,              -- 계정 삭제 중: 새 Storage 업로드 차단
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE members ADD COLUMN IF NOT EXISTS deletion_started_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS posts (
     id         BIGSERIAL PRIMARY KEY,

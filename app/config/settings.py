@@ -39,6 +39,18 @@ SUPABASE_PUBLISHABLE_KEY = (
 SUPABASE_ANON_KEY = SUPABASE_PUBLISHABLE_KEY
 SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 
+# Apple 로그인은 Apple Developer와 Supabase provider 설정이 모두 끝난 뒤에만
+# 화면에 노출한다. 준비 전 버튼을 보여 실패하는 로그인 흐름을 만들지 않는다.
+APPLE_AUTH_ENABLED = os.environ.get("APPLE_AUTH_ENABLED", "0") == "1"
+
+# 공개 법률·지원 화면. 실제 법적 운영자명과 공개 이메일은 배포 환경에서
+# 설정할 수 있으며, 이메일이 없을 때는 공개 GitHub 지원 창구를 제공한다.
+OPERATOR_NAME = os.environ.get("OPERATOR_NAME", "TIPLOOP 운영자")
+SUPPORT_EMAIL = os.environ.get("SUPPORT_EMAIL", "")
+SUPPORT_URL = os.environ.get(
+    "SUPPORT_URL", "https://github.com/keestory/TIPLOOP/issues"
+)
+
 # 크론 엔드포인트 보호 — Vercel이 Authorization: Bearer <CRON_SECRET>로 호출
 CRON_SECRET = os.environ.get("CRON_SECRET", "")
 
@@ -104,7 +116,7 @@ CATEGORIES = {
 }
 
 # 소셜 로그인 제공자
-PROVIDERS = ["google", "kakao"]
+PROVIDERS = ["google", "kakao"] + (["apple"] if APPLE_AUTH_ENABLED else [])
 
 # 크루 — 함께 쓰는 주간 기록 (셋로그식 소그룹). 주가 바뀌면 프롬프트 자동 로테이션.
 CREW_MAX_MEMBERS = 12

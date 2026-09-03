@@ -90,7 +90,9 @@
   document.getElementById('share-this-page').addEventListener('click', async function () {
     var feedback = document.getElementById('share-page-feedback');
     try {
-      if (navigator.share) {
+      if (window.tiploopNative) {
+        await window.tiploopNative.share({ title: document.title, url: location.href, dialogTitle: 'TIPLOOP 노트 공유' });
+      } else if (navigator.share) {
         await navigator.share({ title: document.title, url: location.href });
       } else {
         await navigator.clipboard.writeText(location.href);

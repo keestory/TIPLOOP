@@ -85,9 +85,14 @@
 
     document.getElementById('copy-share').addEventListener('click', copyLink);
     document.getElementById('native-share').addEventListener('click', async function () {
-      if (!navigator.share) return copyLink();
       try {
-        await navigator.share({ title: title, url: url });
+        if (window.tiploopNative) {
+          await window.tiploopNative.share({ title: title, url: url, dialogTitle: 'TIPLOOP 노트 공유' });
+        } else if (navigator.share) {
+          await navigator.share({ title: title, url: url });
+        } else {
+          return copyLink();
+        }
       } catch (error) {
         if (error.name !== 'AbortError') await copyLink();
       }

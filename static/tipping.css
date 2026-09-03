@@ -612,6 +612,7 @@ a.plain { text-decoration: none; color: inherit; }
   border: 1.5px solid var(--ink);
 }
 .social-btn:active { transform: scale(.98); }
+.social-btn.apple { background: #000; color: #fff; border-color: #000; }
 .social-btn.kakao { background: #FEE500; color: #191600; border-color: #FEE500; }
 .social-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -619,7 +620,15 @@ a.plain { text-decoration: none; color: inherit; }
 }
 .social-badge.g { border: 1px solid var(--chip-border); }
 .social-badge.k { background: #191600; color: #FEE500; }
+.apple-mark {
+  display: inline-block; color: #fff; font: 500 20px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  transform: translateY(-1px);
+}
 .auth-fine { margin: 18px 0 0; text-align: center; font: 500 11px var(--mono); letter-spacing: .02em; color: var(--meta); }
+.success-notice {
+  margin: 16px 0 0; padding: 11px 13px; border-radius: 12px;
+  background: #EFF8D7; color: #385000; font: 600 13px/1.5 var(--sans); text-align: center;
+}
 
 /* ── 영상 지점 코멘트 (videopin.js) ── */
 .hint { font: 500 12px var(--sans); color: #9A9384; display: flex; align-items: center; gap: 8px; }
@@ -1044,6 +1053,31 @@ a.plain { text-decoration: none; color: inherit; }
 .privacy-note > span { color: #79A500; font-size: 10px; padding-top: 4px; }
 .privacy-note strong { display: block; font: 700 13px var(--sans); }
 .privacy-note p { margin: 3px 0 0; font: 400 12px/1.5 var(--sans); color: var(--muted); }
+.account-delete-dialog {
+  width: min(430px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 22px;
+  color: var(--ink); background: #fff; box-shadow: 0 24px 80px rgba(26, 25, 23, .28);
+}
+.account-delete-dialog:not([open]) { display: none; }
+.account-delete-dialog::backdrop { background: rgba(26, 25, 23, .56); }
+.account-delete-dialog.fallback-open {
+  display: grid; position: fixed; inset: 0; z-index: 1000; width: 100%; height: 100%;
+  max-width: none; max-height: none; margin: 0; padding: 16px; place-items: center;
+  border-radius: 0; background: rgba(26, 25, 23, .56); box-shadow: none;
+}
+.account-delete-dialog.fallback-open .account-delete-card {
+  width: min(430px, 100%); border-radius: 22px; background: #fff;
+  box-shadow: 0 24px 80px rgba(26, 25, 23, .28);
+}
+.account-delete-card { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+.account-delete-card h2 { margin: 0; font: 800 24px/1.25 var(--head); }
+.account-delete-card p { margin: 0; font: 400 14px/1.6 var(--sans); color: var(--muted-2); }
+.danger-eyebrow { color: #A12C27; font: 700 11px var(--mono); letter-spacing: .12em; }
+.account-delete-card .account-delete-note { padding: 10px 12px; border-radius: 11px; background: #F7EEE9; color: #71322E; font-size: 12px; }
+.account-delete-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.btn.danger-fill { background: #A12C27; color: #fff; border-color: #A12C27; }
+.btn.danger-fill:disabled { opacity: .65; cursor: wait; }
+.support-card { display: flex; flex-direction: column; gap: 12px; padding: 18px; border: 1px solid var(--card-border); border-radius: 17px; background: #fff; }
+.support-card h2, .support-card p { margin: 0; }
 
 @media (hover: hover) and (pointer: fine) {
   .study-card:hover { transform: translateY(-2px); border-color: #CFC8B8; box-shadow: 0 10px 24px -20px rgba(26, 25, 23, .8); }

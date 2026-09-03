@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.config.settings import SESSION_COOKIE, SESSION_COOKIE_SECURE, SESSION_TTL_DAYS
-from app.service import auth_service
+from app.service import account_service, auth_service
 from app.service.auth_service import AuthError
 from app.types.models import User
 from app.ui.deps import get_current_user
@@ -29,8 +29,8 @@ def _render(request: Request, name: str, current_user: Optional[User], **ctx):
 
 
 @router.get("/login")
-def login_page(request: Request):
-    return _render(request, "login.html", None)
+def login_page(request: Request, deleted: str = ""):
+    return _render(request, "login.html", None, account_deleted=deleted == "1")
 
 
 @router.get("/register")
@@ -104,6 +104,32 @@ def logout(request: Request):
     return resp
 
 
+@router.post("/account/delete")
+def delete_account(
+    request: Request,
+    access_token: str = Form(...),
+    user: Optional[User] = Depends(get_current_user),
+):
+    """앱 안에서 전체 계정·노트·첨부 삭제를 시작하고 완료한다."""
+    if user is None:
+        return JSONResponse({"error": "다시 로그인해 주세요."}, status_code=401)
+    if not _is_same_origin(request):
+        return JSONResponse({"error": "허용되지 않은 요청입니다."}, status_code=403)
+    try:
+        account_service.delete_current_account(user, access_token)
+    except account_service.AccountDeletionError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=409)
+    resp = JSONResponse({"ok": True, "next": "/login?deleted=1"})
+    resp.delete_cookie(
+        SESSION_COOKIE,
+        httponly=True,
+        secure=SESSION_COOKIE_SECURE,
+        samesite="lax",
+    )
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
 @router.post("/tour/seen")
 def tour_seen(user: Optional[User] = Depends(get_current_user)):
     """첫 로그인 코치마크 투어 완료/건너뛰기 저장 (프론트 fetch)."""
@@ -141,6 +167,11 @@ def legal_service(request: Request, user: Optional[User] = Depends(get_current_u
 @router.get("/terms/privacy")
 def legal_privacy(request: Request, user: Optional[User] = Depends(get_current_user)):
     return _render(request, "legal_privacy.html", user)
+
+
+@router.get("/support")
+def support(request: Request, user: Optional[User] = Depends(get_current_user)):
+    return _render(request, "support.html", user)
 
 
 # ── 관심 주제 수정 (온보딩 완료 후 언제든) ──────────────────────────

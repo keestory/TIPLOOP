@@ -12,10 +12,18 @@
   {% if not supabase_url %}
   <p class="error" style="margin-top:16px">로그인이 아직 설정되지 않았습니다. (관리자: Supabase 키를 넣어주세요)</p>
   {% endif %}
+  {% if account_deleted %}
+  <p class="success-notice" role="status">계정과 저장한 데이터를 삭제했어요.</p>
+  {% endif %}
 
   <div class="grow"></div>
 
   <div class="auth-buttons">
+    {% if apple_auth_enabled %}
+    <button id="apple" class="social-btn apple" type="button">
+      <span class="apple-mark" aria-hidden="true">&#63743;</span> Apple로 계속하기
+    </button>
+    {% endif %}
     <button id="google" class="social-btn" type="button">
       <span class="social-badge g">G</span> 구글로 시작하기
     </button>
@@ -32,13 +40,64 @@
 
 {% block script %}
 {% if supabase_url %}
-<script src="/static/native-auth.js"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-  const native = !!(window.tippingNative && window.tippingNative.isNative)
-  // 앱: implicit 플로우로 토큰이 URL 프래그먼트에 실려 오게 한다 (native-auth.js가 처리)
+  const native = !!(window.tiploopNative && window.tiploopNative.isNative)
   const sb = createClient("{{ supabase_url }}", "{{ supabase_anon_key }}",
-    native ? { auth: { flowType: 'implicit' } } : undefined)
+    native ? { auth: { flowType: 'pkce', detectSessionInUrl: false } } : undefined)
+  let finishingNativeLogin = false
+
+  function callbackParams(rawUrl) {
+    const parsed = new URL(rawUrl)
+    if (parsed.protocol !== 'tiploop:' || parsed.hostname !== 'auth-callback') return null
+    const params = new URLSearchParams(parsed.search)
+    const fragment = new URLSearchParams(parsed.hash.slice(1))
+    for (const [key, value] of fragment) params.set(key, value)
+    return params
+  }
+
+  async function completeNativeLogin(rawUrl) {
+    if (!native || finishingNativeLogin || !rawUrl) return
+    let params
+    try { params = callbackParams(rawUrl) } catch (error) { return }
+    if (!params) return
+    finishingNativeLogin = true
+    try { await window.Capacitor.Plugins.Browser.close() } catch (error) {}
+    try {
+      if (params.get('error')) throw new Error(params.get('error_description') || '로그인이 취소됐습니다.')
+      const code = params.get('code')
+      if (!code) throw new Error('로그인 정보를 받지 못했습니다. 다시 시도해 주세요.')
+
+      // 딥링크에는 토큰 대신 일회용 code만 받고, 앱 안에서 PKCE 검증 후 세션을 저장한다.
+      const { data: sessionData, error: sessionError } = await sb.auth.exchangeCodeForSession(code)
+      if (sessionError || !sessionData || !sessionData.session) {
+        throw sessionError || new Error('로그인 세션을 만들지 못했습니다.')
+      }
+      const accessToken = sessionData.session.access_token
+
+      const body = new URLSearchParams({ access_token: accessToken })
+      const response = await fetch('/auth/session', { method: 'POST', body })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || '세션 생성에 실패했습니다.')
+      location.replace(result.next || '/')
+    } catch (error) {
+      finishingNativeLogin = false
+      alert(error.message || '로그인에 실패했습니다. 다시 시도해 주세요.')
+    }
+  }
+
+  if (native) {
+    window.addEventListener('tiploop:auth-url', event => completeNativeLogin(event.detail && event.detail.url))
+    completeNativeLogin(window.tiploopNative.consumePendingAuthUrl())
+    const appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App
+    const launchCheckedKey = 'tiploop.authLaunchUrlChecked'
+    if (appPlugin && appPlugin.getLaunchUrl && !sessionStorage.getItem(launchCheckedKey)) {
+      sessionStorage.setItem(launchCheckedKey, '1')
+      appPlugin.getLaunchUrl()
+        .then(result => completeNativeLogin(result && result.url))
+        .catch(() => {})
+    }
+  }
 
   async function login(provider) {
     if (!native) {
@@ -47,17 +106,20 @@
         provider, options: { redirectTo: location.origin + '/auth/callback' }
       })
     }
-    // 앱: WebView 안 OAuth는 구글이 차단 → 시스템 브라우저로 열고 딥링크로 복귀
+    // 앱: WebView 안 OAuth는 구글이 차단 → 시스템 브라우저로 열고 PKCE 딥링크로 복귀
     const { data, error } = await sb.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: 'tipping://auth-callback', skipBrowserRedirect: true }
+      options: { redirectTo: 'tiploop://auth-callback', skipBrowserRedirect: true }
     })
     if (error || !data || !data.url) {
       alert('로그인을 시작하지 못했습니다. 다시 시도해 주세요.')
       return
     }
-    window.tippingNative.openBrowser(data.url)
+    window.tiploopNative.openBrowser(data.url)
   }
+  {% if apple_auth_enabled %}
+  document.getElementById('apple').addEventListener('click', () => login('apple'))
+  {% endif %}
   document.getElementById('google').addEventListener('click', () => login('google'))
   document.getElementById('kakao').addEventListener('click', () => login('kakao'))
 </script>

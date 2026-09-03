@@ -83,3 +83,64 @@ def test_research_share_native_share_does_not_append_copy_to_url():
 
     assert "navigator.share({ title: title, url: url })" in template
     assert "함께 보고 싶은 서비스 분석이에요." not in template
+
+
+@pytest.mark.no_db
+def test_app_store_account_controls_and_legal_pages_are_present():
+    root = Path(__file__).resolve().parents[1]
+    profile = (root / "templates" / "profile.html").read_text(encoding="utf-8")
+    privacy = (root / "templates" / "legal_privacy.html").read_text(encoding="utf-8")
+    service = (root / "templates" / "legal_service.html").read_text(encoding="utf-8")
+    support = (root / "templates" / "support.html").read_text(encoding="utf-8")
+
+    assert 'id="open-delete-account"' in profile
+    assert "계정과 데이터 삭제" in profile
+    assert "스크린샷·영상" in profile
+    assert "/account/delete" in profile
+    assert "/support" in privacy
+    assert "운영자명]" not in privacy
+    assert "운영자명]" not in service
+    assert "계정 삭제" in support
+
+
+@pytest.mark.no_db
+def test_native_auth_uses_tiploop_callback_scheme_consistently():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+    bridge = (root / "static" / "native-auth.js").read_text(encoding="utf-8")
+    info_plist = (root / "mobile" / "ios" / "App" / "App" / "Info.plist").read_text(
+        encoding="utf-8"
+    )
+
+    assert "tiploop://auth-callback" in login
+    assert 'parsed.protocol === "tiploop:"' in bridge
+    assert "<string>tiploop</string>" in info_plist
+    assert "tipping://auth-callback" not in login
+
+
+@pytest.mark.no_db
+def test_native_auth_uses_pkce_session_exchange_and_cold_start_callback():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+    mobile = (root / "templates" / "mobile.html").read_text(encoding="utf-8")
+
+    assert "flowType: 'pkce'" in login
+    assert "sb.auth.exchangeCodeForSession(code)" in login
+    assert "params.get('code')" in login
+    assert "flowType: 'implicit'" not in login
+    assert "appPlugin.getLaunchUrl()" in login
+    assert "tiploop.authLaunchUrlChecked" in login
+    assert "tiploop:auth-url" in login
+    assert '/static/native-auth.js?v=2' in mobile
+
+
+@pytest.mark.no_db
+def test_account_delete_dialog_has_pre_ios_15_4_fallback():
+    root = Path(__file__).resolve().parents[1]
+    profile = (root / "templates" / "profile.html").read_text(encoding="utf-8")
+    css = (root / "static" / "tipping.css").read_text(encoding="utf-8")
+
+    assert "typeof dialog.showModal === 'function'" in profile
+    assert "dialog.setAttribute('open', '')" in profile
+    assert 'id="close-delete-account"' in profile
+    assert ".account-delete-dialog.fallback-open" in css

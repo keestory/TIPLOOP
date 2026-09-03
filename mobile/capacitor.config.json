@@ -1,12 +1,14 @@
 {
-  "appId": "com.keestory.tipping",
-  "appName": "티핑",
+  "appId": "com.keestory.tiploop",
+  "appName": "TIPLOOP",
   "webDir": "www",
   "server": {
     "url": "https://tiploop.vercel.app",
-    "cleartext": false
+    "cleartext": false,
+    "errorPath": "offline.html"
   },
   "ios": {
-    "contentInset": "always"
+    "contentInset": "never",
+    "preferredContentMode": "mobile"
   }
 }

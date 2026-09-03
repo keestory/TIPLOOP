@@ -16,8 +16,11 @@ CREATE TABLE IF NOT EXISTS members (
     agreed_terms  BOOLEAN NOT NULL DEFAULT FALSE,  -- 약관·개인정보 동의 (신규 첫 단계)
     has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE,  -- 첫 로그인 코치마크 투어 시청 여부
     checklist_dismissed BOOLEAN NOT NULL DEFAULT FALSE,  -- 홈 시작 체크리스트 닫음
+    deletion_started_at TIMESTAMPTZ,              -- 계정 삭제 중: 새 Storage 업로드 차단
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE members ADD COLUMN IF NOT EXISTS deletion_started_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS posts (
     id         BIGSERIAL PRIMARY KEY,
@@ -244,10 +247,32 @@ ON CONFLICT (id) DO UPDATE SET
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 DROP POLICY IF EXISTS "research_media_insert_own" ON storage.objects;
+CREATE OR REPLACE FUNCTION public.tiploop_account_accepts_storage()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+    account_is_active BOOLEAN;
+BEGIN
+    -- 행 잠금으로 삭제 시작과 업로드의 경합을 직렬화한다.
+    SELECT deletion_started_at IS NULL
+      INTO account_is_active
+      FROM public.members
+     WHERE auth_id = auth.uid()::text
+       FOR SHARE;
+    RETURN COALESCE(account_is_active, FALSE);
+END;
+$$;
+REVOKE ALL ON FUNCTION public.tiploop_account_accepts_storage() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.tiploop_account_accepts_storage() TO authenticated;
+
 CREATE POLICY "research_media_insert_own"
 ON storage.objects FOR INSERT TO authenticated
 WITH CHECK (
     bucket_id IN ('tiploop-research-images', 'tiploop-research-videos')
+    AND public.tiploop_account_accepts_storage()
     AND (storage.foldername(name))[1] = (SELECT auth.uid()::text)
     AND (storage.foldername(name))[2] = 'drafts'
     AND cardinality(storage.foldername(name)) = 3

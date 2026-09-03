@@ -1,7 +1,6 @@
-# Capacitor / Node — 생성물은 각자 Mac에서
+# Capacitor / Node
 node_modules/
-# 네이티브 프로젝트(cap add ios/android로 생성). 커밋하려면 이 줄을 지우세요.
-ios/
+# iOS 프로젝트는 서명 설정을 제외한 재현 가능한 앱 소스로 커밋한다.
 android/
 DerivedData/
 *.log

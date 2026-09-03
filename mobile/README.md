@@ -1,110 +1,57 @@
-# 티핑 iOS 앱 (Capacitor) — App Store 배포
+# TIPLOOP iOS 앱
 
-배포된 웹앱(`https://tiploop.vercel.app`)을 네이티브 셸로 감싸 App Store에 올린다.
-아래는 **당신 Mac에서** 실행하는 순서다. (샌드박스에선 빌드·서명·제출 불가)
+배포된 TIPLOOP(`https://tiploop.vercel.app`)을 Capacitor 기반 iPhone 앱으로 제공한다.
 
-## 0. 준비물
-- ✅ **Apple Developer Program** — 승인 완료
-- **Xcode** (App Store에서 설치) + Command Line Tools
-- **Node.js 18+**, CocoaPods (`sudo gem install cocoapods`)
+## 현재 값
 
-## 0.5 App Store Connect에 앱 레코드 미리 만들기 (권장)
-Xcode 아카이브 전에 미리 해두면 이름 중복 등을 일찍 발견한다.
-1. [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → **나의 앱 → +**
-2. **플랫폼**: iOS, **이름**: 티핑 (중복이면 "티핑 — 실무 팁 커뮤니티" 등으로),
-   **기본 언어**: 한국어, **Bundle ID**: `com.keestory.tipping` (드롭다운에 없으면
-   먼저 [Certificates, IDs & Profiles](https://developer.apple.com/account/resources/identifiers/list)
-   에서 App ID로 등록), **SKU**: `tipping-001` (아무 고유 문자열)
-3. 준비해둘 정보:
-   - **개인정보처리방침 URL**: `https://tiploop.vercel.app/terms/privacy` (이미 구현됨)
-   - **지원 URL**: 배포 도메인 그대로 써도 됨
-   - **카테고리**: 소셜 네트워킹 또는 생산성
-   - **연령 등급**: 설문 진행(특이 콘텐츠 없어 4+ 예상)
-   - **스크린샷**: 아래 "스크린샷" 섹션 참고 — 5장 준비돼 있음
+- 앱 이름: `TIPLOOP`
+- Bundle ID: `com.keestory.tiploop`
+- 버전 / 빌드: `1.0.0` / `1`
+- 대상: iPhone, 세로 화면
+- 최소 iOS: 14.0
+- 개인정보 처리방침: `https://tiploop.vercel.app/terms/privacy`
+- 지원 URL: `https://tiploop.vercel.app/support`
 
-## 1. Capacitor iOS 프로젝트 생성
+## 동기화와 빌드
+
 ```bash
-cd FT/mobile
-npm install
-npx cap add ios          # ios/ 네이티브 프로젝트 생성
-npx cap sync
+cd mobile
+npm ci
+npm run sync
+xcodebuild \
+  -workspace ios/App/App.xcworkspace \
+  -scheme App \
+  -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath /tmp/tiploop-derived \
+  CODE_SIGNING_ALLOWED=NO build
 ```
 
-## 2. 앱 아이콘/스플래시
-```bash
-npm i -D @capacitor/assets
-# 리포의 브랜드 아이콘을 소스로 사용
-cp ../static/icons/icon-512.png ./assets/icon.png   # 폴더 없으면 mkdir assets 먼저
-npx capacitor-assets generate --ios \
-  --iconBackgroundColor '#CDFF47' --splashBackgroundColor '#FCFBF8'
-npx cap sync
-```
+`npm run sync` 마지막에 실행되는 Xcode clean이 로컬 권한 때문에 실패하더라도,
+웹 자산 복사와 Pod 설치가 완료됐는지 확인한 뒤 위 빌드를 별도로 실행한다.
 
-## 3. Xcode에서 서명·실행
-```bash
-npx cap open ios
-```
-Xcode에서:
-1. 좌측 **App** 타겟 → **Signing & Capabilities**
-2. **Team** = 본인 Apple Developer 계정 선택 (자동 서명 체크)
-3. **Bundle Identifier** = `com.keestory.tipping` (고유해야 함; 중복이면 바꾸기)
-4. **Display Name** = 티핑, **Version** 1.0.0, **Build** 1
-5. 상단에서 실기기/시뮬레이터 선택 → ▶ 실행해 동작 확인
+## 제출 전 외부 설정
 
-## 4. 아카이브 → App Store 업로드
-1. 상단 기기 선택을 **Any iOS Device**로
-2. 메뉴 **Product → Archive**
-3. Organizer 창 → **Distribute App → App Store Connect → Upload**
-4. [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → **앱 생성**(같은 Bundle ID)
-   → 이름·설명·스크린샷·개인정보 처리방침 URL·연령등급 입력 → **심사 제출**
-   (먼저 **TestFlight**로 본인 폰에서 테스트 후 제출 추천)
+1. Apple Developer에서 `com.keestory.tiploop` App ID 생성
+2. Sign in with Apple capability와 `App.entitlements` 서명 연결 확인
+3. App Store Connect에 한국어 기본 앱 레코드 생성
+4. Supabase Authentication에서 Apple provider 설정
+5. Supabase Redirect URLs에 `tiploop://auth-callback` 추가
+6. Vercel에 `APPLE_AUTH_ENABLED=1`, 법적 운영자명과 지원 이메일 설정
+7. Xcode Signing & Capabilities에서 올바른 Team 선택
+8. Archive 업로드 후 TestFlight 실기기 QA
 
----
+Apple 로그인이 실제로 성공하기 전에는 `APPLE_AUTH_ENABLED`를 켜지 않는다.
 
-## 스크린샷 (App Store Connect 필수)
-2026년 기준 **6.9인치 iPhone 크기(1320×2868px) 한 세트만 있으면** 애플이
-나머지 기기 크기에 자동으로 맞춰준다. 실제 데이터로 만든 5장을 채팅에서
-전달받았다 — 홈 피드·글 상세(후기)·크루(스트릭)·주간 다이제스트·공유 카드.
-App Store Connect → 앱 → **스크린샷** 섹션에 그대로 업로드하면 된다.
+## 네이티브 기능
 
----
+- 시스템 공유 시트
+- 주요 동작 햅틱
+- OAuth·외부 링크 시스템 브라우저 열기
+- `tiploop://auth-callback` 딥링크
+- 앱 안 계정과 콘텐츠 삭제
+- 앱 개인정보 선언(`PrivacyInfo.xcprivacy`)
+- 네트워크·서버 오류 시 로컬 안내 화면
 
-## ⚠️ 미리 알아둘 두 가지 (중요)
-
-### (a) 애플 심사 4.2 — "웹사이트 래퍼" 반려 위험
-티핑은 모바일 최적화가 잘 돼 있어 유리하지만, 안전하게 통과하려면
-**네이티브 기능 1개**를 붙이는 걸 권장한다 → **푸시 알림**(`@capacitor/push-notifications`).
-첫 제출은 그대로 넣어보고, 4.2로 반려되면 그때 푸시를 추가해도 된다.
-
-### (b) 구글 로그인이 WebView에서 막힘 — ✅ 해결됨 (설정 2가지만 하면 됨)
-구글은 임베디드 WebView 안 OAuth를 차단한다(`disallowed_useragent`).
-웹 코드에 앱 분기가 이미 들어가 있다: 앱에서는 로그인만 **시스템 브라우저**
-(SFSafariViewController)로 열고, `tipping://auth-callback` 딥링크로 토큰을
-받아 세션을 만든다. (`templates/login.html` + `static/native-auth.js`)
-
-**당신이 할 설정 2가지:**
-
-1. **iOS URL 스킴 등록** — Xcode에서 App 타겟 → **Info → URL Types → +**
-   - URL Schemes: `tipping`  (Identifier는 `com.keestory.tipping` 등 아무거나)
-   - 또는 `ios/App/App/Info.plist`에 직접:
-   ```xml
-   <key>CFBundleURLTypes</key>
-   <array><dict>
-     <key>CFBundleURLSchemes</key><array><string>tipping</string></array>
-   </dict></array>
-   ```
-
-2. **Supabase Redirect URL 추가** — 대시보드 → Authentication → URL Configuration
-   → Redirect URLs에 추가:
-   ```
-   tipping://auth-callback
-   ```
-
-플러그인(`@capacitor/app`, `@capacitor/browser`)은 package.json에 포함돼 있어
-`npm install && npx cap sync` 하면 적용된다.
-
----
-
-## 이후 업데이트
-웹앱(Vercel)만 배포하면 앱은 그 URL을 로드하므로 **대부분의 변경은 앱 재제출 없이 반영**된다.
-네이티브 설정(아이콘·권한·플러그인)이 바뀔 때만 `npx cap sync` 후 재아카이브·재제출.
+앱은 현재 원격 서버 렌더링 화면을 사용한다. 웹 배포만으로 화면이 바뀔 수 있으므로,
+스토어 심사 중에는 핵심 흐름을 고정하고 제출 빌드와 같은 운영 버전을 유지한다.

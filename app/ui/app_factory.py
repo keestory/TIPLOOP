@@ -10,11 +10,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.config.settings import (
+    APPLE_AUTH_ENABLED,
     BRAND,
     CATEGORIES,
     INDUSTRIES,
     JOB_ROLES,
+    OPERATOR_NAME,
     SITE_URL,
+    SUPPORT_EMAIL,
+    SUPPORT_URL,
     SUPABASE_ANON_KEY,
     SUPABASE_URL,
     TAGLINE,
@@ -89,6 +93,10 @@ def create_app() -> FastAPI:
         site_url=SITE_URL,
         supabase_url=SUPABASE_URL,
         supabase_anon_key=SUPABASE_ANON_KEY,
+        apple_auth_enabled=APPLE_AUTH_ENABLED,
+        operator_name=OPERATOR_NAME,
+        support_email=SUPPORT_EMAIL,
+        support_url=SUPPORT_URL,
     )
     app.state.templates = templates
 

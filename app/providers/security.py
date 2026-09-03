@@ -36,6 +36,43 @@ def fetch_supabase_user(access_token: str, supabase_url: str, anon_key: str) -> 
     return data if isinstance(data, dict) and data.get("id") else None
 
 
+def delete_storage_paths(
+    access_token: str,
+    supabase_url: str,
+    publishable_key: str,
+    bucket: str,
+    paths: list[str],
+) -> bool:
+    """현재 사용자의 JWT로 본인 소유 Storage 객체를 삭제한다.
+
+    브라우저가 먼저 파일을 지우지만, 서버에서도 같은 사용자 토큰으로 한 번 더
+    실행해 네트워크 중단 뒤 남은 객체를 정리한다. 관리자 키는 사용하지 않는다.
+    """
+    if not paths:
+        return True
+    url = f"{supabase_url.rstrip('/')}/storage/v1/object/{bucket}"
+    # Supabase Storage remove API는 요청당 최대 1,000개다.
+    for start in range(0, len(paths), 1000):
+        body = json.dumps({"prefixes": paths[start:start + 1000]}).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            method="DELETE",
+            headers={
+                "Authorization": "Bearer " + access_token,
+                "apikey": publishable_key,
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                if not 200 <= resp.status < 300:
+                    return False
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return False
+    return True
+
+
 def sign_session(member_id: int, secret: str, ttl_seconds: int) -> str:
     """member_id를 담은 서명 세션 토큰. 'id.exp.sig' 형식."""
     exp = int(time.time()) + ttl_seconds

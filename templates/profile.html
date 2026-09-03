@@ -37,9 +37,13 @@
       <a class="set-row" href="/terms/privacy">
         <span class="set-label">개인정보 처리방침</span><span class="meta">→</span>
       </a>
+      <a class="set-row" href="/support">
+        <span class="set-label">도움말·문의</span><span class="meta">→</span>
+      </a>
       <form action="/logout" method="post" class="logout-form" novalidate>
         <button type="submit" class="set-row danger">로그아웃</button>
       </form>
+      <button type="button" class="set-row danger" id="open-delete-account">계정 삭제</button>
     </div>
   </section>
 
@@ -48,6 +52,85 @@
     <div><strong>서비스 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있어요. 이전 커뮤니티 첨부는 상세에서 별도로 표시됩니다.</p></div>
   </section>
 </main>
+
+<dialog class="account-delete-dialog" id="account-delete-dialog" aria-labelledby="account-delete-title">
+  <form method="dialog" class="account-delete-card">
+    <span class="danger-eyebrow">DELETE ACCOUNT</span>
+    <h2 id="account-delete-title">계정을 삭제할까요?</h2>
+    <p>작성한 노트, 스크린샷·영상, 공유 링크와 계정 정보가 모두 삭제되며 되돌릴 수 없어요.</p>
+    <p class="account-delete-note">앱을 삭제하는 것만으로는 계정이 삭제되지 않습니다.</p>
+    <p class="error" id="account-delete-error" role="alert" hidden></p>
+    <div class="account-delete-actions">
+      <button type="button" class="btn danger-fill" id="confirm-delete-account">계정과 데이터 삭제</button>
+      <button type="button" class="btn gh" id="close-delete-account">취소</button>
+    </div>
+  </form>
+</dialog>
 {% set tab = "profile" %}
 {% include "_tabbar.html" %}
+{% endblock %}
+
+{% block script %}
+{% if supabase_url %}
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const dialog = document.getElementById('account-delete-dialog')
+  const openButton = document.getElementById('open-delete-account')
+  const closeButton = document.getElementById('close-delete-account')
+  const confirmButton = document.getElementById('confirm-delete-account')
+  const errorBox = document.getElementById('account-delete-error')
+  const sb = createClient({{ supabase_url|tojson }}, {{ supabase_anon_key|tojson }})
+
+  function openDeleteDialog() {
+    if (typeof dialog.showModal === 'function') dialog.showModal()
+    else {
+      dialog.setAttribute('open', '')
+      dialog.classList.add('fallback-open')
+      confirmButton.focus()
+    }
+  }
+
+  function closeDeleteDialog() {
+    if (typeof dialog.close === 'function') dialog.close()
+    else dialog.removeAttribute('open')
+    dialog.classList.remove('fallback-open')
+    openButton.focus()
+  }
+
+  openButton.addEventListener('click', openDeleteDialog)
+  closeButton.addEventListener('click', closeDeleteDialog)
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) closeDeleteDialog()
+  })
+
+  async function deleteAccount() {
+    confirmButton.disabled = true
+    confirmButton.textContent = '삭제하는 중…'
+    errorBox.hidden = true
+    try {
+      const { data: { session } } = await sb.auth.getSession()
+      if (!session || session.user.id !== {{ current_user.auth_id|tojson }}) {
+        throw new Error('안전을 위해 다시 로그인한 뒤 삭제해 주세요.')
+      }
+      const body = new URLSearchParams({ access_token: session.access_token })
+      const response = await fetch('/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || '계정을 삭제하지 못했습니다.')
+      await sb.auth.signOut({ scope: 'local' }).catch(() => {})
+      location.replace(result.next || '/login?deleted=1')
+    } catch (error) {
+      errorBox.textContent = error.message || '계정을 삭제하지 못했습니다.'
+      errorBox.hidden = false
+      confirmButton.disabled = false
+      confirmButton.textContent = '계정과 데이터 삭제'
+    }
+  }
+
+  confirmButton.addEventListener('click', deleteAccount)
+</script>
+{% endif %}
 {% endblock %}
