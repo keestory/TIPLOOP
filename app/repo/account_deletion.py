@@ -56,7 +56,14 @@ def delete_account(member_id: int, auth_id: str) -> None:
                 (auth_id,),
             ).fetchone()
             member_row = conn.execute(
-                "SELECT id FROM members WHERE id = %s AND auth_id = %s FOR UPDATE",
+                """
+                SELECT id
+                  FROM members
+                 WHERE id = %s
+                   AND auth_id = %s
+                   AND deletion_started_at IS NOT NULL
+                   FOR UPDATE
+                """,
                 (member_id, auth_id),
             ).fetchone()
             if auth_row is None or member_row is None:

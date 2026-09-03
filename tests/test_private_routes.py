@@ -20,7 +20,7 @@ from app.service import research_service
 from app.types.models import Post
 from app.types.models import MediaAttachment
 from app.types.models import User
-from app.ui import routes_community, routes_legacy, routes_post, routes_research_share
+from app.ui import routes_community, routes_post, routes_research_share
 from app.ui.app_factory import create_app
 
 
@@ -182,5 +182,24 @@ def test_retired_social_mutations_return_gone():
         job_role="PM",
         years="3~5년",
     )
-    assert routes_legacy.react_comment(None, 99, user=user).status_code == 410
     assert routes_community.follow_user(None, 99, user=user).status_code == 410
+
+
+@pytest.mark.no_db
+def test_app_store_http_surface_excludes_crew_and_legacy_social_routes():
+    app = create_app()
+    paths = {route.path for route in app.routes if hasattr(route, "path")}
+    for included in app.routes:
+        original = getattr(included, "original_router", None)
+        if original is not None:
+            paths.update(route.path for route in original.routes if hasattr(route, "path"))
+
+    assert "/" in paths
+    assert "/explore" in paths
+    assert "/account/delete" in paths
+    assert "/posts/{post_id}/share" in paths
+    assert "/crews" not in paths
+    assert "/crews/join/{invite_code}" not in paths
+    assert "/cron/weekly-nudge" not in paths
+    assert "/posts/{post_id}/comments" not in paths
+    assert "/posts/{post_id}/reviews" not in paths

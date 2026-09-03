@@ -18,14 +18,20 @@ class Rows:
     def fetchall(self):
         return self._rows
 
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
 
 class Connection:
-    def __init__(self, states, policies, privileges):
+    def __init__(self, states, policies, privileges, deletion_gate):
         self.states = states
         self.policies = policies
         self.privileges = privileges
+        self.deletion_gate = deletion_gate
 
     def execute(self, query, _params):
+        if "tiploop_account_accepts_storage" in query:
+            return Rows([self.deletion_gate])
         if "pg_class" in query:
             return Rows(self.states)
         if "has_table_privilege" in query:
@@ -44,8 +50,26 @@ class ConnectionContext:
         return False
 
 
-def _connection(states, policies=(), privileges=()):
-    return lambda: ConnectionContext(Connection(states, policies, privileges))
+_SAFE_DELETION_GATE = {
+    "has_tombstone": True,
+    "has_safe_function": True,
+    "authenticated_schema_usage": True,
+    "anon_schema_usage": False,
+    "authenticated_execute": True,
+    "anon_execute": False,
+    "insert_policy_uses_gate": True,
+}
+
+
+def _connection(states, policies=(), privileges=(), deletion_gate=None):
+    return lambda: ConnectionContext(
+        Connection(
+            states,
+            policies,
+            privileges,
+            deletion_gate or _SAFE_DELETION_GATE,
+        )
+    )
 
 
 @pytest.mark.no_db
@@ -81,6 +105,23 @@ def test_privacy_check_rejects_browser_table_privilege(monkeypatch):
         _connection(states, privileges=privileges),
     )
     with pytest.raises(RuntimeError, match="직접 테이블 권한"):
+        privacy.verify_privacy_boundaries()
+
+
+@pytest.mark.no_db
+def test_privacy_check_requires_account_deletion_storage_gate(monkeypatch):
+    states = [
+        {"relname": table, "relrowsecurity": True}
+        for table in privacy.RLS_TABLES
+    ]
+    unsafe_gate = {**_SAFE_DELETION_GATE, "insert_policy_uses_gate": False}
+    monkeypatch.setattr(
+        privacy,
+        "get_connection",
+        _connection(states, deletion_gate=unsafe_gate),
+    )
+
+    with pytest.raises(RuntimeError, match="계정 삭제 중 새 첨부"):
         privacy.verify_privacy_boundaries()
 
 

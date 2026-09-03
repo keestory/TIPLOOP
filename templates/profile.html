@@ -49,7 +49,7 @@
 
   <section class="privacy-note">
     <span aria-hidden="true">●</span>
-    <div><strong>서비스 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있어요. 이전 커뮤니티 첨부는 상세에서 별도로 표시됩니다.</p></div>
+    <div><strong>서비스 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있고, 내가 만든 기간 제한 링크로만 공유돼요.</p></div>
   </section>
 </main>
 
@@ -121,6 +121,9 @@
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || '계정을 삭제하지 못했습니다.')
       await sb.auth.signOut({ scope: 'local' }).catch(() => {})
+      if (window.tiploopNative && window.tiploopNative.clearLocalAuthState) {
+        window.tiploopNative.clearLocalAuthState({{ supabase_url|tojson }})
+      }
       location.replace(result.next || '/login?deleted=1')
     } catch (error) {
       errorBox.textContent = error.message || '계정을 삭제하지 못했습니다.'

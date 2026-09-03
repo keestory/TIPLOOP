@@ -1,6 +1,6 @@
 """라우트 공통 헬퍼 — 템플릿 렌더링, referer 복귀, 쓰기 액션 가드.
 
-여러 라우트 모듈(routes_community, routes_post, routes_crew 등)이 공유한다.
+여러 라우트 모듈(routes_community, routes_post 등)이 공유한다.
 """
 
 from __future__ import annotations

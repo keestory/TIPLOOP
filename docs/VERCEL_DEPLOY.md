@@ -31,9 +31,8 @@ FastAPI 앱을 Vercel **Python 서버리스 함수**로 배포한다. 빌드 스
 | `SITE_URL` | `https://tiploop.vercel.app` | OG·공유 카드 절대 URL |
 | `SKIP_DB_INIT` | `1` | `schema.sql` 적용·RLS 검증이 끝난 배포에서만 사용 |
 
-> **크론**: `vercel.json`의 `crons`가 일요일 09:00 UTC(한국 18:00)에
-> `/cron/weekly-nudge`를 호출해 이번 주 미참여 크루원에게 마감 넛지 알림을 보낸다.
-> `CRON_SECRET`이 없으면 엔드포인트는 401로 잠긴다.
+> 첫 App Store 버전은 개인 서비스 노트만 제공하므로 크루 넛지 Cron과
+> `/cron/weekly-nudge` 엔드포인트는 배포하지 않는다.
 
 ### DATABASE_URL — 서버리스용 풀러
 Supabase 대시보드 → **Connect** → **Transaction pooler**(포트 `6543`, IPv4)의

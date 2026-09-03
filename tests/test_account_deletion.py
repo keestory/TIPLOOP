@@ -162,3 +162,13 @@ def test_storage_gate_serializes_upload_with_deletion_start():
     assert "deletion_started_at IS NULL" in migration
     assert "FOR SHARE;" in migration
     assert "FOR KEY SHARE;" not in migration
+
+
+@pytest.mark.no_db
+def test_final_account_delete_requires_deletion_tombstone():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "app" / "repo" / "account_deletion.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "deletion_started_at IS NOT NULL" in source

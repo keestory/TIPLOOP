@@ -17,6 +17,9 @@
       // 앱 쿠키는 서버에서 이미 삭제했다. 외부 라이브러리 실패가 이동을 막지 않는다.
     }
     {% endif %}
+    if (window.tiploopNative && window.tiploopNative.clearLocalAuthState) {
+      window.tiploopNative.clearLocalAuthState({{ supabase_url|tojson }})
+    }
     location.replace('/login')
   }
   finishLogout()

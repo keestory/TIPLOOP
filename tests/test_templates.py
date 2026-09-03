@@ -24,6 +24,7 @@ def test_logout_template_clears_supabase_browser_session():
         supabase_anon_key="publishable",
     )
     assert "auth.signOut" in rendered
+    assert "clearLocalAuthState" in rendered
     assert "location.replace('/login')" in rendered
 
 
@@ -154,3 +155,14 @@ def test_account_delete_dialog_has_pre_ios_15_4_fallback():
     assert "dialog.setAttribute('open', '')" in profile
     assert 'id="close-delete-account"' in profile
     assert ".account-delete-dialog.fallback-open" in css
+
+
+@pytest.mark.no_db
+def test_account_delete_clears_only_this_projects_local_auth_state():
+    root = Path(__file__).resolve().parents[1]
+    profile = (root / "templates" / "profile.html").read_text(encoding="utf-8")
+    bridge = (root / "static" / "native-auth.js").read_text(encoding="utf-8")
+
+    assert "clearLocalAuthState" in profile
+    assert 'localStorage.removeItem("sb-" + projectRef + "-auth-token")' in bridge
+    assert "localStorage.clear" not in bridge

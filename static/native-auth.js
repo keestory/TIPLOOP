@@ -31,9 +31,24 @@
     return isAuthCallback(url) ? url : "";
   }
 
+  function clearLocalAuthState(supabaseUrl) {
+    var projectRef = "";
+    try {
+      var host = new URL(supabaseUrl).hostname;
+      if (/\.supabase\.co$/i.test(host)) projectRef = host.split(".")[0];
+    } catch (error) {}
+    try {
+      sessionStorage.removeItem(pendingKey);
+      sessionStorage.removeItem("tiploop.authLaunchUrlChecked");
+    } catch (error) {}
+    if (!projectRef) return;
+    try { localStorage.removeItem("sb-" + projectRef + "-auth-token"); } catch (error) {}
+  }
+
   window.tiploopNative = Object.assign(window.tiploopNative || {}, {
     isNative: isNative,
     consumePendingAuthUrl: consumePendingAuthUrl,
+    clearLocalAuthState: clearLocalAuthState,
     openBrowser: function (url) {
       if (cap && cap.Plugins && cap.Plugins.Browser) cap.Plugins.Browser.open({ url: url });
       else window.open(url, "_blank");

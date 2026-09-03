@@ -117,6 +117,10 @@ def verify_private_media_storage() -> None:
             or "tiploop-research-videos" not in expression
             or "storage.foldername(name)" not in expression
             or "auth.uid()" not in expression
+            or (
+                command == "INSERT"
+                and "tiploop_account_accepts_storage" not in expression
+            )
         ):
             raise RuntimeError(f"{name} Storage 소유자 정책이 예상 범위와 다릅니다.")
 
@@ -130,7 +134,10 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001 - 배포 게이트는 모든 실패를 차단한다.
         print(f"[FAIL] {exc}", file=sys.stderr)
         return 1
-    print("[PASS] 15개 앱 테이블 RLS + Data API/비공개 Storage 경계 확인")
+    print(
+        "[PASS] 15개 앱 테이블 RLS + Data API/비공개 Storage + "
+        "계정 삭제 gate 확인"
+    )
     return 0
 
 

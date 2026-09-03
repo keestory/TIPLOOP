@@ -32,8 +32,6 @@ from app.repo.privacy import verify_privacy_boundaries
 from app.ui import (
     routes_auth,
     routes_community,
-    routes_crew,
-    routes_legacy,
     routes_post,
     routes_pwa,
     routes_research_share,
@@ -104,9 +102,9 @@ def create_app() -> FastAPI:
 
     app.include_router(routes_pwa.router)
     app.include_router(routes_auth.router)
-    app.include_router(routes_crew.router)
     app.include_router(routes_post.router)
     app.include_router(routes_research_share.router)
-    app.include_router(routes_legacy.router)
+    # App Store 첫 버전은 개인 서비스 노트에만 집중한다. 이전 커뮤니티/크루
+    # 모듈은 데이터 호환을 위해 저장소에 남기되 HTTP 라우트에는 연결하지 않는다.
     app.include_router(routes_community.router)
     return app
