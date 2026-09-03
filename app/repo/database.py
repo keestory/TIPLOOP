@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS members (
     email      TEXT,
     name       TEXT NOT NULL,
     avatar_url TEXT,
-    provider   TEXT,                          -- google | kakao
+    provider   TEXT,                          -- google | apple
     job_role   TEXT,                          -- 직군 (온보딩 전엔 NULL)
     years      TEXT,                          -- 연차
     industry   TEXT,                          -- 업종

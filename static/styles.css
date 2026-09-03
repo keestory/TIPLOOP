@@ -338,9 +338,6 @@ select:focus, input:focus, textarea:focus {
   align-items: center; justify-content: center; font-weight: 800; font-size: 13px;
 }
 .social-google .social-logo { border: 1px solid var(--line); }
-.social-kakao { background: #fee500; border-color: #fee500; color: #191600; }
-.social-kakao:hover { background: #f5dd00; border-color: #f5dd00; }
-.social-kakao .social-logo { background: #191600; color: #fee500; }
 .auth-fine { color: var(--muted); font-size: 12px; margin-top: calc(var(--unit) * 3); }
 
 /* 헤더 아바타 + 온보딩 정체성 박스 */

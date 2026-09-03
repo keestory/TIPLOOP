@@ -30,7 +30,7 @@ class User:
     created_at: str
     email: str | None = None
     avatar_url: str | None = None
-    provider: str | None = None  # google | kakao | apple
+    provider: str | None = None  # google | apple
     # 온보딩에서 채우는 값 (소셜이 주지 않음) — 완료 전엔 None
     job_role: str | None = None   # 직군
     years: str | None = None      # 연차

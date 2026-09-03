@@ -613,13 +613,11 @@ a.plain { text-decoration: none; color: inherit; }
 }
 .social-btn:active { transform: scale(.98); }
 .social-btn.apple { background: #000; color: #fff; border-color: #000; }
-.social-btn.kakao { background: #FEE500; color: #191600; border-color: #FEE500; }
 .social-badge {
   display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; border-radius: 50%; font: 800 13px var(--sans);
 }
 .social-badge.g { border: 1px solid var(--chip-border); }
-.social-badge.k { background: #191600; color: #FEE500; }
 .apple-mark {
   display: inline-block; color: #fff; font: 500 20px/1 -apple-system, BlinkMacSystemFont, sans-serif;
   transform: translateY(-1px);

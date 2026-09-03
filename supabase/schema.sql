@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS members (
     email      TEXT,
     name       TEXT NOT NULL,
     avatar_url TEXT,
-    provider   TEXT,                          -- google | kakao
+    provider   TEXT,                          -- google | apple
     job_role   TEXT,                          -- 직군 (온보딩 전엔 NULL)
     years      TEXT,                          -- 연차
     industry   TEXT,                          -- 업종
@@ -247,11 +247,15 @@ ON CONFLICT (id) DO UPDATE SET
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 DROP POLICY IF EXISTS "research_media_insert_own" ON storage.objects;
-CREATE OR REPLACE FUNCTION public.tiploop_account_accepts_storage()
+CREATE SCHEMA IF NOT EXISTS tiploop_private;
+REVOKE ALL ON SCHEMA tiploop_private FROM PUBLIC;
+GRANT USAGE ON SCHEMA tiploop_private TO authenticated;
+
+CREATE OR REPLACE FUNCTION tiploop_private.tiploop_account_accepts_storage()
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, auth
+SET search_path = public, auth, pg_temp
 AS $$
 DECLARE
     account_is_active BOOLEAN;
@@ -265,14 +269,14 @@ BEGIN
     RETURN COALESCE(account_is_active, FALSE);
 END;
 $$;
-REVOKE ALL ON FUNCTION public.tiploop_account_accepts_storage() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.tiploop_account_accepts_storage() TO authenticated;
+REVOKE ALL ON FUNCTION tiploop_private.tiploop_account_accepts_storage() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION tiploop_private.tiploop_account_accepts_storage() TO authenticated;
 
 CREATE POLICY "research_media_insert_own"
 ON storage.objects FOR INSERT TO authenticated
 WITH CHECK (
     bucket_id IN ('tiploop-research-images', 'tiploop-research-videos')
-    AND public.tiploop_account_accepts_storage()
+    AND tiploop_private.tiploop_account_accepts_storage()
     AND (storage.foldername(name))[1] = (SELECT auth.uid()::text)
     AND (storage.foldername(name))[2] = 'drafts'
     AND cardinality(storage.foldername(name)) = 3

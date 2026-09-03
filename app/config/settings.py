@@ -116,7 +116,7 @@ CATEGORIES = {
 }
 
 # 소셜 로그인 제공자
-PROVIDERS = ["google", "kakao"] + (["apple"] if APPLE_AUTH_ENABLED else [])
+PROVIDERS = ["google"] + (["apple"] if APPLE_AUTH_ENABLED else [])
 
 # 크루 — 함께 쓰는 주간 기록 (셋로그식 소그룹). 주가 바뀌면 프롬프트 자동 로테이션.
 CREW_MAX_MEMBERS = 12

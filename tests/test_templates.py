@@ -119,6 +119,16 @@ def test_native_auth_uses_tiploop_callback_scheme_consistently():
 
 
 @pytest.mark.no_db
+def test_login_does_not_offer_removed_kakao_provider():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+
+    assert "카카오" not in login
+    assert "login('kakao')" not in login
+    assert 'id="kakao"' not in login
+
+
+@pytest.mark.no_db
 def test_native_auth_uses_pkce_session_exchange_and_cold_start_callback():
     root = Path(__file__).resolve().parents[1]
     login = (root / "templates" / "login.html").read_text(encoding="utf-8")

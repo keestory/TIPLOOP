@@ -27,9 +27,6 @@
     <button id="google" class="social-btn" type="button">
       <span class="social-badge g">G</span> 구글로 시작하기
     </button>
-    <button id="kakao" class="social-btn kakao" type="button">
-      <span class="social-badge k">K</span> 카카오로 시작하기
-    </button>
   </div>
 
   <p class="auth-fine">계속하면 이용약관·개인정보 처리방침에 동의하게 됩니다</p>
@@ -121,7 +118,6 @@
   document.getElementById('apple').addEventListener('click', () => login('apple'))
   {% endif %}
   document.getElementById('google').addEventListener('click', () => login('google'))
-  document.getElementById('kakao').addEventListener('click', () => login('kakao'))
 </script>
 {% endif %}
 {% endblock %}

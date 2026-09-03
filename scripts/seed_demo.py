@@ -2,7 +2,7 @@
 
     DATABASE_URL=... python3 scripts/seed_demo.py
 
-인증(구글/카카오)은 외부 Supabase가 맡으므로, 여기선 회원 프로필을 직접 만들어
+인증(Google/Apple)은 외부 Supabase가 맡으므로, 여기선 회원 프로필을 직접 만들어
 팁·레퍼런스·질문·회고 예시를 채운다. 같은 auth_id는 갱신만 하므로 재실행도 안전.
 """
 
@@ -21,9 +21,9 @@ from app.service import reaction_service as R
 
 MEMBERS = [
     ("seed-jun", "김준", "google", "PM", "3~5년", "커머스"),
-    ("seed-sora", "이소라", "kakao", "디자인", "5~10년", "SaaS"),
+    ("seed-sora", "이소라", "google", "디자인", "5~10년", "SaaS"),
     ("seed-min", "박민", "google", "개발", "1~3년", "핀테크"),
-    ("seed-hyun", "정현", "kakao", "마케팅", "5~10년", "콘텐츠·미디어"),
+    ("seed-hyun", "정현", "google", "마케팅", "5~10년", "콘텐츠·미디어"),
 ]
 
 

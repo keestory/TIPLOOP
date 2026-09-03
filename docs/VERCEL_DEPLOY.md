@@ -88,7 +88,7 @@ vercel --prod          # 프로덕션 배포
 ```
 
 ## 4. 배포 후 점검
-- `/login` → 구글/카카오 버튼이 보이는지
+- `/login` → 구글 버튼과, 설정 완료 시 Apple 버튼이 보이는지
 - 로그인 → 온보딩 → 홈 흐름
 - 배포 환경에서 `python -m scripts.verify_supabase_privacy` 통과
 - `IEUM_SECRET` 32자 이상, `SESSION_COOKIE_SECURE=1` 확인
