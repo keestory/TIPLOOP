@@ -87,7 +87,7 @@
     document.getElementById('native-share').addEventListener('click', async function () {
       if (!navigator.share) return copyLink();
       try {
-        await navigator.share({ title: title, text: '함께 보고 싶은 서비스 분석이에요.', url: url });
+        await navigator.share({ title: title, url: url });
       } catch (error) {
         if (error.name !== 'AbortError') await copyLink();
       }

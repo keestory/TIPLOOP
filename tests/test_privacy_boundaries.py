@@ -203,3 +203,20 @@ def test_share_mutation_rejects_cross_origin():
         "server": ("tiploop.vercel.app", 443),
     })
     assert routes_research_share._is_same_origin(request) is False
+
+
+@pytest.mark.no_db
+def test_ios_share_sheet_text_suffix_is_removed_from_share_token():
+    token = "_" + "A" * 42
+
+    assert routes_research_share._share_token_from_path(token) == token
+    assert (
+        routes_research_share._share_token_from_path(
+            token + " 함께 보고 싶은 서비스 분석이에요."
+        )
+        == token
+    )
+    assert (
+        routes_research_share._share_token_from_path(token + "붙은문구")
+        == token + "붙은문구"
+    )

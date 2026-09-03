@@ -88,6 +88,45 @@ def test_public_share_is_frozen_snapshot_with_scoped_media_tokens(monkeypatch):
 
 
 @pytest.mark.no_db
+def test_created_token_round_trips_to_public_lookup(monkeypatch):
+    stored = {}
+    monkeypatch.setattr(
+        research_share_service.posts, "get_owned_post", lambda *_: _post()
+    )
+    monkeypatch.setattr(
+        research_share_service.secrets, "token_urlsafe", lambda _n: "R" * 43
+    )
+
+    def replace(
+        post_id, _author_id, token_hash, include_media, snapshot, _media_hashes
+    ):
+        stored[token_hash] = {
+            "id": 9,
+            "post_id": post_id,
+            "include_media": include_media,
+            "snapshot": snapshot,
+        }
+        return True
+
+    monkeypatch.setattr(research_share_service.post_shares, "replace_active", replace)
+    monkeypatch.setattr(
+        research_share_service.post_shares,
+        "active_for_hash",
+        lambda token_hash: stored.get(token_hash),
+    )
+
+    token = research_share_service.create_link(12, 7, "auth-7", True)
+    shared, grants = research_share_service.shared_note(token)
+
+    assert shared.title == "Notion"
+    assert len(grants) == 2
+    assert grants == tuple(
+        research_share_service._media_token("R" * 43, index)
+        for index in range(2)
+    )
+
+
+@pytest.mark.no_db
 def test_share_rejects_bad_or_unknown_token(monkeypatch):
     with pytest.raises(ResearchShareError):
         research_share_service.shared_note("too-short")

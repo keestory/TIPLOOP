@@ -47,3 +47,14 @@ def test_research_form_dismisses_mobile_keyboard_without_blocking_interactions()
     assert "document.addEventListener('pointerdown'" in javascript
     assert "document.addEventListener('touchend'" in javascript
     assert javascript.count("{ passive: true }") >= 4
+
+
+@pytest.mark.no_db
+def test_research_share_native_share_does_not_append_copy_to_url():
+    root = Path(__file__).resolve().parents[1]
+    template = (root / "templates" / "research_share.html").read_text(
+        encoding="utf-8"
+    )
+
+    assert "navigator.share({ title: title, url: url })" in template
+    assert "함께 보고 싶은 서비스 분석이에요." not in template

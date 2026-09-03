@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -17,6 +18,20 @@ from app.ui.deps import get_current_user
 from app.ui.render import gate, render
 
 router = APIRouter()
+
+_SHARE_TOKEN_WITH_TEXT_RE = re.compile(
+    r"^(?P<token>[A-Za-z0-9_-]{43})(?:\s+.+)?$", re.DOTALL
+)
+
+
+def _share_token_from_path(value: str) -> str:
+    """iOS 공유 시트가 URL 뒤에 본문을 붙인 옛 링크를 정규화한다.
+
+    비밀 토큰 자체는 기존 43자 형식을 그대로 요구하고, 뒤에 공백으로
+    구분된 공유 문구가 있는 경우에만 그 문구를 버린다.
+    """
+    match = _SHARE_TOKEN_WITH_TEXT_RE.fullmatch((value or "").strip())
+    return match.group("token") if match else value
 
 
 def _is_same_origin(request: Request) -> bool:
@@ -118,7 +133,9 @@ def revoke_post_share(
 def shared_research_note(request: Request, token: str):
     """링크 보유자가 로그인 없이 보는 공개 연구 노트."""
     try:
-        post, media_tokens = research_share_service.shared_note(token)
+        post, media_tokens = research_share_service.shared_note(
+            _share_token_from_path(token)
+        )
     except ResearchShareError as exc:
         response = render(
             request,
