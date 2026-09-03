@@ -52,17 +52,20 @@ def replace_active(
                 (post_id, token_hash, include_media, Jsonb(snapshot)),
             ).fetchone()
             if row is not None and media_token_hashes:
-                conn.executemany(
-                    """
-                    INSERT INTO post_share_media_grants (
-                        share_id, attachment_index, token_hash
-                    ) VALUES (%s, %s, %s)
-                    """,
-                    [
-                        (row["id"], index, media_hash)
-                        for index, media_hash in enumerate(media_token_hashes)
-                    ],
-                )
+                # psycopg 3의 Connection에는 executemany가 없고 Cursor에만 있다.
+                # 로컬 fake가 아니라 Vercel 운영 드라이버와 같은 API를 사용한다.
+                with conn.cursor() as cursor:
+                    cursor.executemany(
+                        """
+                        INSERT INTO post_share_media_grants (
+                            share_id, attachment_index, token_hash
+                        ) VALUES (%s, %s, %s)
+                        """,
+                        [
+                            (row["id"], index, media_hash)
+                            for index, media_hash in enumerate(media_token_hashes)
+                        ],
+                    )
     return row is not None
 
 

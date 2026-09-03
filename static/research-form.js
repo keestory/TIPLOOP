@@ -94,6 +94,45 @@ function autoGrow(field) {
   field.style.height = `${Math.max(104, field.scrollHeight)}px`
 }
 
+const KEYBOARD_INPUT_TYPES = new Set([
+  'email', 'number', 'password', 'search', 'tel', 'text', 'url'
+])
+
+function isKeyboardInput(element) {
+  if (element instanceof HTMLTextAreaElement) return true
+  if (element instanceof HTMLInputElement) return KEYBOARD_INPUT_TYPES.has(element.type)
+  return element instanceof HTMLElement && element.isContentEditable
+}
+
+function dismissKeyboard() {
+  const active = document.activeElement
+  if (isKeyboardInput(active)) active.blur()
+}
+
+// iPhone Safari에서는 키보드가 열린 동안 하단 탭바가 화면 위로 밀려난다.
+// 입력 영역 밖을 누르거나 손가락을 아래로 쓸면 기본 탭/스크롤을 막지 않고 키보드만 닫는다.
+document.addEventListener('pointerdown', (event) => {
+  if (!isKeyboardInput(event.target)) dismissKeyboard()
+}, { passive: true })
+
+let touchStart = null
+document.addEventListener('touchstart', (event) => {
+  const touch = event.touches.length === 1 ? event.touches[0] : null
+  touchStart = touch ? { x: touch.clientX, y: touch.clientY } : null
+}, { passive: true })
+document.addEventListener('touchend', (event) => {
+  const touch = touchStart && event.changedTouches[0]
+  if (touch) {
+    const deltaX = touch.clientX - touchStart.x
+    const deltaY = touch.clientY - touchStart.y
+    if (deltaY >= 48 && deltaY > Math.abs(deltaX)) dismissKeyboard()
+  }
+  touchStart = null
+}, { passive: true })
+document.addEventListener('touchcancel', () => {
+  touchStart = null
+}, { passive: true })
+
 function collectDraft() {
   const valuesById = {}
   const values = {}

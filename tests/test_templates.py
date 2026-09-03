@@ -34,3 +34,16 @@ def test_empty_state_link_color_does_not_override_primary_button():
 
     assert ".empty a:not(.btn)" in css
     assert ".empty a {" not in css
+
+
+@pytest.mark.no_db
+def test_research_form_dismisses_mobile_keyboard_without_blocking_interactions():
+    root = Path(__file__).resolve().parents[1]
+    javascript = (root / "static" / "research-form.js").read_text(encoding="utf-8")
+
+    assert "function isKeyboardInput" in javascript
+    assert "if (!isKeyboardInput(event.target)) dismissKeyboard()" in javascript
+    assert "deltaY >= 48 && deltaY > Math.abs(deltaX)" in javascript
+    assert "document.addEventListener('pointerdown'" in javascript
+    assert "document.addEventListener('touchend'" in javascript
+    assert javascript.count("{ passive: true }") >= 4
