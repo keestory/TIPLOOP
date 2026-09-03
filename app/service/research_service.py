@@ -10,6 +10,7 @@ from __future__ import annotations
 from urllib.parse import urlsplit
 
 from app.config.settings import (
+    REFERENCE_APPLICATION_LABEL,
     REFERENCE_ANALYSIS_MODES,
     REFERENCE_QUESTION_IDS,
     REFERENCE_QUICK_QUESTION_IDS,
@@ -23,7 +24,7 @@ from app.types.models import MediaAttachment, Post
 
 
 class ResearchError(ValueError):
-    """연구 노트 동작 실패. 메시지는 사용자에게 보여줄 수 있다."""
+    """서비스 노트 동작 실패. 메시지는 사용자에게 보여줄 수 있다."""
 
 
 attachment_dicts = research_media_service.attachment_dicts
@@ -53,11 +54,11 @@ def list_notes(user_id: int, search: str = "") -> list[Post]:
 
 
 def list_actionable_notes(user_id: int, search: str = "") -> list[Post]:
-    """`실제로 적용할 것`을 적은 내 노트만 돌려준다."""
+    """`내가 적용한다면?`을 적은 내 노트만 돌려준다."""
     return [
         post
         for post in list_notes(user_id, search)
-        if section_values(post.body).get("실제로 적용할 것", "")
+        if section_values(post.body).get(REFERENCE_APPLICATION_LABEL, "")
     ]
 
 
@@ -65,7 +66,7 @@ def get_note(post_id: int, user_id: int) -> Post:
     """내 서비스 분석 노트 한 건. 없거나 남의 글이면 같은 오류를 낸다."""
     post = posts.get_owned_post(post_id, user_id)
     if post is None or post.category != "reference":
-        raise ResearchError("연구 노트를 찾을 수 없습니다.")
+        raise ResearchError("서비스 노트를 찾을 수 없습니다.")
     return post
 
 
@@ -140,7 +141,7 @@ def update_note(
         selected_question_ids=selected_question_ids,
         attachments=attachments,
     ):
-        raise ResearchError("연구 노트를 찾을 수 없습니다.")
+        raise ResearchError("서비스 노트를 찾을 수 없습니다.")
 
 
 def _clean(title: str, body: str, link_url: str) -> tuple[str, str, str]:
@@ -163,7 +164,7 @@ def normalize_question_ids(question_ids: tuple[str, ...] | list[str]) -> tuple[s
     submitted = [str(question_id).strip() for question_id in (question_ids or ())]
     unknown = set(submitted) - set(REFERENCE_QUESTION_IDS)
     if unknown:
-        raise ResearchError("알 수 없는 분석 질문이 포함되어 있어요. 다시 선택해 주세요.")
+        raise ResearchError("알 수 없는 질문이 포함되어 있어요. 다시 선택해 주세요.")
     selected = set(submitted)
     return tuple(question_id for question_id in REFERENCE_QUESTION_IDS if question_id in selected)
 
@@ -186,7 +187,7 @@ def normalize_analysis_selection(
     """프리셋 의미를 지키면서 이미 작성한 답변을 선택 밖으로 버리지 않는다."""
     mode = (analysis_mode or "").strip()
     if mode not in REFERENCE_ANALYSIS_MODES:
-        raise ResearchError("분석 방식을 다시 선택해 주세요.")
+        raise ResearchError("작성 방식을 다시 선택해 주세요.")
     submitted = normalize_question_ids(question_ids)
     if mode == "quick":
         selected = set(REFERENCE_QUICK_QUESTION_IDS)
@@ -228,7 +229,7 @@ def dashboard(user_id: int) -> dict:
     applied = sum(
         1
         for post in items
-        if section_values(post.body).get("실제로 적용할 것", "")
+        if section_values(post.body).get(REFERENCE_APPLICATION_LABEL, "")
     )
     return {
         "notes": presented,

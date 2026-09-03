@@ -3,6 +3,7 @@
 import pytest
 
 from app.config.settings import (
+    REFERENCE_APPLICATION_LABEL,
     REFERENCE_IMAGE_MAX_BYTES,
     REFERENCE_MEDIA_BUCKETS,
     REFERENCE_MEDIA_MAX_FILES,
@@ -88,12 +89,14 @@ def test_research_templates_render_for_signed_in_user():
         video_max_bytes=REFERENCE_VIDEO_MAX_BYTES,
     )
 
-    assert "서비스를 뜯어보고" in home
-    assert "보관함" in library
-    assert "5분 빠른 분석" in form
-    assert "질문 골라 분석" in form
+    assert "좋은 서비스에는" in home
+    assert "내 노트" in library
+    assert "5분만 쓰기" in form
+    assert "골라서 쓰기" in form
+    assert REFERENCE_APPLICATION_LABEL in form
+    assert ">APPLY<" in form
     assert 'name="selected_question_ids"' in form
-    assert "연구 노트 저장" in form
+    assert "서비스 노트 저장" in form
     assert '/static/research-form.js' in form
     assert "tiploop:draft:new:user:7" in form
     assert '"tiploop:draft:new"' not in form
@@ -115,10 +118,11 @@ def test_research_templates_render_for_signed_in_user():
         progress=research_service.progress(post),
         groups=research_service.detail_groups(post.body),
         attachments=[],
-        analysis_mode_label="기존 분석",
+        analysis_mode_label="이전 방식",
         saved="",
     )
     assert "관찰의 출발점" in detail
+    assert "NOTE #012" in detail
     assert "<h2>제품</h2>" not in detail
 
 
@@ -164,6 +168,8 @@ def test_shared_research_renders_generic_image_and_video_without_private_paths()
     assert "사내화면.jpg" not in html
     assert "회의영상.mp4" not in html
     assert "private/drafts" not in html
+    assert "SHARED NOTE" in html
+    assert "공유된 노트" in html
 
 
 @pytest.mark.no_db

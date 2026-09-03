@@ -52,7 +52,7 @@ def create_app() -> FastAPI:
             init_db()
         verify_privacy_boundaries()
 
-    app = FastAPI(title=f"{BRAND} — 개인 서비스 연구 노트")
+    app = FastAPI(title=f"{BRAND} — 개인 서비스 노트")
 
     # 요청 하나당 DB 커넥션 하나만 빌려 모든 repo 호출이 재사용하게 한다.
     # 순수 ASGI 미들웨어라 다운스트림과 같은 태스크에서 실행돼 contextvar가

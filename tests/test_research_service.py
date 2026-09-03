@@ -4,7 +4,12 @@ import json
 
 import pytest
 
-from app.config.settings import REFERENCE_QUESTION_IDS, REFERENCE_QUICK_QUESTION_IDS
+from app.config.settings import (
+    REFERENCE_APPLICATION_LABEL,
+    REFERENCE_QUESTION_IDS,
+    REFERENCE_QUICK_QUESTION_IDS,
+    REFERENCE_WHY_LABEL,
+)
 from app.service import research_service
 from app.service.research_service import ResearchError
 from app.types.models import Post
@@ -15,12 +20,12 @@ def test_section_values_round_trip_and_progress():
     body = (
         "분석한 이유\n첫 줄\n둘째 줄\n\n"
         "핵심 기능과 흐름\n가입 뒤 바로 템플릿을 보여준다\n\n"
-        "실제로 적용할 것\n다음 랜딩에서 가치 제안을 한 문장으로 줄인다"
+        "내가 적용한다면?\n다음 랜딩에서 가치 제안을 한 문장으로 줄인다"
     )
     values = research_service.section_values(body)
-    assert values["분석한 이유"] == "첫 줄\n둘째 줄"
+    assert values[REFERENCE_WHY_LABEL] == "첫 줄\n둘째 줄"
     assert values["핵심 기능과 흐름"] == "가입 뒤 바로 템플릿을 보여준다"
-    assert values["실제로 적용할 것"].startswith("다음 랜딩")
+    assert values[REFERENCE_APPLICATION_LABEL].startswith("다음 랜딩")
 
     post = Post(
         id=1, author_id=1, category="reference", title="Notion",
@@ -30,6 +35,19 @@ def test_section_values_round_trip_and_progress():
     assert result["done"] == 3
     assert result["total"] == 12
     assert result["percent"] == 25
+
+
+@pytest.mark.no_db
+def test_legacy_application_label_maps_to_new_prompt():
+    body = "실제로 적용할 것\n다음 랜딩에서 가치 제안을 한 문장으로 줄인다"
+
+    values = research_service.section_values(body)
+
+    assert values[REFERENCE_APPLICATION_LABEL].startswith("다음 랜딩")
+    assert research_service.legacy_preamble(body) == ""
+    groups = research_service.detail_groups(body)
+    assert groups[0]["items"][0]["label"] == REFERENCE_APPLICATION_LABEL
+    assert groups[0]["items"][0]["highlight"] is True
 
 
 @pytest.mark.no_db
@@ -48,11 +66,11 @@ def test_unknown_legacy_preamble_is_preserved():
 def test_legacy_reference_sections_are_preserved_for_editing():
     body = "무엇을 봤나요\n토스 온보딩\n\n핵심 인사이트\n첫 성공 경험을 앞당긴다"
     values = research_service.section_values(body)
-    assert values["분석한 이유"] == "토스 온보딩"
+    assert values[REFERENCE_WHY_LABEL] == "토스 온보딩"
     assert values["가져올 아이디어"] == "첫 성공 경험을 앞당긴다"
 
     freeform = research_service.section_values("예전 자유 형식 메모")
-    assert freeform["분석한 이유"] == "예전 자유 형식 메모"
+    assert freeform[REFERENCE_WHY_LABEL] == "예전 자유 형식 메모"
 
 
 @pytest.mark.no_db

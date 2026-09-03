@@ -1,5 +1,5 @@
 {% extends "mobile.html" %}
-{% block title %}{{ "연구 노트 편집" if editing else "새 서비스 분석" }}{% endblock %}
+{% block title %}{{ "서비스 노트 편집" if editing else "새 서비스 노트" }}{% endblock %}
 
 {% block app %}
 <form class="body research-form" method="post"
@@ -11,11 +11,11 @@
 
   <header class="topbar form-topbar">
     <a class="cancel" href="{{ '/posts/' ~ post_id if editing else '/' }}">‹ {{ "노트" if editing else "홈" }}</a>
-    <span class="study-index">{{ "EDIT STUDY" if editing else "NEW STUDY" }}</span>
+    <span class="study-index">{{ "EDIT NOTE" if editing else "NEW NOTE" }}</span>
   </header>
 
   <section class="form-intro" aria-labelledby="form-heading">
-    <p class="eyebrow">SERVICE RESEARCH</p>
+    <p class="eyebrow">SERVICE NOTES</p>
     <h1 id="form-heading">{{ "관찰을 다듬어보세요." if editing else "궁금한 질문부터 골라보세요." }}</h1>
     <p>추천 질문 3개로 가볍게 시작하거나, 지금 필요한 관점만 직접 고를 수 있어요.</p>
   </section>
@@ -47,24 +47,24 @@
       <h2 id="analysis-plan-heading">얼마나 깊게 볼까요?</h2>
     </div>
     <fieldset class="mode-picker">
-      <legend class="sr-only">분석 방식 선택</legend>
+      <legend class="sr-only">작성 방식 선택</legend>
       <label class="mode-card">
         <input type="radio" name="analysis_mode" value="quick" {% if analysis_mode == 'quick' %}checked{% endif %}>
-        <span><strong>5분 빠른 분석</strong><small>핵심 질문 3개 · 추천</small></span>
+        <span><strong>5분만 쓰기</strong><small>핵심 질문 3개 · 추천</small></span>
       </label>
       <label class="mode-card">
         <input type="radio" name="analysis_mode" value="focus" {% if analysis_mode == 'focus' %}checked{% endif %}>
-        <span><strong>질문 골라 분석</strong><small>필요한 관점만 선택</small></span>
+        <span><strong>골라서 쓰기</strong><small>필요한 질문만 선택</small></span>
       </label>
       <label class="mode-card">
         <input type="radio" name="analysis_mode" value="full" {% if analysis_mode == 'full' %}checked{% endif %}>
-        <span><strong>전체 분석</strong><small>12개 질문을 모두 사용</small></span>
+        <span><strong>꼼꼼히 쓰기</strong><small>12개 질문 모두 사용</small></span>
       </label>
     </fieldset>
 
     <details class="question-picker" id="question-picker" {% if analysis_mode == 'focus' %}open{% endif %}>
       <summary>
-        <span>질문 직접 고르기</span>
+        <span>궁금한 것만 고르기</span>
         <strong id="selected-count" aria-live="polite">0개 선택</strong>
       </summary>
       <fieldset class="question-bank">
@@ -86,14 +86,14 @@
         </label>
         {% endfor %}
       </fieldset>
-      <p class="field-help" id="required-final-note">‘실제로 적용할 것’은 어떤 방식에서도 마지막 질문으로 포함됩니다.</p>
+      <p class="field-help" id="required-final-note">‘내가 적용한다면?’은 어떤 방식에서도 마지막 질문이에요.</p>
     </details>
   </section>
 
   {% if legacy_body %}
   <section class="wr-sec research-field legacy-field" aria-labelledby="legacy-label">
     <label class="field-label" id="legacy-label" for="legacy-body">이전 형식 메모</label>
-    <span class="field-help">예전 기록에서 자동으로 가져왔어요. 편집해도 나머지 분석과 함께 보존됩니다.</span>
+    <span class="field-help">예전 기록에서 자동으로 가져왔어요. 편집해도 나머지 노트와 함께 보존됩니다.</span>
     <textarea class="ta" id="legacy-body" rows="3">{{ legacy_body }}</textarea>
   </section>
   {% endif %}
@@ -114,7 +114,7 @@
         </div>
         <label class="field-label" for="section-{{ loop.index }}">
           {{ section.label }}
-          {% if section.hl %}<span class="apply-badge">NEXT ACTION</span>{% endif %}
+          {% if section.hl %}<span class="apply-badge">APPLY</span>{% endif %}
         </label>
         {% if section.hint %}<span class="field-help">{{ section.hint }}</span>{% endif %}
         <textarea class="ta tpl-field" id="section-{{ loop.index }}"
@@ -128,7 +128,7 @@
   <section class="media-section" aria-labelledby="media-heading">
     <div class="section-copy">
       <p class="eyebrow">03 · MEDIA</p>
-      <h2 id="media-heading">장면도 함께 남겨보세요.</h2>
+      <h2 id="media-heading">기억해둘 장면도 함께 남겨보세요.</h2>
       <p>스크린샷과 짧은 영상은 기본으로 나만 볼 수 있고, 원할 때 공유 링크에 포함할 수 있어요.</p>
     </div>
     <div class="upload-zone" id="upload-zone">
@@ -145,7 +145,7 @@
   <div class="form-submit">
     <p class="save-note" id="draft-status" aria-live="polite">작성 중인 내용은 이 기기에 자동 임시 저장됩니다.</p>
     <button type="submit" class="btn" id="submit-btn">
-      <span>{{ "변경사항 저장" if editing else "연구 노트 저장" }}</span>
+      <span>{{ "변경사항 저장" if editing else "서비스 노트 저장" }}</span>
       <span aria-hidden="true">→</span>
     </button>
   </div>
@@ -173,7 +173,7 @@
   "attachments": attachments,
   "draftKey": ("tiploop:draft:edit:" ~ post_id ~ ":user:" ~ current_user.id if editing else "tiploop:draft:new:user:" ~ current_user.id),
   "cleanupKey": ("tiploop:media:cleanup:post:" ~ post_id ~ ":user:" ~ current_user.id if editing else "tiploop:media:cleanup:new:user:" ~ current_user.id),
-  "submitLabel": ("변경사항 저장" if editing else "연구 노트 저장")
+  "submitLabel": ("변경사항 저장" if editing else "서비스 노트 저장")
 }|tojson }}
 </script>
 <script type="module" src="/static/research-form.js"></script>

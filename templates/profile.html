@@ -14,14 +14,14 @@
     <span class="av" {% if teacher.avatar_url %}style="background-image:url('{{ teacher.avatar_url }}')"{% endif %}></span>
     <div>
       <h2>{{ teacher.name }}</h2>
-      <p>{{ teacher.email or "TIPLOOP 연구자" }}</p>
+      <p>{{ teacher.email or "TIPLOOP 멤버" }}</p>
     </div>
   </section>
 
-  <section class="research-stats" aria-label="내 연구 현황">
+  <section class="research-stats" aria-label="내 서비스 노트 현황">
     <div><strong>{{ stats.total }}</strong><span>전체 노트</span></div>
-    <div><strong>{{ stats.completed }}</strong><span>분석 완료</span></div>
-    <a href="/explore?focus=applied"><strong>{{ stats.applied }}</strong><span>적용할 것</span></a>
+    <div><strong>{{ stats.completed }}</strong><span>작성 완료</span></div>
+    <a href="/explore?focus=applied"><strong>{{ stats.applied }}</strong><span>적용 아이디어</span></a>
   </section>
 
   <section class="account-settings" aria-labelledby="settings-heading">
@@ -45,7 +45,7 @@
 
   <section class="privacy-note">
     <span aria-hidden="true">●</span>
-    <div><strong>연구 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있어요. 이전 커뮤니티 첨부는 상세에서 별도로 표시됩니다.</p></div>
+    <div><strong>서비스 노트 본문은 개인 공간입니다.</strong><p>로그인한 본인만 조회하고 편집할 수 있어요. 이전 커뮤니티 첨부는 상세에서 별도로 표시됩니다.</p></div>
   </section>
 </main>
 {% set tab = "profile" %}

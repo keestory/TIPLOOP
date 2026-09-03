@@ -38,7 +38,7 @@ def add_media_comment(
         return JSONResponse({"error": "글을 찾을 수 없습니다."}, status_code=404)
     if post.category == "reference":
         return JSONResponse(
-            {"error": "연구 노트에는 댓글을 지원하지 않습니다."}, status_code=400
+            {"error": "서비스 노트에는 댓글을 지원하지 않습니다."}, status_code=400
         )
     try:
         comment = community_service.add_media_comment(

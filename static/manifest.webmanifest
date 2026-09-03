@@ -1,7 +1,7 @@
 {
-  "name": "TIPLOOP — 개인 서비스 연구 노트",
+  "name": "TIPLOOP — 개인 서비스 노트",
   "short_name": "TIPLOOP",
-  "description": "다른 서비스의 기능, UX, 마케팅과 비즈니스 모델을 분석하고 적용하는 개인 연구 노트",
+  "description": "서비스에서 눈에 띈 기능과 UX, 내 방식으로 적용할 포인트를 남기는 개인 노트",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",

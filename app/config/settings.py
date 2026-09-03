@@ -21,7 +21,7 @@ except ImportError:
 
 # ── 브랜드 ────────────────────────────────────────────────────────────
 BRAND = "TIPLOOP"
-TAGLINE = "다른 서비스를 뜯어보고, 배운 점을 내 일에 적용하는 연구 노트"
+TAGLINE = "서비스를 뜯어보고, 내 일과 프로젝트에 써보는 서비스 노트"
 
 # 공유 카드(OG)의 절대 URL 기준 — 스크레이퍼는 절대 경로만 읽는다
 SITE_URL = os.environ.get("SITE_URL", "https://tiploop.vercel.app")
@@ -98,7 +98,7 @@ TOPICS = [
 # 글 카테고리: 코드값 → 한글 라벨
 CATEGORIES = {
     "tip": "팁",
-    "reference": "서비스 분석",
+    "reference": "서비스 노트",
     "question": "질문",
     "retro": "회고",
 }
@@ -128,7 +128,7 @@ WRITE_TEMPLATES = {
         {"label": "결과", "hint": "숫자로 남기면 후기가 붙어요", "ph": "예: 이탈률 12% ↓", "hl": True},
     ],
     "reference": [
-        {"id": "ref.why_now", "lens": "맥락", "group": "관찰의 출발점", "group_no": "01", "label": "분석한 이유", "hint": "왜 지금 이 서비스를 보나요?", "ph": "예: 첫 방문자를 가입까지 이끄는 방식을 배우고 싶었어요"},
+        {"id": "ref.why_now", "lens": "맥락", "group": "관찰의 출발점", "group_no": "01", "label": "왜 이 서비스를 봤나요?", "hint": "어떤 계기로 관심이 생겼나요?", "ph": "예: 첫 방문자를 가입까지 이끄는 방식을 배우고 싶었어요"},
         {"id": "ref.audience_problem", "lens": "기능", "group": "제품", "group_no": "02", "label": "타깃과 문제", "hint": "누구의 어떤 문제를 푸나요?", "ph": "핵심 사용자를 한 문장으로 적어보세요"},
         {"id": "ref.core_journey", "lens": "기능", "label": "핵심 기능과 흐름", "hint": "발견부터 가치 경험까지", "ph": "사용자가 처음 들어와 핵심 가치를 얻기까지의 흐름"},
         {"id": "ref.planning_ux", "lens": "기획·UX", "group": "경험", "group_no": "03", "label": "기획과 UX", "hint": "매력적이거나 불편한 장면", "ph": "정보 구조, 상호작용, 전환 장치에서 눈에 띈 점"},
@@ -139,7 +139,7 @@ WRITE_TEMPLATES = {
         {"id": "ref.service_operations", "lens": "운영", "label": "서비스 운영", "hint": "이 경험을 뒤에서 어떻게 굴릴까요?", "ph": "정책, 공급, CS, 품질 관리, 파트너 운영"},
         {"id": "ref.strengths_gaps", "lens": "판단", "group": "결론", "group_no": "05", "label": "잘한 점과 아쉬운 점", "hint": "근거가 드러나게", "ph": "좋았던 점과 개선할 점을 함께 적어보세요"},
         {"id": "ref.transferable_principle", "lens": "적용", "label": "가져올 아이디어", "hint": "내 제품에 옮길 수 있는 것", "ph": "그대로 복사하지 않고 원리를 추출해보세요"},
-        {"id": "ref.next_action", "lens": "적용", "label": "실제로 적용할 것", "hint": "다음 행동 하나", "ph": "예: 다음 랜딩 개편에서 첫 화면 가치 제안을 한 문장으로 줄인다", "hl": True},
+        {"id": "ref.next_action", "lens": "적용", "label": "내가 적용한다면?", "hint": "내 방식으로 바꿔보기", "ph": "예: 다음 랜딩 개편에서 첫 화면 가치 제안을 한 문장으로 줄인다", "hl": True},
     ],
     "question": [
         {"label": "상황", "hint": "어떤 걸 겪고 있나요?", "ph": "배경을 적어주세요"},
@@ -165,6 +165,16 @@ REFERENCE_QUICK_QUESTION_IDS = (
     "ref.next_action",
 )
 REFERENCE_REQUIRED_FINAL_ID = "ref.next_action"
+REFERENCE_WHY_LABEL = next(
+    section["label"]
+    for section in WRITE_TEMPLATES["reference"]
+    if section["id"] == "ref.why_now"
+)
+REFERENCE_APPLICATION_LABEL = next(
+    section["label"]
+    for section in WRITE_TEMPLATES["reference"]
+    if section["id"] == REFERENCE_REQUIRED_FINAL_ID
+)
 
 # 비공개 연구 미디어. Storage 버킷의 50 MiB 상한과 별개로 이미지는 더 작게 제한한다.
 REFERENCE_IMAGE_BUCKET = "tiploop-research-images"

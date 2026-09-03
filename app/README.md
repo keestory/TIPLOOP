@@ -1,7 +1,7 @@
-# TIPLOOP — 개인 서비스 연구 노트
+# TIPLOOP — 개인 서비스 노트
 
 다른 서비스의 **기능·기획·UX·콘텐츠·마케팅·비즈니스 모델·운영 모델**을 구조적으로
-분석하고, 내 서비스에 적용할 다음 행동까지 남기는 개인 연구 노트입니다.
+서비스를 뜯어보고, 내 일과 프로젝트에 적용할 포인트까지 남기는 개인 서비스 노트입니다.
 
 - 제품 사양: [`docs/product-specs/tiploop-service-research.md`](../docs/product-specs/tiploop-service-research.md)
 - 설계·디자인 시스템: [`docs/design-docs/ieum-design.md`](../docs/design-docs/ieum-design.md)

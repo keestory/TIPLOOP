@@ -1,11 +1,11 @@
-{# TIPLOOP 핵심 루프: 홈 → 보관함 → 분석 → 계정 #}
+{# TIPLOOP 핵심 루프: 홈 → 내 노트 → 기록 → 계정 #}
 <nav class="tabbar" aria-label="주요 메뉴">
   <a class="tb {% if tab == 'home' %}on{% endif %}" href="/"
      {% if tab == 'home' %}aria-current="page"{% endif %}>홈</a>
   <a class="tb {% if tab == 'library' %}on{% endif %}" href="/explore"
-     {% if tab == 'library' %}aria-current="page"{% endif %}>보관함</a>
+     {% if tab == 'library' %}aria-current="page"{% endif %}>내 노트</a>
   <a class="tb write {% if tab == 'write' %}on{% endif %}" href="/posts/new/write"
-     {% if tab == 'write' %}aria-current="page"{% endif %}><span aria-hidden="true">＋</span> 분석</a>
+     {% if tab == 'write' %}aria-current="page"{% endif %}><span aria-hidden="true">＋</span> 기록</a>
   <a class="tb {% if tab == 'profile' %}on{% endif %}"
      href="{% if current_user %}/users/{{ current_user.id }}{% else %}/login{% endif %}"
      {% if tab == 'profile' %}aria-current="page"{% endif %}>계정</a>

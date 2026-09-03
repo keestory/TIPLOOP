@@ -204,6 +204,11 @@ function restoreDraft() {
         field.value = draft.valuesById[field.dataset.questionId]
       } else if (Object.prototype.hasOwnProperty.call(draft.values || {}, field.dataset.label)) {
         field.value = draft.values[field.dataset.label]
+      } else if (
+        field.dataset.questionId === 'ref.next_action' &&
+        Object.prototype.hasOwnProperty.call(draft.values || {}, '실제로 적용할 것')
+      ) {
+        field.value = draft.values['실제로 적용할 것']
       }
     })
     if (Array.isArray(draft.selectedIds) && draft.selectedIds.length) {

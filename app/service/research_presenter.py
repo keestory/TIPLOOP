@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from app.config.settings import REFERENCE_QUESTION_IDS, WRITE_TEMPLATES
+from app.config.settings import (
+    REFERENCE_APPLICATION_LABEL,
+    REFERENCE_QUESTION_IDS,
+    REFERENCE_WHY_LABEL,
+    WRITE_TEMPLATES,
+)
 from app.types.models import Post
 
 
@@ -12,8 +17,10 @@ def section_values(body: str) -> dict[str, str]:
     values: dict[str, list[str]] = {label: [] for label in labels}
     label_targets = {label: label for label in labels}
     label_targets.update({
-        "무엇을 봤나요": "분석한 이유",
+        "무엇을 봤나요": REFERENCE_WHY_LABEL,
+        "분석한 이유": REFERENCE_WHY_LABEL,
         "핵심 인사이트": "가져올 아이디어",
+        "실제로 적용할 것": REFERENCE_APPLICATION_LABEL,
     })
     current: str | None = None
     for line in (body or "").splitlines():
@@ -23,14 +30,19 @@ def section_values(body: str) -> dict[str, str]:
             values[current].append(line)
     parsed = {label: "\n".join(lines).strip() for label, lines in values.items()}
     if body.strip() and not any(parsed.values()):
-        parsed["분석한 이유"] = body.strip()
+        parsed[REFERENCE_WHY_LABEL] = body.strip()
     return parsed
 
 
 def legacy_preamble(body: str) -> str:
     """첫 정식 라벨 앞의 이전 자유 형식 메모를 손실 없이 분리한다."""
     labels = {section["label"] for section in WRITE_TEMPLATES["reference"]}
-    labels.update({"무엇을 봤나요", "핵심 인사이트"})
+    labels.update({
+        "무엇을 봤나요",
+        "분석한 이유",
+        "핵심 인사이트",
+        "실제로 적용할 것",
+    })
     lines = (body or "").splitlines()
     first_label = next((index for index, line in enumerate(lines) if line in labels), None)
     if first_label in {None, 0}:

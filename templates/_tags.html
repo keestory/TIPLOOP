@@ -2,5 +2,5 @@
    규칙(2b): 카테고리 태그는 항상 뉴트럴(.tag). 라임(.tag.lime)은 시스템이
    주목시키는 큐레이션·상태 배지 전용("오늘의 팁", "이번 주", "크루", "효과 봄"). #}
 {% macro cat_tag(cat) -%}
-{{ {"tip": "팁", "reference": "서비스 분석", "question": "질문", "retro": "회고"}.get(cat, category_label(cat)) }}
+{{ {"tip": "팁", "reference": "서비스 노트", "question": "질문", "retro": "회고"}.get(cat, category_label(cat)) }}
 {%- endmacro %}

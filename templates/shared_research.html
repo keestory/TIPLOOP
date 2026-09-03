@@ -9,8 +9,8 @@
 {% block og %}
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="TIPLOOP">
-<meta property="og:title" content="{{ post.title }} · TIPLOOP 서비스 연구">
-<meta property="og:description" content="서비스를 뜯어보고 내 일에 남긴 연구 노트">
+<meta property="og:title" content="{{ post.title }} · TIPLOOP 서비스 노트">
+<meta property="og:description" content="서비스에서 눈에 띈 포인트를 내 일과 프로젝트에 써보기 위해 남긴 노트">
 <meta property="og:image" content="{{ site_url }}/static/og-default.png">
 <meta name="twitter:card" content="summary_large_image">
 {% endblock %}
@@ -19,11 +19,11 @@
 <main class="body shared-study">
   <header class="topbar shared-topbar">
     <a class="brand plain" href="/login" aria-label="TIPLOOP 시작하기">TIPLOOP<span class="d"></span></a>
-    <span class="share-status">공유된 연구</span>
+    <span class="share-status">공유된 노트</span>
   </header>
 
   <section class="study-detail-head">
-    <p class="eyebrow">SHARED SERVICE STUDY</p>
+    <p class="eyebrow">SHARED NOTE</p>
     <h1>{{ post.title }}</h1>
     {% if post.link_url %}
     <a class="source-link" href="{{ post.link_url }}" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">
@@ -40,14 +40,14 @@
     </div>
   </section>
 
-  <section class="detail-sections" aria-label="공유된 서비스 분석 내용">
+  <section class="detail-sections" aria-label="공유된 서비스 노트 내용">
     {% for group in groups %}
     <div class="form-group-heading detail-group">
       <span>{{ group["no"] }}</span><h2>{{ group["name"] }}</h2>
     </div>
     {% for item in group["items"] %}
     <article class="detail-field {% if item["highlight"] %}apply-field{% endif %}">
-      <h3>{{ item["label"] }}{% if item["highlight"] %}<span class="apply-badge">NEXT ACTION</span>{% endif %}</h3>
+      <h3>{{ item["label"] }}{% if item["highlight"] %}<span class="apply-badge">APPLY</span>{% endif %}</h3>
       <p>{{ item["value"] }}</p>
     </article>
     {% endfor %}
@@ -57,7 +57,7 @@
   {% if attachments and media_endpoint %}
   <section class="private-media shared-media" aria-labelledby="shared-media-heading">
     <div class="form-group-heading detail-group">
-      <span>MEDIA</span><h2 id="shared-media-heading">관찰한 장면</h2>
+      <span>MEDIA</span><h2 id="shared-media-heading">기억해둘 장면</h2>
     </div>
     <div class="private-media-grid">
       {% for attachment in attachments %}
@@ -77,9 +77,9 @@
   {% endif %}
 
   <section class="shared-footer-cta">
-    <p>이 노트는 TIPLOOP에서 서비스의 기능·UX·성장 방식을 분석해 만든 기록입니다.</p>
-    <a class="btn lime" href="/login">나도 서비스 분석 시작하기 <span aria-hidden="true">→</span></a>
-    <button class="text-link" id="share-this-page" type="button">이 연구 다시 공유하기</button>
+    <p>이 노트는 TIPLOOP에서 서비스의 좋은 포인트를 보고, 내 방식으로 써보기 위해 남긴 기록이에요.</p>
+    <a class="btn lime" href="/login">나도 서비스 뜯어보기 <span aria-hidden="true">→</span></a>
+    <button class="text-link" id="share-this-page" type="button">이 노트 공유하기</button>
     <p id="share-page-feedback" class="share-feedback" role="status" aria-live="polite"></p>
   </section>
 </main>

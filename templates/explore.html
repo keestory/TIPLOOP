@@ -1,27 +1,27 @@
 {% extends "mobile.html" %}
-{% block title %}보관함{% endblock %}
+{% block title %}내 노트{% endblock %}
 
 {% block app %}
 <main class="body library-page">
   <header class="topbar page-heading">
     <div>
       <p class="eyebrow">MY LIBRARY</p>
-      <h1>{{ "적용 큐" if focus == "applied" else "보관함" }}</h1>
+      <h1>{{ "적용 아이디어" if focus == "applied" else "내 노트" }}</h1>
     </div>
-    <a class="top-action" href="/posts/new/write">+ 새 분석</a>
+    <a class="top-action" href="/posts/new/write">+ 새 노트</a>
   </header>
 
   <form class="searchbar library-search" method="get" action="/explore" role="search" novalidate>
     {% if focus %}<input type="hidden" name="focus" value="{{ focus }}">{% endif %}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-    <label class="sr-only" for="library-q">내 연구 노트 검색</label>
+    <label class="sr-only" for="library-q">내 서비스 노트 검색</label>
     <input id="library-q" name="q" value="{{ q }}" placeholder="서비스명이나 관찰 내용 검색" autocomplete="off">
     <button class="search-submit" type="submit">검색</button>
     {% if q %}<a class="search-clear" href="{{ '/explore?focus=applied' if focus else '/explore' }}" aria-label="검색어 지우기">×</a>{% endif %}
   </form>
 
   <div class="sec-head library-count">
-    <h2 class="h2">{{ "검색 결과" if q else ("실제로 적용할 것이 있는 연구" if focus else "모든 연구") }}</h2>
+    <h2 class="h2">{{ "검색 결과" if q else ("적용 아이디어가 있는 노트" if focus else "모든 노트") }}</h2>
     <span class="meta">{{ results|length }}개</span>
   </div>
 
@@ -30,7 +30,7 @@
     {% set post = item.post %}
     <a class="study-card" href="/posts/{{ post.id }}">
       <div class="study-card-head">
-        <span class="study-index">STUDY #{{ "%03d"|format(post.id) }}</span>
+        <span class="study-index">NOTE #{{ "%03d"|format(post.id) }}</span>
         <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
       </div>
       <h3>{{ post.title }}</h3>
@@ -46,10 +46,10 @@
     </a>
     {% else %}
     <div class="empty research-empty">
-      <span class="study-index">NO STUDY FOUND</span>
-      <h3>{{ "다른 검색어를 써보세요." if q else ("아직 적용할 것을 적은 연구가 없어요." if focus else "아직 보관한 연구가 없어요.") }}</h3>
-      <p>{{ "서비스명과 본문을 함께 검색하고 있어요." if q else ("연구 노트의 ‘실제로 적용할 것’을 채우면 이곳에 모입니다." if focus else "첫 서비스를 분석하면 이곳에 차곡차곡 쌓입니다.") }}</p>
-      <a class="btn" href="{{ ('/explore?focus=applied' if focus else '/explore') if q else ('/posts/new/write' if not focus else '/explore') }}">{{ "검색 초기화" if q else ("전체 연구 보기" if focus else "첫 분석 시작") }} <span aria-hidden="true">→</span></a>
+      <span class="study-index">NO NOTE FOUND</span>
+      <h3>{{ "다른 검색어를 써보세요." if q else ("아직 적용 아이디어를 적은 노트가 없어요." if focus else "아직 남긴 서비스가 없어요.") }}</h3>
+      <p>{{ "서비스명과 본문을 함께 검색하고 있어요." if q else ("노트의 ‘내가 적용한다면?’을 채우면 이곳에 모아드려요." if focus else "자주 쓰는 앱이나 요즘 눈에 띈 서비스부터 시작해보세요.") }}</p>
+      <a class="btn" href="{{ ('/explore?focus=applied' if focus else '/explore') if q else ('/posts/new/write' if not focus else '/explore') }}">{{ "검색 초기화" if q else ("전체 노트 보기" if focus else "첫 서비스 뜯어보기") }} <span aria-hidden="true">→</span></a>
     </div>
     {% endfor %}
   </div>

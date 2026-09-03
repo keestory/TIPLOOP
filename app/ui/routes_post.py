@@ -209,9 +209,9 @@ def post_detail(
         groups=research_service.detail_groups(post.body),
         attachments=research_service.attachment_dicts(post.attachments),
         analysis_mode_label={
-            "quick": "5분 빠른 분석",
-            "focus": "질문 골라 분석",
-            "full": "전체 분석",
-        }.get(post.analysis_mode, "기존 분석"),
+            "quick": "5분만 쓰기",
+            "focus": "골라서 쓰기",
+            "full": "꼼꼼히 쓰기",
+        }.get(post.analysis_mode, "이전 방식"),
         saved=saved if saved in {"new", "edit"} else "",
     )

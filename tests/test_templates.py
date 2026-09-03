@@ -50,6 +50,15 @@ def test_research_form_dismisses_mobile_keyboard_without_blocking_interactions()
 
 
 @pytest.mark.no_db
+def test_research_form_restores_legacy_application_draft():
+    root = Path(__file__).resolve().parents[1]
+    javascript = (root / "static" / "research-form.js").read_text(encoding="utf-8")
+
+    assert "field.dataset.questionId === 'ref.next_action'" in javascript
+    assert "draft.values['실제로 적용할 것']" in javascript
+
+
+@pytest.mark.no_db
 def test_research_share_native_share_does_not_append_copy_to_url():
     root = Path(__file__).resolve().parents[1]
     template = (root / "templates" / "research_share.html").read_text(

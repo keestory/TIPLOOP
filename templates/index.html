@@ -1,45 +1,45 @@
 {% extends "mobile.html" %}
-{% block title %}내 연구 노트{% endblock %}
+{% block title %}내 서비스 노트{% endblock %}
 
 {% block app %}
 <main class="body research-home">
   <header class="topbar research-topbar">
     <a class="brand plain" href="/" aria-label="TIPLOOP 홈">TIPLOOP<span class="d"></span></a>
-    <a class="top-action" href="/explore">보관함 보기</a>
+    <a class="top-action" href="/explore">내 노트 보기</a>
   </header>
 
   <section class="research-intro" aria-labelledby="home-heading">
-    <p class="eyebrow">PERSONAL SERVICE STUDY</p>
-    <h1 id="home-heading">서비스를 뜯어보고,<br><span class="hl">내 일에 남기는 노트</span></h1>
-    <p>기능부터 UX, 마케팅, 비즈니스 모델까지 관찰하고 다음 행동으로 연결하세요.</p>
+    <p class="eyebrow">MY SERVICE NOTES</p>
+    <h1 id="home-heading">좋은 서비스에는<br><span class="hl">이유가 있어요.</span></h1>
+    <p>눈에 띈 기능과 UX, 따라 해보고 싶은 포인트를 짧게 남겨보세요.</p>
   </section>
 
   <form class="quick-capture" method="get" action="/posts/new/write" novalidate>
     <div class="quick-copy">
       <span class="quick-number">01</span>
       <div>
-        <label for="quick-link">분석할 서비스 링크</label>
+        <label for="quick-link">뜯어볼 서비스 링크</label>
         <p>링크가 없어도 바로 시작할 수 있어요.</p>
       </div>
     </div>
     <div class="quick-row">
       <input id="quick-link" name="link_url" type="url" inputmode="url"
              autocomplete="url" placeholder="https://service.com">
-      <button class="btn quick-btn" type="submit">분석 시작 <span aria-hidden="true">→</span></button>
+      <button class="btn quick-btn" type="submit">서비스 뜯어보기 <span aria-hidden="true">→</span></button>
     </div>
   </form>
 
-  <section class="research-stats" aria-label="연구 노트 현황">
+  <section class="research-stats" aria-label="서비스 노트 현황">
     <a href="/explore"><strong>{{ dashboard.total }}</strong><span>전체 노트</span></a>
-    <a href="/explore"><strong>{{ dashboard.completed }}</strong><span>분석 완료</span></a>
-    <a href="/explore?focus=applied"><strong>{{ dashboard.applied }}</strong><span>적용할 것</span></a>
+    <a href="/explore"><strong>{{ dashboard.completed }}</strong><span>작성 완료</span></a>
+    <a href="/explore?focus=applied"><strong>{{ dashboard.applied }}</strong><span>적용 아이디어</span></a>
   </section>
 
   <section class="note-section" aria-labelledby="recent-heading">
     <div class="sec-head">
       <div>
-        <p class="eyebrow">RECENT STUDIES</p>
-        <h2 id="recent-heading" class="h2">최근 연구</h2>
+        <p class="eyebrow">RECENT NOTES</p>
+        <h2 id="recent-heading" class="h2">최근 노트</h2>
       </div>
       {% if dashboard.total %}<a class="text-link" href="/explore">전체 {{ dashboard.total }}개</a>{% endif %}
     </div>
@@ -49,7 +49,7 @@
       {% set post = item.post %}
       <a class="study-card" href="/posts/{{ post.id }}">
         <div class="study-card-head">
-          <span class="study-index">STUDY #{{ "%03d"|format(post.id) }}</span>
+          <span class="study-index">NOTE #{{ "%03d"|format(post.id) }}</span>
           <time class="meta" datetime="{{ post.created_at[0:10] }}">{{ post.created_at[0:10] }}</time>
         </div>
         <h3>{{ post.title }}</h3>
@@ -64,10 +64,10 @@
       </a>
       {% else %}
       <div class="empty research-empty">
-        <span class="study-index">STUDY #001</span>
-        <h3>첫 서비스를 분석해보세요.</h3>
-        <p>잘 쓰려 하지 않아도 괜찮아요. 한 칸만 채워도 연구가 시작됩니다.</p>
-        <a class="btn" href="/posts/new/write">첫 분석 시작 <span aria-hidden="true">→</span></a>
+        <span class="study-index">NOTE #001</span>
+        <h3>첫 서비스를 뜯어보세요.</h3>
+        <p>전부 잘 쓸 필요 없어요. 눈에 띈 한 가지만 남겨도 충분해요.</p>
+        <a class="btn" href="/posts/new/write">첫 서비스 뜯어보기 <span aria-hidden="true">→</span></a>
       </div>
       {% endfor %}
     </div>

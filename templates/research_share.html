@@ -6,13 +6,13 @@
 {% block app %}
 <main class="body share-settings">
   <header class="topbar">
-    <a class="cancel" href="/posts/{{ post.id }}">‹ 연구 노트</a>
-    <span class="study-index">SHARE STUDY</span>
+    <a class="cancel" href="/posts/{{ post.id }}">‹ 서비스 노트</a>
+    <span class="study-index">SHARE NOTE</span>
   </header>
 
   <section class="share-intro" aria-labelledby="share-heading">
     <p class="eyebrow">LINK SHARING</p>
-    <h1 id="share-heading">이 연구 노트를<br><span class="hl">함께 볼까요?</span></h1>
+    <h1 id="share-heading">이 노트를<br><span class="hl">같이 볼까요?</span></h1>
     <p>링크를 받은 사람은 로그인 없이 답변{% if post.attachments %}과 선택한 첨부{% endif %}를 볼 수 있어요.</p>
     {% if post.link_url %}<p>노트에 저장한 원본 서비스 링크도 함께 보여요. 주소에 비밀 값이 없는지 확인해 주세요.</p>{% endif %}
     <p class="share-expiry">공유 링크는 만든 시점부터 7일 동안 열립니다.</p>
@@ -70,7 +70,7 @@
 <script>
   (function () {
     var url = {{ share_url|tojson }};
-    var title = {{ (post.title ~ ' · TIPLOOP 서비스 연구')|tojson }};
+    var title = {{ (post.title ~ ' · TIPLOOP 서비스 노트')|tojson }};
     var feedback = document.getElementById('share-feedback');
 
     async function copyLink() {

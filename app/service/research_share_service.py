@@ -59,7 +59,7 @@ def create_link(
 ) -> str:
     post = posts.get_owned_post(post_id, author_id)
     if post is None or post.category != "reference":
-        raise ResearchShareError("연구 노트를 찾을 수 없습니다.")
+        raise ResearchShareError("서비스 노트를 찾을 수 없습니다.")
     token = secrets.token_urlsafe(32)
     snapshot = _snapshot(post, owner_auth_id, include_media)
     media_hashes = tuple(
@@ -74,7 +74,7 @@ def create_link(
         snapshot,
         media_hashes,
     ):
-        raise ResearchShareError("연구 노트를 찾을 수 없습니다.")
+        raise ResearchShareError("서비스 노트를 찾을 수 없습니다.")
     return token
 
 
