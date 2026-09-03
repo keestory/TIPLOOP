@@ -50,6 +50,22 @@ def test_research_form_dismisses_mobile_keyboard_without_blocking_interactions()
 
 
 @pytest.mark.no_db
+def test_question_picker_uses_modal_sheet_without_in_flow_details_reflow():
+    root = Path(__file__).resolve().parents[1]
+    template = (root / "templates" / "post_write.html").read_text(encoding="utf-8")
+    javascript = (root / "static" / "research-form.js").read_text(encoding="utf-8")
+    css = (root / "static" / "tipping.css").read_text(encoding="utf-8")
+
+    assert '<dialog class="question-sheet" id="question-picker"' in template
+    assert '<details class="question-picker"' not in template
+    assert "picker.showModal()" in javascript
+    assert "syncSelectedCount()" in javascript
+    assert "picker.addEventListener('close'" in javascript
+    assert ".question-sheet[open] { display: flex; }" in css
+    assert ".ta, .field select, .searchbar input, .share-url { font-size: 16px; }" in css
+
+
+@pytest.mark.no_db
 def test_research_form_restores_legacy_application_draft():
     root = Path(__file__).resolve().parents[1]
     javascript = (root / "static" / "research-form.js").read_text(encoding="utf-8")

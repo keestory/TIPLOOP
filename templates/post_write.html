@@ -62,11 +62,22 @@
       </label>
     </fieldset>
 
-    <details class="question-picker" id="question-picker" {% if analysis_mode == 'focus' %}open{% endif %}>
-      <summary>
+    <div class="question-picker">
+      <button class="question-picker-trigger" id="question-picker-trigger" type="button"
+              aria-haspopup="dialog" aria-controls="question-picker" aria-expanded="false">
         <span>궁금한 것만 고르기</span>
-        <strong id="selected-count" aria-live="polite">0개 선택</strong>
-      </summary>
+        <strong data-selected-count>{{ selected_question_ids|length }}개 선택</strong>
+      </button>
+    </div>
+
+    <dialog class="question-sheet" id="question-picker" aria-labelledby="question-picker-title">
+      <header class="question-sheet-header">
+        <div>
+          <p class="eyebrow">CHOOSE QUESTIONS</p>
+          <h3 id="question-picker-title">궁금한 것만 골라보세요.</h3>
+        </div>
+        <button class="question-sheet-close" id="question-picker-close" type="button" aria-label="질문 선택 닫기">×</button>
+      </header>
       <fieldset class="question-bank">
         <legend class="sr-only">답할 질문 선택</legend>
         {% for section in sections %}
@@ -86,8 +97,14 @@
         </label>
         {% endfor %}
       </fieldset>
-      <p class="field-help" id="required-final-note">‘내가 적용한다면?’은 어떤 방식에서도 마지막 질문이에요.</p>
-    </details>
+      <footer class="question-sheet-footer">
+        <p class="field-help" id="required-final-note">‘내가 적용한다면?’은 어떤 방식에서도 마지막 질문이에요.</p>
+        <button class="btn lime" id="question-picker-done" type="button">
+          <span>선택 완료</span>
+          <strong data-selected-count aria-live="polite">{{ selected_question_ids|length }}개 선택</strong>
+        </button>
+      </footer>
+    </dialog>
   </section>
 
   {% if legacy_body %}
@@ -176,5 +193,5 @@
   "submitLabel": ("변경사항 저장" if editing else "서비스 노트 저장")
 }|tojson }}
 </script>
-<script type="module" src="/static/research-form.js"></script>
+<script type="module" src="/static/research-form.js?v=5"></script>
 {% endblock %}

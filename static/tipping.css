@@ -839,12 +839,34 @@ a.plain { text-decoration: none; color: inherit; }
 .question-picker {
   border: 1px solid var(--card-border); border-radius: 16px; background: #fff; overflow: hidden;
 }
-.question-picker summary {
+.question-picker-trigger {
+  width: 100%; border: 0; background: transparent; color: var(--ink);
   min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 0 14px; cursor: pointer; font: 700 13px var(--sans);
 }
-.question-picker summary strong { font: 600 11px var(--mono); color: var(--meta); }
-.question-bank { display: grid; gap: 0; margin: 0; padding: 0 14px; border: 0; border-top: 1px solid var(--card-border); }
+.question-picker-trigger strong { font: 600 11px var(--mono); color: var(--meta); }
+.question-sheet {
+  width: 100%; max-width: 480px; max-height: min(82dvh, 720px); margin: auto auto 0; padding: 0;
+  flex-direction: column; overflow: hidden; color: var(--ink); background: var(--screen);
+  border: 1px solid var(--card-border); border-radius: 24px 24px 0 0;
+  box-shadow: 0 -18px 48px -22px rgba(26, 25, 23, .48);
+}
+.question-sheet[open] { display: flex; }
+.question-sheet::backdrop { background: rgba(26, 25, 23, .42); backdrop-filter: blur(2px); }
+.question-sheet-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 18px 18px 14px; background: var(--screen); border-bottom: 1px solid var(--card-border);
+}
+.question-sheet-header .eyebrow { margin: 0 0 4px; }
+.question-sheet-header h3 { margin: 0; font: 800 19px/1.35 var(--head); letter-spacing: -.02em; }
+.question-sheet-close {
+  width: 44px; height: 44px; margin: -6px -8px 0 0; flex: none; border: 0; border-radius: 50%;
+  background: transparent; color: var(--ink); font: 400 28px/1 var(--sans); cursor: pointer;
+}
+.question-bank {
+  min-height: 0; display: grid; gap: 0; margin: 0; padding: 0 18px; overflow-y: auto;
+  border: 0; background: #fff; overscroll-behavior: contain;
+}
 .question-choice {
   min-height: 68px; display: flex; align-items: flex-start; gap: 11px; padding: 12px 0;
   border-bottom: 1px solid var(--card-border); cursor: pointer;
@@ -856,7 +878,10 @@ a.plain { text-decoration: none; color: inherit; }
 .choice-copy small { font: 600 10px var(--mono); color: var(--meta); }
 .choice-copy strong { font: 700 13px var(--sans); }
 .choice-copy > span { grid-column: 1 / -1; font: 400 12px/1.45 var(--sans); color: var(--muted); }
-.question-picker > .field-help { display: block; padding: 0 14px 13px; }
+.question-sheet-footer { padding: 12px 18px calc(14px + env(safe-area-inset-bottom)); background: var(--screen); }
+.question-sheet-footer .field-help { display: block; margin-bottom: 9px; }
+.question-sheet-footer .btn { justify-content: space-between; padding-inline: 16px; }
+.question-sheet-footer .btn strong { font: 600 11px var(--mono); }
 .research-fields { display: flex; flex-direction: column; gap: 14px; }
 .form-group-heading {
   display: grid; grid-template-columns: 28px 1fr; align-items: baseline;
@@ -1023,6 +1048,13 @@ a.plain { text-decoration: none; color: inherit; }
 @media (hover: hover) and (pointer: fine) {
   .study-card:hover { transform: translateY(-2px); border-color: #CFC8B8; box-shadow: 0 10px 24px -20px rgba(26, 25, 23, .8); }
   .top-action:hover, .text-link:hover, .source-link:hover { text-decoration-thickness: 2px; }
+}
+@media (min-width: 520px) {
+  .question-sheet { width: min(440px, calc(100vw - 40px)); margin: auto; border-radius: 24px; }
+}
+@media (max-width: 519px), (hover: none) and (pointer: coarse) {
+  /* iOS Safari는 16px보다 작은 입력을 탭하면 화면을 자동 확대해 레이아웃이 흔들린다. */
+  .ta, .field select, .searchbar input, .share-url { font-size: 16px; }
 }
 @media (max-width: 360px) {
   .quick-row { flex-direction: column; }

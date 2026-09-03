@@ -11,7 +11,10 @@ const draftStatus = document.getElementById('draft-status')
 const legacy = document.getElementById('legacy-body')
 const submit = document.getElementById('submit-btn')
 const picker = document.getElementById('question-picker')
-const selectedCount = document.getElementById('selected-count')
+const pickerTrigger = document.getElementById('question-picker-trigger')
+const pickerClose = document.getElementById('question-picker-close')
+const pickerDone = document.getElementById('question-picker-done')
+const selectedCounts = form.querySelectorAll('[data-selected-count]')
 const supabase = config.supabaseUrl
   ? createClient(config.supabaseUrl, config.supabaseKey)
   : null
@@ -42,6 +45,10 @@ function selectedIds() {
     .map((input) => input.value)
 }
 
+function syncSelectedCount(ids = selectedIds()) {
+  selectedCounts.forEach((count) => { count.textContent = `${ids.length}개 선택` })
+}
+
 function syncQuestions(announce = true) {
   const ids = selectedIds()
   const order = new Map(ids.map((id, index) => [id, index + 1]))
@@ -51,8 +58,26 @@ function syncQuestions(announce = true) {
     const position = card.querySelector('.answer-position')
     position.textContent = isSelected ? `${order.get(card.dataset.questionId)}/${ids.length}` : ''
   })
-  selectedCount.textContent = `${ids.length}개 선택`
+  syncSelectedCount(ids)
   if (announce) dirty = true
+}
+
+function openQuestionPicker() {
+  if (!picker.open) {
+    if (typeof picker.showModal === 'function') picker.showModal()
+    else picker.setAttribute('open', '')
+  }
+  pickerTrigger.setAttribute('aria-expanded', 'true')
+}
+
+function closeQuestionPicker() {
+  if (picker.open) {
+    // 체크할 때마다 본문 높이를 바꾸지 않고 시트를 닫을 때 한 번만 반영한다.
+    syncQuestions(false)
+    if (typeof picker.close === 'function') picker.close()
+    else picker.removeAttribute('open')
+  }
+  pickerTrigger.setAttribute('aria-expanded', 'false')
 }
 
 function setSelected(ids, announce = true) {
@@ -68,11 +93,17 @@ function currentMode() {
 }
 
 function setMode(mode) {
-  if (mode === 'quick') setSelected(config.quickQuestionIds)
-  if (mode === 'full') setSelected(config.questionIds)
+  if (mode === 'quick') {
+    closeQuestionPicker()
+    setSelected(config.quickQuestionIds)
+  }
+  if (mode === 'full') {
+    closeQuestionPicker()
+    setSelected(config.questionIds)
+  }
   if (mode === 'focus') {
-    picker.open = true
     setSelected(selectedIds())
+    openQuestionPicker()
   }
   scheduleDraft()
 }
@@ -242,7 +273,7 @@ function validateForm() {
     }
   }
   if (!selectedIds().length) {
-    picker.open = true
+    openQuestionPicker()
     setError('답하고 싶은 질문을 한 개 이상 선택해 주세요.', picker.querySelector('input[type="checkbox"]'))
     return false
   }
@@ -259,11 +290,21 @@ form.querySelectorAll('textarea').forEach(autoGrow)
 form.querySelectorAll('[name="analysis_mode"]').forEach((radio) => {
   radio.addEventListener('change', () => setMode(radio.value))
 })
+pickerTrigger.addEventListener('click', openQuestionPicker)
+pickerClose.addEventListener('click', closeQuestionPicker)
+pickerDone.addEventListener('click', closeQuestionPicker)
+picker.addEventListener('close', () => {
+  syncQuestions(false)
+  pickerTrigger.setAttribute('aria-expanded', 'false')
+})
+picker.addEventListener('click', (event) => {
+  if (event.target === picker) closeQuestionPicker()
+})
 form.querySelectorAll('[data-question-id][type="checkbox"]').forEach((input) => {
   input.addEventListener('change', () => {
     form.querySelector('[name="analysis_mode"][value="focus"]').checked = true
-    picker.open = true
-    syncQuestions()
+    syncSelectedCount()
+    dirty = true
     scheduleDraft()
   })
 })

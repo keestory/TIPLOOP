@@ -97,7 +97,7 @@ def test_research_templates_render_for_signed_in_user():
     assert ">APPLY<" in form
     assert 'name="selected_question_ids"' in form
     assert "서비스 노트 저장" in form
-    assert '/static/research-form.js' in form
+    assert '/static/research-form.js?v=5' in form
     assert "tiploop:draft:new:user:7" in form
     assert '"tiploop:draft:new"' not in form
     assert 'type="file"' in form
