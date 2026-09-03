@@ -83,3 +83,13 @@ def test_research_share_native_share_does_not_append_copy_to_url():
 
     assert "navigator.share({ title: title, url: url })" in template
     assert "함께 보고 싶은 서비스 분석이에요." not in template
+
+
+@pytest.mark.no_db
+def test_login_does_not_offer_removed_kakao_provider():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+
+    assert "카카오" not in login
+    assert "login('kakao')" not in login
+    assert 'id="kakao"' not in login

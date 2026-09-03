@@ -48,14 +48,13 @@ def test_login_is_idempotent_by_auth_id(monkeypatch):
     assert t2.name == "김서연B"      # 이름은 최신화
 
 
-def test_kakao_login_sets_provider(monkeypatch):
+def test_removed_kakao_provider_is_rejected(monkeypatch):
     _patch(monkeypatch, {
         "id": "kakao-1", "app_metadata": {"provider": "kakao"},
         "user_metadata": {"name": "박지우"},
     })
-    member, _ = auth_service.establish_session("good")
-    assert member.provider == "kakao"
-    assert member.name == "박지우"
+    with pytest.raises(AuthError, match="지원하지 않는 로그인 방식"):
+        auth_service.establish_session("good")
 
 
 def test_invalid_token_rejected(monkeypatch):

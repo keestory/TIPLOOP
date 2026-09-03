@@ -1,6 +1,6 @@
 # Supabase 셋업 가이드 (TIPLOOP)
 
-TIPLOOP은 **인증=Supabase Auth(구글·카카오), 데이터=Supabase Postgres**로 동작합니다.
+TIPLOOP은 **인증=Supabase Auth(Google), 데이터=Supabase Postgres**로 동작합니다.
 아래 값들을 환경 변수로 넣으면 됩니다. (`.env.example` 참고)
 
 | 환경 변수 | 어디서 | 용도 |
@@ -28,15 +28,7 @@ TIPLOOP은 **인증=Supabase Auth(구글·카카오), 데이터=Supabase Postgre
    `https://<ref>.supabase.co/auth/v1/callback`
 3. 발급된 Client ID/Secret을 Supabase → Authentication → Providers → **Google**에 입력, 활성화.
 
-## 3. 카카오 로그인
-1. https://developers.kakao.com 에서 애플리케이션 생성.
-2. 카카오 로그인 활성화 → Redirect URI에 `https://<ref>.supabase.co/auth/v1/callback` 추가.
-3. **동의항목**에서 카카오계정(이메일) — 이름/이메일 을 사용 설정.
-4. REST API 키/Client Secret을 Supabase → Authentication → Providers → **Kakao**에 입력, 활성화.
-
-> 전화번호는 현재 받지 않습니다(추후 필요 시 문자 인증 또는 카카오 동의항목으로 추가 가능).
-
-## 3-2. 연구 노트 비공개 첨부
+## 3. 연구 노트 비공개 첨부
 
 `supabase/schema.sql` 또는 최신 migration은 `tiploop-research-images`와
 `tiploop-research-videos`를 private bucket으로 만들고, 로그인 사용자 UUID로 시작하는
@@ -62,7 +54,7 @@ https://tiploop.vercel.app/auth/callback (배포)
 
 ## 5. 로그인 흐름 (참고)
 ```
-[로그인 페이지] 구글/카카오 클릭
+[로그인 페이지] Google 클릭
    → supabase-js signInWithOAuth → 제공자 동의 → Supabase
    → /auth/callback (supabase-js가 세션 파싱)
    → POST /auth/session  (백엔드가 JWT 검증 → 교사 upsert → 세션 쿠키)

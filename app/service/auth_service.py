@@ -1,6 +1,6 @@
 """인증 도메인 로직 — Supabase 소셜 로그인 + 자체 세션 + 온보딩.
 
-이메일/비밀번호는 없다. 구글·카카오로만 로그인하고, 세션은 서명 쿠키로 유지한다.
+이메일/비밀번호는 없다. Google로 로그인하고, 세션은 서명 쿠키로 유지한다.
 """
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ from __future__ import annotations
 from app.config.settings import (
     INDUSTRIES,
     JOB_ROLES,
+    PROVIDERS,
     SESSION_SECRET,
     SESSION_TTL_DAYS,
     SUPABASE_ANON_KEY,
@@ -43,13 +44,16 @@ def establish_session(access_token: str) -> tuple[User, str]:
 
     meta = info.get("user_metadata") or {}
     app_meta = info.get("app_metadata") or {}
+    provider = str(app_meta.get("provider") or "")
+    if provider not in PROVIDERS:
+        raise AuthError("현재 지원하지 않는 로그인 방식입니다.")
 
     member = members.upsert_by_auth(
         auth_id=str(info["id"]),
         name=_claim_name(info, meta),
         email=info.get("email") or meta.get("email"),
         avatar_url=meta.get("avatar_url") or meta.get("picture"),
-        provider=app_meta.get("provider"),
+        provider=provider,
     )
     return member, sign_session(member.id, SESSION_SECRET, _TTL)
 

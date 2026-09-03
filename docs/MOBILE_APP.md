@@ -71,7 +71,7 @@ npx capacitor-assets generate --iconBackgroundColor '#CDFF47' --splashBackground
 - 애플 가이드라인 4.2: "웹사이트를 그대로 감싼 앱"은 반려될 수 있다.
   티핑은 모바일 최적화 UX라 유리하지만, **네이티브 기능 한 가지 이상**(푸시 알림 등)을
   붙이면 통과율이 오른다. 필요 시 `@capacitor/push-notifications` 추가.
-- OAuth 콜백: 앱에서 구글/카카오 로그인 시 리디렉트가 앱으로 돌아오도록
+- OAuth 콜백: 앱에서 Google 로그인 시 리디렉트가 앱으로 돌아오도록
   Supabase Redirect URL에 앱 스킴/도메인 추가 필요할 수 있음.
 
 ---

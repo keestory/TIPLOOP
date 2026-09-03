@@ -22,7 +22,7 @@ class MediaAttachment:
 
 @dataclass(frozen=True)
 class User:
-    """가입한 실무자 회원. 인증은 Supabase(구글/카카오), 프로필은 우리가 보관."""
+    """가입한 실무자 회원. 인증은 Supabase(Google), 프로필은 우리가 보관."""
 
     id: int
     auth_id: str  # Supabase auth 사용자 id
@@ -30,7 +30,7 @@ class User:
     created_at: str
     email: str | None = None
     avatar_url: str | None = None
-    provider: str | None = None  # google | kakao
+    provider: str | None = None  # google
     # 온보딩에서 채우는 값 (소셜이 주지 않음) — 완료 전엔 None
     job_role: str | None = None   # 직군
     years: str | None = None      # 연차
