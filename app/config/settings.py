@@ -42,6 +42,9 @@ SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", "")
 # Apple 로그인은 Apple Developer와 Supabase provider 설정이 모두 끝난 뒤에만
 # 화면에 노출한다. 준비 전 버튼을 보여 실패하는 로그인 흐름을 만들지 않는다.
 APPLE_AUTH_ENABLED = os.environ.get("APPLE_AUTH_ENABLED", "0") == "1"
+APPLE_CLIENT_ID = os.environ.get("APPLE_CLIENT_ID", "")
+APPLE_CLIENT_SECRET = os.environ.get("APPLE_CLIENT_SECRET", "")
+APPLE_TOKEN_ENCRYPTION_KEY = os.environ.get("APPLE_TOKEN_ENCRYPTION_KEY", "")
 
 # 공개 법률·지원 화면. 실제 법적 운영자명과 공개 이메일은 배포 환경에서
 # 설정할 수 있으며, 이메일이 없을 때는 공개 GitHub 지원 창구를 제공한다.
@@ -76,6 +79,23 @@ def validate_runtime_security() -> None:
         raise RuntimeError(
             "SUPABASE_URL과 DATABASE_URL이 서로 다른 Supabase 프로젝트를 가리킵니다."
         )
+    if APPLE_AUTH_ENABLED:
+        missing = [
+            name
+            for name, value in (
+                ("APPLE_CLIENT_ID", APPLE_CLIENT_ID),
+                ("APPLE_CLIENT_SECRET", APPLE_CLIENT_SECRET),
+                ("APPLE_TOKEN_ENCRYPTION_KEY", APPLE_TOKEN_ENCRYPTION_KEY),
+            )
+            if not value
+        ]
+        if missing:
+            raise RuntimeError(
+                "Apple 로그인을 켜려면 다음 환경 변수가 필요합니다: "
+                + ", ".join(missing)
+            )
+        if len(APPLE_TOKEN_ENCRYPTION_KEY) < 32:
+            raise RuntimeError("APPLE_TOKEN_ENCRYPTION_KEY는 32자 이상이어야 합니다.")
 
 
 def _project_ref_from_supabase_url(url: str) -> str:

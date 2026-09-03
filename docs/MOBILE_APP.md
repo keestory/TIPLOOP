@@ -11,7 +11,7 @@
 | 항목 | 값 |
 |---|---|
 | 앱 이름 | TIPLOOP |
-| Bundle ID | `com.keestory.tiploop` |
+| Bundle ID | `com.keestory.tipping` |
 | 버전 | 1.0.0 (빌드 1) |
 | 기기 | iPhone 전용 |
 | 방향 | 세로 |
@@ -23,6 +23,7 @@
 
 - 로그인 화면에서 Google과 동등한 Apple 로그인 제공
 - 계정 화면에서 계정과 저장 데이터 삭제 시작·완료
+- Apple 계정 삭제 시 Apple OAuth 연결도 함께 해제
 - 심사 계정 또는 완전한 데모 접근 제공
 - App Privacy에 계정 정보, 사용자 ID, 사진·영상, 기타 사용자 콘텐츠 신고
 - 심사 노트에 네이티브 공유·햅틱·시스템 브라우저 연동과 서비스 분석 전용 UX 설명

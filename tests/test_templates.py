@@ -146,6 +146,18 @@ def test_native_auth_uses_pkce_session_exchange_and_cold_start_callback():
 
 
 @pytest.mark.no_db
+def test_apple_refresh_token_reaches_secure_server_flow():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+    callback = (root / "templates" / "auth_callback.html").read_text(encoding="utf-8")
+    profile = (root / "templates" / "profile.html").read_text(encoding="utf-8")
+
+    assert "sessionData.session.provider_refresh_token" in login
+    assert "session.provider_refresh_token" in callback
+    assert "session.provider_refresh_token" in profile
+
+
+@pytest.mark.no_db
 def test_account_delete_dialog_has_pre_ios_15_4_fallback():
     root = Path(__file__).resolve().parents[1]
     profile = (root / "templates" / "profile.html").read_text(encoding="utf-8")

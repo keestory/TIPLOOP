@@ -63,12 +63,21 @@ def _is_same_origin(request: Request) -> bool:
 
 
 @router.post("/auth/session")
-def auth_session(request: Request, access_token: str = Form(...)):
+def auth_session(
+    request: Request,
+    access_token: str = Form(...),
+    provider_refresh_token: str = Form(""),
+):
     """프론트가 받은 Supabase 액세스 토큰을 검증하고 세션 쿠키를 심는다."""
     if not _is_same_origin(request):
         return JSONResponse({"error": "허용되지 않은 로그인 요청입니다."}, status_code=403)
+    refresh_token = (
+        provider_refresh_token if isinstance(provider_refresh_token, str) else ""
+    )
     try:
-        teacher, cookie = auth_service.establish_session(access_token)
+        teacher, cookie = auth_service.establish_session(
+            access_token, refresh_token
+        )
     except AuthError as exc:
         return JSONResponse({"error": str(exc)}, status_code=401)
     # 재방문자(온보딩 완료)는 곧장 피드로. 신규는 약관 → 온보딩 순서.
@@ -109,14 +118,20 @@ def delete_account(
     request: Request,
     access_token: str = Form(...),
     user: Optional[User] = Depends(get_current_user),
+    provider_refresh_token: str = Form(""),
 ):
     """앱 안에서 전체 계정·노트·첨부 삭제를 시작하고 완료한다."""
     if user is None:
         return JSONResponse({"error": "다시 로그인해 주세요."}, status_code=401)
     if not _is_same_origin(request):
         return JSONResponse({"error": "허용되지 않은 요청입니다."}, status_code=403)
+    refresh_token = (
+        provider_refresh_token if isinstance(provider_refresh_token, str) else ""
+    )
     try:
-        account_service.delete_current_account(user, access_token)
+        account_service.delete_current_account(
+            user, access_token, refresh_token
+        )
     except account_service.AccountDeletionError as exc:
         return JSONResponse({"error": str(exc)}, status_code=409)
     resp = JSONResponse({"ok": True, "next": "/login?deleted=1"})

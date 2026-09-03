@@ -5,7 +5,7 @@
 ## 현재 값
 
 - 앱 이름: `TIPLOOP`
-- Bundle ID: `com.keestory.tiploop`
+- Bundle ID: `com.keestory.tipping` (기존 App Store Connect 앱 6790769878)
 - 버전 / 빌드: `1.0.0` / `1`
 - 대상: iPhone, 세로 화면
 - 최소 iOS: 14.0
@@ -32,14 +32,16 @@ xcodebuild \
 
 ## 제출 전 외부 설정
 
-1. Apple Developer에서 `com.keestory.tiploop` App ID 생성
+1. Apple Developer에서 기존 `com.keestory.tipping` App ID의 설정 확인
 2. Sign in with Apple capability와 `App.entitlements` 서명 연결 확인
 3. App Store Connect에 한국어 기본 앱 레코드 생성
 4. Supabase Authentication에서 Apple provider 설정
 5. Supabase Redirect URLs에 `tiploop://auth-callback` 추가
-6. Vercel에 `APPLE_AUTH_ENABLED=1`, 법적 운영자명과 지원 이메일 설정
-7. Xcode Signing & Capabilities에서 올바른 Team 선택
-8. Archive 업로드 후 TestFlight 실기기 QA
+6. Vercel에 Apple client ID·client secret·토큰 암호화 키를 비공개 환경 변수로 설정
+7. Apple 로그인·탈퇴 연결 해제를 실제 계정으로 검증한 뒤 `APPLE_AUTH_ENABLED=1` 설정
+8. 법적 운영자명과 지원 이메일 설정
+9. Xcode Signing & Capabilities에서 올바른 Team 선택
+10. Archive 업로드 후 TestFlight 실기기 QA
 
 Apple 로그인이 실제로 성공하기 전에는 `APPLE_AUTH_ENABLED`를 켜지 않는다.
 

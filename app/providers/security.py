@@ -12,6 +12,7 @@ import hmac
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
@@ -71,6 +72,31 @@ def delete_storage_paths(
         except (urllib.error.URLError, TimeoutError, OSError):
             return False
     return True
+
+
+def revoke_apple_token(token: str, client_id: str, client_secret: str) -> bool:
+    """Apple OAuth refresh token을 공식 revoke endpoint에서 폐기한다."""
+    if not token or not client_id or not client_secret:
+        return False
+    body = urllib.parse.urlencode(
+        {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "token": token,
+            "token_type_hint": "refresh_token",
+        }
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        "https://appleid.apple.com/auth/revoke",
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.status == 200
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return False
 
 
 def sign_session(member_id: int, secret: str, ttl_seconds: int) -> str:

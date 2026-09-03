@@ -35,10 +35,14 @@ CREATE TABLE IF NOT EXISTS members (
     has_seen_tour BOOLEAN NOT NULL DEFAULT FALSE,  -- 첫 로그인 코치마크 투어 시청 여부
     checklist_dismissed BOOLEAN NOT NULL DEFAULT FALSE,  -- 홈 시작 체크리스트 닫음
     deletion_started_at TIMESTAMPTZ,              -- 계정 삭제 중: 새 Storage 업로드 차단
+    provider_refresh_token_ciphertext BYTEA,       -- Apple refresh token 암호문
+    provider_token_revoked_at TIMESTAMPTZ,         -- Apple 연결 해제 완료 시각
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 ALTER TABLE members ADD COLUMN IF NOT EXISTS deletion_started_at TIMESTAMPTZ;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS provider_refresh_token_ciphertext BYTEA;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS provider_token_revoked_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS posts (
     id         BIGSERIAL PRIMARY KEY,

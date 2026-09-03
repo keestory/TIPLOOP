@@ -6,6 +6,7 @@
 import pytest
 
 from app.providers import security
+from app.types.models import User
 from app.service import auth_service
 from app.service.auth_service import AuthError
 
@@ -61,6 +62,39 @@ def test_invalid_token_rejected(monkeypatch):
     _patch(monkeypatch, _google_user())
     with pytest.raises(AuthError):
         auth_service.establish_session("bad")
+
+
+@pytest.mark.no_db
+def test_apple_login_encrypts_refresh_token_for_account_deletion(monkeypatch):
+    apple_info = {
+        "id": "apple-1",
+        "email": "relay@privaterelay.appleid.com",
+        "app_metadata": {"provider": "apple"},
+        "user_metadata": {"full_name": "Apple User"},
+    }
+    _patch(monkeypatch, apple_info)
+    member = User(
+        id=9,
+        auth_id="apple-1",
+        name="Apple User",
+        created_at="2026-09-04",
+        email=apple_info["email"],
+        provider="apple",
+    )
+    saved = []
+    monkeypatch.setattr(auth_service.members, "upsert_by_auth", lambda **_kwargs: member)
+    monkeypatch.setattr(
+        auth_service.provider_credentials,
+        "save_apple_refresh_token",
+        lambda member_id, token, key: saved.append((member_id, token, key)),
+    )
+    monkeypatch.setattr(auth_service, "APPLE_TOKEN_ENCRYPTION_KEY", "k" * 32)
+    monkeypatch.setattr(auth_service, "PROVIDERS", ["google", "apple"])
+
+    actual, _cookie = auth_service.establish_session("good", "apple-refresh-token")
+
+    assert actual == member
+    assert saved == [(9, "apple-refresh-token", "k" * 32)]
 
 
 def test_current_user_none_for_bad_cookie():

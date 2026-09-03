@@ -113,6 +113,9 @@
         throw new Error('안전을 위해 다시 로그인한 뒤 삭제해 주세요.')
       }
       const body = new URLSearchParams({ access_token: session.access_token })
+      if (session.provider_refresh_token) {
+        body.set('provider_refresh_token', session.provider_refresh_token)
+      }
       const response = await fetch('/account/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

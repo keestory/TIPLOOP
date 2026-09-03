@@ -188,7 +188,7 @@ def test_auth_session_cookie_is_secure(monkeypatch):
     monkeypatch.setattr(
         routes_auth.auth_service,
         "establish_session",
-        lambda _token: (user, "signed-session"),
+        lambda _token, _refresh_token="": (user, "signed-session"),
     )
     request = Request({
         "type": "http",

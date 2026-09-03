@@ -73,6 +73,9 @@
       const accessToken = sessionData.session.access_token
 
       const body = new URLSearchParams({ access_token: accessToken })
+      if (sessionData.session.provider_refresh_token) {
+        body.set('provider_refresh_token', sessionData.session.provider_refresh_token)
+      }
       const response = await fetch('/auth/session', { method: 'POST', body })
       const result = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(result.error || '세션 생성에 실패했습니다.')

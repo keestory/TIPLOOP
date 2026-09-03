@@ -26,7 +26,7 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.keestory.tiploop.auth</string>
+			<string>com.keestory.tipping.auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>tiploop</string>

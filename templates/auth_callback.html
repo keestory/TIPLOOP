@@ -21,6 +21,9 @@
     }
     const body = new URLSearchParams()
     body.set('access_token', session.access_token)
+    if (session.provider_refresh_token) {
+      body.set('provider_refresh_token', session.provider_refresh_token)
+    }
     const res = await fetch('/auth/session', { method: 'POST', body })
     if (!res.ok) {
       msg.textContent = '세션 생성에 실패했습니다. 다시 시도해 주세요.'

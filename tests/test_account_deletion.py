@@ -27,8 +27,14 @@ def _request(origin: str) -> Request:
     })
 
 
-def _user() -> User:
-    return User(id=7, auth_id="auth-7", name="사용자", created_at="2026-09-03")
+def _user(provider: str | None = None) -> User:
+    return User(
+        id=7,
+        auth_id="auth-7",
+        name="사용자",
+        created_at="2026-09-03",
+        provider=provider,
+    )
 
 
 @pytest.mark.no_db
@@ -53,7 +59,9 @@ def test_account_delete_clears_app_session_cookie(monkeypatch):
     monkeypatch.setattr(
         routes_auth.account_service,
         "delete_current_account",
-        lambda actual_user, token: called.append((actual_user, token)),
+        lambda actual_user, token, refresh_token="": called.append(
+            (actual_user, token, refresh_token)
+        ),
     )
 
     response = routes_auth.delete_account(
@@ -61,7 +69,7 @@ def test_account_delete_clears_app_session_cookie(monkeypatch):
     )
 
     assert response.status_code == 200
-    assert called == [(user, "access-token")]
+    assert called == [(user, "access-token", "")]
     cookie = response.headers["set-cookie"]
     assert f"{settings.SESSION_COOKIE}=\"\"" in cookie
     assert "Max-Age=0" in cookie
@@ -150,6 +158,123 @@ def test_storage_delete_batches_at_supabase_limit(monkeypatch):
         "token", "https://project.supabase.co", "publishable", "bucket", paths
     )
     assert [len(batch) for batch in batches] == [1000, 1000, 1]
+
+
+@pytest.mark.no_db
+def test_apple_account_delete_revokes_provider_token_before_auth_account(monkeypatch):
+    user = _user("apple")
+    events = []
+    monkeypatch.setattr(
+        account_service.security,
+        "fetch_supabase_user",
+        lambda *_args: {"id": "auth-7", "app_metadata": {"provider": "apple"}},
+    )
+    monkeypatch.setattr(
+        account_service.provider_credentials,
+        "save_apple_refresh_token",
+        lambda member_id, token, key: events.append(("stored", member_id, token, key)),
+    )
+    monkeypatch.setattr(
+        account_service.account_deletion,
+        "start_account_deletion",
+        lambda member_id, auth_id: events.append(("started", member_id, auth_id)),
+    )
+    monkeypatch.setattr(
+        account_service.account_deletion,
+        "owned_storage_paths",
+        lambda _auth_id: {},
+    )
+    monkeypatch.setattr(
+        account_service.provider_credentials,
+        "apple_revocation_state",
+        lambda member_id, key: ("stored-refresh-token", False),
+    )
+    monkeypatch.setattr(
+        account_service.security,
+        "revoke_apple_token",
+        lambda token, client_id, client_secret: events.append(
+            ("revoked", token, client_id, client_secret)
+        ) or True,
+    )
+    monkeypatch.setattr(
+        account_service.provider_credentials,
+        "mark_apple_token_revoked",
+        lambda member_id: events.append(("marked", member_id)),
+    )
+    monkeypatch.setattr(
+        account_service.account_deletion,
+        "delete_account",
+        lambda member_id, auth_id: events.append(("account", member_id, auth_id)),
+    )
+    monkeypatch.setattr(account_service, "APPLE_TOKEN_ENCRYPTION_KEY", "k" * 32)
+    monkeypatch.setattr(account_service, "APPLE_CLIENT_ID", "com.keestory.tipping.web")
+    monkeypatch.setattr(account_service, "APPLE_CLIENT_SECRET", "client-secret")
+
+    account_service.delete_current_account(user, "fresh-token", "fresh-provider-token")
+
+    assert events == [
+        ("stored", 7, "fresh-provider-token", "k" * 32),
+        ("started", 7, "auth-7"),
+        ("revoked", "stored-refresh-token", "com.keestory.tipping.web", "client-secret"),
+        ("marked", 7),
+        ("account", 7, "auth-7"),
+    ]
+
+
+@pytest.mark.no_db
+def test_apple_account_delete_requires_refresh_token(monkeypatch):
+    user = _user("apple")
+    monkeypatch.setattr(
+        account_service.security,
+        "fetch_supabase_user",
+        lambda *_args: {"id": "auth-7", "app_metadata": {"provider": "apple"}},
+    )
+    monkeypatch.setattr(account_service.account_deletion, "start_account_deletion", lambda *_args: None)
+    monkeypatch.setattr(account_service.account_deletion, "owned_storage_paths", lambda _auth_id: {})
+    monkeypatch.setattr(
+        account_service.provider_credentials,
+        "apple_revocation_state",
+        lambda *_args: (None, False),
+    )
+    monkeypatch.setattr(account_service, "APPLE_TOKEN_ENCRYPTION_KEY", "k" * 32)
+
+    with pytest.raises(account_service.AccountDeletionError, match="Apple로 다시 로그인"):
+        account_service.delete_current_account(user, "fresh-token")
+
+
+@pytest.mark.no_db
+def test_apple_revoke_posts_form_encoded_refresh_token(monkeypatch):
+    captured = {}
+
+    class Response:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+    def fake_urlopen(request, timeout):
+        captured["url"] = request.full_url
+        captured["timeout"] = timeout
+        captured["headers"] = request.headers
+        captured["body"] = request.data.decode("utf-8")
+        return Response()
+
+    monkeypatch.setattr(security.urllib.request, "urlopen", fake_urlopen)
+
+    assert security.revoke_apple_token("refresh", "client-id", "client-secret")
+    form = dict(item.split("=", 1) for item in captured["body"].split("&"))
+    assert captured["url"] == "https://appleid.apple.com/auth/revoke"
+    assert captured["timeout"] == 15
+    assert captured["headers"]["Content-type"] == "application/x-www-form-urlencoded"
+    assert form == {
+        "client_id": "client-id",
+        "client_secret": "client-secret",
+        "token": "refresh",
+        "token_type_hint": "refresh_token",
+    }
 
 
 @pytest.mark.no_db

@@ -15,9 +15,11 @@ TIPLOOP의 iPhone 앱을 재현 가능한 iOS 프로젝트로 만들고, App Sto
 ## 접근법
 
 - 기존 모바일 웹 UX를 유지하되 네이티브 공유 시트, 햅틱, 시스템 브라우저 연동을 앱 셸에 연결한다.
-- App Store에 올라가는 첫 빌드는 `TIPLOOP`, `com.keestory.tiploop`, 버전 `1.0.0` 기준으로 준비한다.
+- App Store에 올라가는 첫 빌드는 기존 앱 레코드 6790769878의 Bundle ID인
+  `com.keestory.tipping`을 유지하고, 표시 이름은 `TIPLOOP`, 버전은 `1.0.0`으로 준비한다.
 - 계정과 관련 콘텐츠·첨부를 앱 안에서 삭제할 수 있는 흐름을 제공한다.
-- Apple 로그인은 Apple Developer와 Supabase 설정을 완료한 뒤 노출한다.
+- Apple 로그인은 Apple Developer와 Supabase 설정을 완료한 뒤 노출하고,
+  Apple 계정 삭제 시 암호화 보관한 refresh token으로 연결까지 해제한다.
 - 외부 시스템의 앱 레코드 생성·키 발급·심사 제출은 대상 계정과 값을 확인한 뒤 수행한다.
 
 ## 태스크 분해
@@ -45,7 +47,7 @@ TIPLOOP의 iPhone 앱을 재현 가능한 iOS 프로젝트로 만들고, App Sto
 
 | 날짜 | 결정 | 이유 | 대안 |
 |------|------|------|------|
-| 2026-09-03 | 제품명과 신규 번들 ID를 TIPLOOP 기준으로 정렬 | 첫 iOS 빌드 전이며 현재 제품명·저장소·도메인과 일치시킬 수 있음 | 기존 `com.keestory.tipping` 유지 |
+| 2026-09-03 | 기존 `com.keestory.tipping` Bundle ID 유지 | App Store Connect의 기존 1.0 레코드 6790769878과 서명 자산을 그대로 사용 | 신규 `com.keestory.tiploop` 앱 생성 |
 | 2026-09-03 | 첫 버전은 iPhone 전용으로 준비 | 현재 UX가 iPhone 중심이며 iPad용 QA·스크린샷 범위를 피함 | Universal 앱 |
 | 2026-09-03 | 원격 서버 구조는 유지하되 네이티브 기능을 추가 | SSR 앱 전체를 즉시 로컬 SPA로 재작성하지 않고 출시 준비를 진전시킴 | 앱 전용 프론트엔드 재작성 |
 

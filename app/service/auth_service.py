@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from app.config.settings import (
+    APPLE_TOKEN_ENCRYPTION_KEY,
     INDUSTRIES,
     JOB_ROLES,
     PROVIDERS,
@@ -18,7 +19,7 @@ from app.config.settings import (
 )
 from app.providers import security
 from app.providers.security import read_session, sign_session
-from app.repo import members
+from app.repo import members, provider_credentials
 from app.types.models import User
 
 _TTL = SESSION_TTL_DAYS * 24 * 60 * 60
@@ -36,7 +37,9 @@ def _claim_name(claims: dict, meta: dict) -> str:
     return email.split("@")[0] if email else "회원"
 
 
-def establish_session(access_token: str) -> tuple[User, str]:
+def establish_session(
+    access_token: str, provider_refresh_token: str = ""
+) -> tuple[User, str]:
     """Supabase 액세스 토큰을 검증(=사용자 조회)하고 (회원, 세션 쿠키값)을 돌려준다."""
     info = security.fetch_supabase_user(access_token, SUPABASE_URL, SUPABASE_ANON_KEY)
     if not info or not info.get("id"):
@@ -55,6 +58,13 @@ def establish_session(access_token: str) -> tuple[User, str]:
         avatar_url=meta.get("avatar_url") or meta.get("picture"),
         provider=provider,
     )
+    if provider == "apple" and provider_refresh_token:
+        try:
+            provider_credentials.save_apple_refresh_token(
+                member.id, provider_refresh_token, APPLE_TOKEN_ENCRYPTION_KEY
+            )
+        except ValueError as exc:
+            raise AuthError(str(exc)) from exc
     return member, sign_session(member.id, SESSION_SECRET, _TTL)
 
 
