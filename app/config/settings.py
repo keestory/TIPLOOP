@@ -135,8 +135,9 @@ CATEGORIES = {
     "retro": "회고",
 }
 
-# 소셜 로그인 제공자
-PROVIDERS = ["google"] + (["apple"] if APPLE_AUTH_ENABLED else [])
+# 로그인 제공자. 이메일/비밀번호 가입은 화면에 열지 않고, 운영자가 만든
+# App Store 심사 계정처럼 확인된 계정의 로그인만 허용한다.
+PROVIDERS = ["google", "email"] + (["apple"] if APPLE_AUTH_ENABLED else [])
 
 # 크루 — 함께 쓰는 주간 기록 (셋로그식 소그룹). 주가 바뀌면 프롬프트 자동 로테이션.
 CREW_MAX_MEMBERS = 12

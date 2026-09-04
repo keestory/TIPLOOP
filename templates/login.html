@@ -27,6 +27,21 @@
     <button id="google" class="social-btn" type="button">
       <span class="social-badge g">G</span> 구글로 시작하기
     </button>
+
+    <details class="email-login">
+      <summary>이메일로 로그인</summary>
+      <form id="email-login-form" class="email-login-form">
+        <label for="email-login-address">이메일</label>
+        <input id="email-login-address" name="email" type="email"
+               inputmode="email" autocomplete="username" autocapitalize="none"
+               spellcheck="false" required>
+        <label for="email-login-password">비밀번호</label>
+        <input id="email-login-password" name="password" type="password"
+               autocomplete="current-password" required>
+        <p id="email-login-error" class="email-login-error" role="alert" hidden></p>
+        <button id="email-login-submit" class="social-btn email" type="submit">로그인</button>
+      </form>
+    </details>
   </div>
 
   <p class="auth-fine">계속하면 이용약관·개인정보 처리방침에 동의하게 됩니다</p>
@@ -117,6 +132,42 @@
     }
     window.tiploopNative.openBrowser(data.url)
   }
+
+  async function createAppSession(session) {
+    const body = new URLSearchParams({ access_token: session.access_token })
+    const response = await fetch('/auth/session', { method: 'POST', body })
+    const result = await response.json().catch(() => ({}))
+    if (!response.ok) throw new Error(result.error || '세션 생성에 실패했습니다.')
+    location.replace(result.next || '/')
+  }
+
+  const emailForm = document.getElementById('email-login-form')
+  const emailError = document.getElementById('email-login-error')
+  const emailSubmit = document.getElementById('email-login-submit')
+  emailForm.addEventListener('submit', async event => {
+    event.preventDefault()
+    emailError.hidden = true
+    emailSubmit.disabled = true
+    emailSubmit.textContent = '로그인 중…'
+    const form = new FormData(emailForm)
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({
+        email: String(form.get('email') || '').trim(),
+        password: String(form.get('password') || '')
+      })
+      if (error || !data || !data.session) {
+        throw error || new Error('로그인 정보를 확인해 주세요.')
+      }
+      await createAppSession(data.session)
+    } catch (error) {
+      await sb.auth.signOut().catch(() => {})
+      emailError.textContent = '이메일 또는 비밀번호를 확인해 주세요.'
+      emailError.hidden = false
+      emailSubmit.disabled = false
+      emailSubmit.textContent = '로그인'
+    }
+  })
+
   {% if apple_auth_enabled %}
   document.getElementById('apple').addEventListener('click', () => login('apple'))
   {% endif %}

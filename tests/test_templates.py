@@ -130,6 +130,17 @@ def test_login_does_not_offer_removed_kakao_provider():
 
 
 @pytest.mark.no_db
+def test_login_offers_managed_email_account_without_public_signup():
+    root = Path(__file__).resolve().parents[1]
+    login = (root / "templates" / "login.html").read_text(encoding="utf-8")
+
+    assert 'id="email-login-form"' in login
+    assert "sb.auth.signInWithPassword" in login
+    assert "sb.auth.signUp" not in login
+    assert "await createAppSession(data.session)" in login
+
+
+@pytest.mark.no_db
 def test_native_auth_uses_pkce_session_exchange_and_cold_start_callback():
     root = Path(__file__).resolve().parents[1]
     login = (root / "templates" / "login.html").read_text(encoding="utf-8")

@@ -58,6 +58,22 @@ def test_removed_kakao_provider_is_rejected(monkeypatch):
         auth_service.establish_session("good")
 
 
+def test_managed_email_login_is_allowed(monkeypatch):
+    email_info = {
+        "id": "reviewer-1",
+        "email": "reviewer@example.com",
+        "app_metadata": {"provider": "email"},
+        "user_metadata": {},
+    }
+    _patch(monkeypatch, email_info)
+
+    member, cookie = auth_service.establish_session("good")
+
+    assert member.name == "reviewer"
+    assert member.provider == "email"
+    assert auth_service.current_user(cookie).id == member.id
+
+
 def test_invalid_token_rejected(monkeypatch):
     _patch(monkeypatch, _google_user())
     with pytest.raises(AuthError):
